@@ -1,0 +1,28 @@
+{
+  "name": "kreat_application",
+  "version": "1.0.0",
+  "description": "back-end project for KreaT",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Khoitran0205/kreat-api.git"
+  },
+  "keywords": [
+    "kreat",
+    "api",
+    "backend",
+    "nodejs"
+  ],
+  "author": "Khoi Tran",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Khoitran0205/kreat-api/issues"
+  },
+  "homepage": "https://github.com/Khoitran0205/kreat-api#readme",
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}
