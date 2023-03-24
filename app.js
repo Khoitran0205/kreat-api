@@ -4,26 +4,26 @@ const morgan = require('morgan');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 
+const accountRoutes = require('./api/routes/account');
+
 //Connect to database
 mongoose.connect(
     "mongodb+srv://mysocialnetwork:" +
     process.env.MONGO_PASS +
     "@social-network-kreat.myvii0l.mongodb.net/?retryWrites=true&w=majority",
     {
-        useMongoClient: true
+        dbName: "KreaT"
     }
 );
 
+//Adding middleware
 app.use(morgan('dev'));
 app.use(bodyParser.urlencoded({
-    extended: false
+    extended: true
 }))
 app.use(bodyParser.json());
 
-app.use('/', (req, res, next) => {
-    res.status(200).json({
-        message: 'hello world'
-    });
-})
+//Define routes
+app.use('/accounts', accountRoutes);
 
 module.exports = app;
