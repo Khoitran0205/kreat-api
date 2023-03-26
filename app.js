@@ -5,6 +5,7 @@ const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 
 const accountRoutes = require('./api/routes/account');
+const postRoutes = require('./api/routes/post');
 
 //Connect to database
 mongoose.connect(
@@ -25,5 +26,7 @@ app.use(bodyParser.json());
 
 //Define routes
 app.use('/accounts', accountRoutes);
+app.use('/posts', postRoutes);
+
 
 module.exports = app;
