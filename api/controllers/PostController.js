@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 const Post = require('../models/post');
-const Account = require('../models/account');
+const Account = require('../models/user/account');
 
 // [POST] /posts/post
 exports.posts_create_post = (req, res, next) => {
