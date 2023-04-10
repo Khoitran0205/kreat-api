@@ -16,4 +16,9 @@ router.get('/search', AccountController.accounts_search_accounts);
 //Interact with account's friends
 router.get('/:id/friends', AccountController.accounts_get_all_friends);
 
+//Interact with a post
+router.post('/:id/react_post', AccountController.accounts_react_post);
+router.patch('/:id/update_react_post', AccountController.accounts_update_react_post);
+router.delete('/:id/unreact_post', AccountController.accounts_unreact_post);
+
 module.exports = router;
