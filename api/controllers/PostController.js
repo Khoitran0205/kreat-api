@@ -1,21 +1,19 @@
 const mongoose = require('mongoose');
 
-const Post = require('../models/post');
+const Post = require('../models/post/post');
 const Account = require('../models/user/account');
 
-// [POST] /posts/post
+// [POST] /posts/:id/create_post
 exports.posts_create_post = (req, res, next) => {
-    const post = new Post(req.body);
-    Account.findById({ _id: req.body.id_account })
+    const post = new Post({
+        id_account: req.params.id,
+        ...req.body
+    });
+    Account.findById({ _id: req.params.id })
         .then(account => {
             if (!account) {
                 return res.status(404).json({
                     message: 'Account not found!'
-                })
-            }
-            if (!req.body.postContent) {
-                return res.status(404).json({
-                    message: 'content must be not empty!'
                 })
             }
             post.save()

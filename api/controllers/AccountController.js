@@ -5,6 +5,7 @@ const PersonalInfo = require('../models/user/personal_info');
 const FavoriteInfo = require('../models/user/favorite_info');
 const EducationInfo = require('../models/user/education_info');
 const OtherInfo = require('../models/user/other_info');
+const React = require('../models/post/react');
 
 
 // [POST] /accounts/signup
@@ -142,3 +143,62 @@ exports.accounts_get_all_friends = (req, res, next) => {
             })
         });
 }
+
+// [POST] /accounts/:id/react_post
+exports.accounts_react_post = (req, res, next) => {
+    const react = new React({
+        id_account: req.params.id,
+        ...req.body
+    });
+    react.save()
+        .then(result => {
+            res.status(201).json({
+                message: 'reaction stored',
+                reaction: result
+            })
+        })
+        .catch(err => {
+            res.status(500).json({
+                error: err
+            })
+        })
+}
+
+// [UPDATE] /accounts/:id/update_react_post
+exports.accounts_update_react_post = (req, res, next) => {
+    React.findOneAndUpdate({
+        id_account: req.params.id,
+        id_post: req.body.id_post
+    }, req.body)
+        .then(result => {
+            res.status(200).json({
+                message: 'reaction updated',
+                reaction: result
+            })
+        })
+        .catch(err => {
+            res.status(500).json({
+                error: err
+            })
+        })
+}
+
+// [DELETE] /accounts/:id/unreact_post
+exports.accounts_unreact_post = (req, res, next) => {
+    React.findOneAndRemove({
+        id_account: req.params.id,
+        id_post: req.body.id_post
+    })
+        .then(result => {
+            res.status(200).json({
+                message: 'reaction removed',
+                reaction: result
+            })
+        })
+        .catch(err => {
+            res.status(500).json({
+                error: err
+            })
+        })
+}
+
