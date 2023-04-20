@@ -30,3 +30,51 @@ exports.posts_create_post = (req, res, next) => {
             })
         })
 }
+
+// [PATCH] /posts/:id/update_post
+exports.posts_update_post = (req, res, next) => {
+    Post.findOneAndUpdate({
+        id_account: req.params.id,
+        _id: req.body.id_post
+    }, req.body)
+        .then(result => {
+            if (!result) {
+                return res.status(404).json({
+                    message: 'Post not found!'
+                })
+            }
+            res.status(200).json({
+                message: 'post updated',
+                post: result
+            })
+        })
+        .catch(err => {
+            res.status(500).json({
+                error: err
+            })
+        })
+}
+
+// [DELETE] /posts/:id/delete_post
+exports.posts_delete_post = (req, res, next) => {
+    Post.findOneAndRemove({
+        id_account: req.params.id,
+        _id: req.body.id_post
+    })
+        .then(result => {
+            if (!result) {
+                return res.status(404).json({
+                    message: 'Post not found!'
+                })
+            }
+            res.status(200).json({
+                message: 'post removed',
+                post: result
+            })
+        })
+        .catch(err => {
+            res.status(500).json({
+                error: err
+            })
+        })
+}
