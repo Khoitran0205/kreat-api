@@ -6,6 +6,7 @@ const FavoriteInfo = require('../models/user/favorite_info');
 const EducationInfo = require('../models/user/education_info');
 const OtherInfo = require('../models/user/other_info');
 const React = require('../models/post/react');
+const Comment = require('../models/post/comment');
 
 
 // [POST] /accounts/signup
@@ -164,7 +165,7 @@ exports.accounts_react_post = (req, res, next) => {
         })
 }
 
-// [UPDATE] /accounts/:id/update_react_post
+// [PATCH] /accounts/:id/update_react_post
 exports.accounts_update_react_post = (req, res, next) => {
     React.findOneAndUpdate({
         id_account: req.params.id,
@@ -202,3 +203,58 @@ exports.accounts_unreact_post = (req, res, next) => {
         })
 }
 
+// [POST] /accounts/:id/comment_post
+exports.accounts_comment_post = (req, res, next) => {
+    const comment = new Comment({
+        id_account: req.params.id,
+        ...req.body
+    });
+    comment.save()
+        .then(result => {
+            res.status(201).json({
+                message: 'comment stored',
+                comment: result
+            })
+        })
+        .catch(err => {
+            res.status(500).json({
+                error: err
+            })
+        })
+}
+
+// [PATCH] /accounts/:id/update_comment_post
+exports.accounts_update_comment_post = (req, res, next) => {
+    Comment.findOneAndUpdate({
+        _id: req.body.id_comment
+    }, req.body)
+        .then(result => {
+            res.status(200).json({
+                message: 'comment updated',
+                comment: result
+            })
+        })
+        .catch(err => {
+            res.status(500).json({
+                error: err
+            })
+        })
+}
+
+// [DELETE] /accounts/:id/delete_comment_post
+exports.accounts_delete_comment_post = (req, res, next) => {
+    Comment.findOneAndRemove({
+        _id: req.body.id_comment
+    })
+        .then(result => {
+            res.status(200).json({
+                message: 'comment removed',
+                comment: result
+            })
+        })
+        .catch(err => {
+            res.status(500).json({
+                error: err
+            })
+        })
+}

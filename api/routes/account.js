@@ -16,9 +16,15 @@ router.get('/search', AccountController.accounts_search_accounts);
 //Interact with account's friends
 router.get('/:id/friends', AccountController.accounts_get_all_friends);
 
-//Interact with a post
+// Interact with a post
+//Raaction
 router.post('/:id/react_post', AccountController.accounts_react_post);
 router.patch('/:id/update_react_post', AccountController.accounts_update_react_post);
 router.delete('/:id/unreact_post', AccountController.accounts_unreact_post);
+
+//Comment
+router.post('/:id/comment_post', AccountController.accounts_comment_post);
+router.patch('/:id/update_comment_post', AccountController.accounts_update_comment_post);
+router.delete('/:id/delete_comment_post', AccountController.accounts_delete_comment_post);
 
 module.exports = router;
