@@ -145,8 +145,8 @@ exports.accounts_get_all_friends = (req, res, next) => {
         });
 }
 
-// [POST] /accounts/:id/react_post
-exports.accounts_react_post = (req, res, next) => {
+// [POST] /accounts/:id/react
+exports.accounts_react = (req, res, next) => {
     const react = new React({
         id_account: req.params.id,
         ...req.body
@@ -165,11 +165,12 @@ exports.accounts_react_post = (req, res, next) => {
         })
 }
 
-// [PATCH] /accounts/:id/update_react_post
-exports.accounts_update_react_post = (req, res, next) => {
+// [PATCH] /accounts/:id/update_react
+exports.accounts_update_react = (req, res, next) => {
     React.findOneAndUpdate({
         id_account: req.params.id,
-        id_post: req.body.id_post
+        id_post: req.body.id_post,
+        id_comment: req.body.id_comment
     }, req.body)
         .then(result => {
             res.status(200).json({
@@ -185,10 +186,11 @@ exports.accounts_update_react_post = (req, res, next) => {
 }
 
 // [DELETE] /accounts/:id/unreact_post
-exports.accounts_unreact_post = (req, res, next) => {
+exports.accounts_unreact = (req, res, next) => {
     React.findOneAndRemove({
         id_account: req.params.id,
-        id_post: req.body.id_post
+        id_post: req.body.id_post,
+        id_comment: req.body.id_comment
     })
         .then(result => {
             res.status(200).json({
