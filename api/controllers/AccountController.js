@@ -6,43 +6,7 @@ const FavoriteInfo = require('../models/user/favorite_info');
 const EducationInfo = require('../models/user/education_info');
 const OtherInfo = require('../models/user/other_info');
 const React = require('../models/post/react');
-
-
-// [POST] /accounts/signup
-exports.accounts_create_account = (req, res, next) => {
-    const account = new Account({
-        email: req.body.email,
-        password: req.body.password,
-    });
-    account.save()
-        .then(result => {
-            res.status(201).json({
-                message: "account created",
-                account: result
-            })
-        })
-        .catch(err => {
-            res.status(500).json({
-                error: err
-            })
-        });
-    const personal_info = new PersonalInfo({
-        id_account: account._id,
-    })
-    personal_info.save();
-    const favorite_info = new FavoriteInfo({
-        id_account: account._id,
-    })
-    favorite_info.save();
-    const education_info = new EducationInfo({
-        id_account: account._id,
-    })
-    education_info.save();
-    const other_info = new OtherInfo({
-        id_account: account._id,
-    })
-    other_info.save();
-}
+const Comment = require('../models/post/comment');
 
 // [PATCH] /accounts/:id/update_personal_info
 exports.accounts_update_personal_info = (req, res, next) => {
@@ -144,8 +108,8 @@ exports.accounts_get_all_friends = (req, res, next) => {
         });
 }
 
-// [POST] /accounts/:id/react_post
-exports.accounts_react_post = (req, res, next) => {
+// [POST] /accounts/:id/react
+exports.accounts_react = (req, res, next) => {
     const react = new React({
         id_account: req.params.id,
         ...req.body
@@ -164,11 +128,12 @@ exports.accounts_react_post = (req, res, next) => {
         })
 }
 
-// [UPDATE] /accounts/:id/update_react_post
-exports.accounts_update_react_post = (req, res, next) => {
+// [PATCH] /accounts/:id/update_react
+exports.accounts_update_react = (req, res, next) => {
     React.findOneAndUpdate({
         id_account: req.params.id,
-        id_post: req.body.id_post
+        id_post: req.body.id_post,
+        id_comment: req.body.id_comment
     }, req.body)
         .then(result => {
             res.status(200).json({
@@ -184,10 +149,11 @@ exports.accounts_update_react_post = (req, res, next) => {
 }
 
 // [DELETE] /accounts/:id/unreact_post
-exports.accounts_unreact_post = (req, res, next) => {
+exports.accounts_unreact = (req, res, next) => {
     React.findOneAndRemove({
         id_account: req.params.id,
-        id_post: req.body.id_post
+        id_post: req.body.id_post,
+        id_comment: req.body.id_comment
     })
         .then(result => {
             res.status(200).json({
@@ -202,3 +168,58 @@ exports.accounts_unreact_post = (req, res, next) => {
         })
 }
 
+// [POST] /accounts/:id/comment_post
+exports.accounts_comment_post = (req, res, next) => {
+    const comment = new Comment({
+        id_account: req.params.id,
+        ...req.body
+    });
+    comment.save()
+        .then(result => {
+            res.status(201).json({
+                message: 'comment stored',
+                comment: result
+            })
+        })
+        .catch(err => {
+            res.status(500).json({
+                error: err
+            })
+        })
+}
+
+// [PATCH] /accounts/:id/update_comment_post
+exports.accounts_update_comment_post = (req, res, next) => {
+    Comment.findOneAndUpdate({
+        _id: req.body.id_comment
+    }, req.body)
+        .then(result => {
+            res.status(200).json({
+                message: 'comment updated',
+                comment: result
+            })
+        })
+        .catch(err => {
+            res.status(500).json({
+                error: err
+            })
+        })
+}
+
+// [DELETE] /accounts/:id/delete_comment_post
+exports.accounts_delete_comment_post = (req, res, next) => {
+    Comment.findOneAndRemove({
+        _id: req.body.id_comment
+    })
+        .then(result => {
+            res.status(200).json({
+                message: 'comment removed',
+                comment: result
+            })
+        })
+        .catch(err => {
+            res.status(500).json({
+                error: err
+            })
+        })
+}
