@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
 
+const authenticateToken = require('../../middleware/auth');
+
 const PostController = require('../controllers/PostController');
 
 //Create a new post
@@ -12,7 +14,7 @@ router.delete('/:id/delete_post', PostController.posts_delete_post);
 router.get('/:id/get_all_post', PostController.posts_get_all_post);
 
 //Get all reactions of a post
-router.get('/:id/get_all_reaction', PostController.posts_get_all_reaction);
+router.get('/:id/get_all_reaction', authenticateToken, PostController.posts_get_all_reaction);
 
 //Get all comment of a post
 router.get('/:id/get_all_comment', PostController.posts_get_all_comment);

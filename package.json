@@ -24,8 +24,11 @@
   },
   "homepage": "https://github.com/Khoitran0205/kreat-api#readme",
   "dependencies": {
+    "bcrypt": "^5.1.0",
     "body-parser": "^1.20.2",
+    "dotenv": "^16.0.3",
     "express": "^4.18.2",
+    "jsonwebtoken": "^9.0.0",
     "mongoose": "^7.0.2",
     "morgan": "^1.10.0"
   },

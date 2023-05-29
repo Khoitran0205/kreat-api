@@ -8,43 +8,6 @@ const OtherInfo = require('../models/user/other_info');
 const React = require('../models/post/react');
 const Comment = require('../models/post/comment');
 
-
-// [POST] /accounts/signup
-exports.accounts_create_account = (req, res, next) => {
-    const account = new Account({
-        email: req.body.email,
-        password: req.body.password,
-    });
-    account.save()
-        .then(result => {
-            res.status(201).json({
-                message: "account created",
-                account: result
-            })
-        })
-        .catch(err => {
-            res.status(500).json({
-                error: err
-            })
-        });
-    const personal_info = new PersonalInfo({
-        id_account: account._id,
-    })
-    personal_info.save();
-    const favorite_info = new FavoriteInfo({
-        id_account: account._id,
-    })
-    favorite_info.save();
-    const education_info = new EducationInfo({
-        id_account: account._id,
-    })
-    education_info.save();
-    const other_info = new OtherInfo({
-        id_account: account._id,
-    })
-    other_info.save();
-}
-
 // [PATCH] /accounts/:id/update_personal_info
 exports.accounts_update_personal_info = (req, res, next) => {
     PersonalInfo.findOneAndUpdate({ id_account: req.params.id }, req.body)
