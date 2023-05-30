@@ -135,7 +135,7 @@ exports.posts_get_all_post = (req, res, next) => {
 
 // [GET] /posts/:id/get_all_reaction
 exports.posts_get_all_reaction = (req, res, next) => {
-  React.find({ id_post: req.body.id_post }, { id_account: 1, reactType: 1 })
+  React.find({ id_post: req.params.id }, { id_account: 1, reactType: 1 })
     .then(async (listReaction) => {
       let list = [];
       for ([index, value] of listReaction.entries()) {
@@ -177,7 +177,7 @@ exports.posts_get_all_reaction = (req, res, next) => {
 
 // [GET] /posts/:id/get_all_comment
 exports.posts_get_all_comment = (req, res, next) => {
-  Comment.find({ id_post: req.body.id_post })
+  Comment.find({ id_post: req.params.id })
     .then(async (listComment) => {
       let list = [];
       for ([index, value] of listComment.entries()) {
