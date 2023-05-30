@@ -7,6 +7,7 @@ const PersonalInfo = require('../models/user/personal_info');
 const EducationInfo = require('../models/user/education_info');
 const FavoriteInfo = require('../models/user/favorite_info');
 const OtherInfo = require('../models/user/other_info');
+const { use } = require('../routes/post');
 
 env.config();
 
@@ -76,12 +77,21 @@ exports.auth_log_in = async (req, res, next) => {
                 error: err,
               });
             });
-
-          res.status(200).json({
-            message: 'Log in successfully',
-            accessToken,
-            refreshToken,
-          });
+          PersonalInfo.findOne({ id_account: account._id }, { avatar: 1, fullName: 1 })
+            .then((user) => {
+              res.status(200).json({
+                message: 'Log in successfully',
+                accessToken,
+                refreshToken,
+                fullName: user.fullName,
+                avatar: user.avatar,
+              });
+            })
+            .catch((err) => {
+              res.status(500).json({
+                error: err,
+              });
+            });
         } else {
           res.status(401).json({
             message: 'Log in failed',
