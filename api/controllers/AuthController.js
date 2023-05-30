@@ -60,7 +60,7 @@ exports.auth_log_in = async (req, res, next) => {
   Account.findOne({ email: req.body.email })
     .then(async (account) => {
       if (!account)
-        res.status(400).json({
+        return res.status(400).json({
           message: 'Log in failed',
         });
       try {
@@ -105,11 +105,11 @@ exports.auth_log_out = (req, res, next) => {
   Account.findOneAndUpdate({ email: req.body.email }, { refreshToken: '' })
     .then((result) => {
       if (!result)
-        res.status(401).json({
+        return res.status(401).json({
           message: 'Log out failed',
         });
       if (!result.refreshToken)
-        res.status(401).json({
+        return res.status(401).json({
           message: 'Log out failed',
         });
       res.status(200).json({
