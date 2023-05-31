@@ -7,7 +7,6 @@ const PersonalInfo = require('../models/user/personal_info');
 const EducationInfo = require('../models/user/education_info');
 const FavoriteInfo = require('../models/user/favorite_info');
 const OtherInfo = require('../models/user/other_info');
-const { use } = require('../routes/post');
 
 env.config();
 

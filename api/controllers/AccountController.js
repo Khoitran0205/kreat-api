@@ -86,21 +86,43 @@ exports.accounts_search_accounts = (req, res, next) => {
 };
 
 // [GET] /accounts/:id/friends
-exports.accounts_get_all_friends = (req, res, next) => {
+exports.accounts_get_all_friends = async (req, res, next) => {
   OtherInfo.findOne({ id_account: req.params.id }, { listFriend: 1 })
-    .then((result) => result.listFriend)
-    .then(async (listID) => {
-      let arrayFriend = [];
-      for (id of listID) {
-        await PersonalInfo.find({ id_account: id }, { fullName: 1, avatar: 1 }).then((result) =>
-          arrayFriend.push(result),
+    .then(async (result) => {
+      let listFriend = [];
+      for ([index, value] of result.listFriend.entries()) {
+        let friendInfo = {};
+        let mutualFriends = [];
+        await PersonalInfo.findOne({ id_account: value }, { fullName: 1, avatar: 1, aboutMe: 1 }).then(
+          async (personalInfo) => {
+            await OtherInfo.findOne({ id_account: value }, { listFriend: 1 })
+              .then(async (otherInfo) => {
+                mutualFriends = await otherInfo.listFriend.filter((value1) => {
+                  for (value2 of result.listFriend) {
+                    return value1 === value2;
+                  }
+                });
+                friendInfo = {
+                  id_account: value,
+                  avatar: personalInfo.avatar,
+                  fullName: personalInfo.fullName,
+                  aboutMe: personalInfo.aboutMe,
+                  friendAmount: otherInfo.listFriend.length,
+                  mutualFriends: mutualFriends.length,
+                };
+              })
+              .catch((err) => {
+                res.status(500).json({
+                  error: err,
+                });
+              });
+          },
         );
+        listFriend.push(friendInfo);
       }
-      return await arrayFriend;
-    })
-    .then((finalList) => {
       res.status(200).json({
-        listFriend: finalList,
+        message: 'get all friends successfully',
+        listFriend,
       });
     })
     .catch((err) => {
@@ -108,6 +130,25 @@ exports.accounts_get_all_friends = (req, res, next) => {
         error: err,
       });
     });
+  // .then(async (listID) => {
+  //   let arrayFriend = [];
+  //   for (id of listID) {
+  //     await PersonalInfo.find({ id_account: id }, { fullName: 1, avatar: 1 }).then((result) =>
+  //       arrayFriend.push(result),
+  //     );
+  //   }
+  //   return await arrayFriend;
+  // })
+  // .then((finalList) => {
+  //   res.status(200).json({
+  //     listFriend: finalList,
+  //   });
+  // })
+  // .catch((err) => {
+  //   res.status(500).json({
+  //     error: err,
+  //   });
+  // });
 };
 
 // [POST] /accounts/:id/react

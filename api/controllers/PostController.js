@@ -7,7 +7,6 @@ const OtherInfo = require('../models/user/other_info');
 const React = require('../models/post/react');
 const Comment = require('../models/post/comment');
 const other_info = require('../models/user/other_info');
-const { log } = require('console');
 
 // [POST] /posts/:id/create_post
 exports.posts_create_post = (req, res, next) => {
