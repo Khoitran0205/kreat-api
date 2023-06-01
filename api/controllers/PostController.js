@@ -6,29 +6,45 @@ const PersonalInfo = require('../models/user/personal_info');
 const OtherInfo = require('../models/user/other_info');
 const React = require('../models/post/react');
 const Comment = require('../models/post/comment');
-const other_info = require('../models/user/other_info');
 
-// [POST] /posts/:id/create_post
+const jwt_decode = require('jwt-decode');
+const account = require('../models/user/account');
+
+// [POST] /posts/create_post
 exports.posts_create_post = (req, res, next) => {
-  PersonalInfo.findOne({ id_account: req.params.id })
+  const authHeader = req.header('Authorization');
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) return res.sendStatus(401);
+
+  var decodedToken = jwt_decode(token);
+  Account.findOne({ email: decodedToken.email })
     .then((account) => {
       if (!account) {
         return res.status(404).json({
           message: 'Account not found!',
         });
       }
-      const post = new Post({
-        id_account: req.params.id,
-        fullName: account.fullName,
-        avatar: account.avatar,
-        ...req.body,
-      });
-      post.save().then((result) => {
-        res.status(201).json({
-          message: 'post created!',
-          post: result,
+      PersonalInfo.findOne({ id_account: account._id })
+        .then((personalInfo) => {
+          const post = new Post({
+            id_account: account._id,
+            fullName: personalInfo.fullName,
+            avatar: personalInfo.avatar,
+            ...req.body,
+          });
+          post.save().then((result) => {
+            res.status(201).json({
+              message: 'post created!',
+              post: result,
+            });
+          });
+        })
+        .catch((err) => {
+          res.status(500).json({
+            error: err,
+          });
         });
-      });
     })
     .catch((err) => {
       res.status(500).json({
@@ -37,25 +53,39 @@ exports.posts_create_post = (req, res, next) => {
     });
 };
 
-// [PATCH] /posts/:id/update_post
+// [PATCH] /posts/update_post
 exports.posts_update_post = (req, res, next) => {
-  Post.findOneAndUpdate(
-    {
-      id_account: req.params.id,
-      _id: req.body.id_post,
-    },
-    req.body,
-  )
-    .then((result) => {
-      if (!result) {
-        return res.status(404).json({
-          message: 'Post not found!',
+  const authHeader = req.header('Authorization');
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) return res.sendStatus(401);
+
+  var decodedToken = jwt_decode(token);
+  Account.findOne({ email: decodedToken.email })
+    .then((account) => {
+      Post.findOneAndUpdate(
+        {
+          id_account: account._id,
+          _id: req.body.id_post,
+        },
+        req.body,
+      )
+        .then((result) => {
+          if (!result) {
+            return res.status(404).json({
+              message: 'Post not found!',
+            });
+          }
+          res.status(200).json({
+            message: 'post updated',
+            post: result,
+          });
+        })
+        .catch((err) => {
+          res.status(500).json({
+            error: err,
+          });
         });
-      }
-      res.status(200).json({
-        message: 'post updated',
-        post: result,
-      });
     })
     .catch((err) => {
       res.status(500).json({
@@ -64,22 +94,54 @@ exports.posts_update_post = (req, res, next) => {
     });
 };
 
-// [DELETE] /posts/:id/delete_post
+// [DELETE] /posts/delete_post
 exports.posts_delete_post = (req, res, next) => {
-  Post.findOneAndRemove({
-    id_account: req.params.id,
-    _id: req.body.id_post,
-  })
-    .then((result) => {
-      if (!result) {
-        return res.status(404).json({
-          message: 'Post not found!',
+  const authHeader = req.header('Authorization');
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) return res.sendStatus(401);
+
+  var decodedToken = jwt_decode(token);
+  Account.findOne({ email: decodedToken.email })
+    .then((account) => {
+      Post.findOneAndRemove({
+        id_account: account._id,
+        _id: req.body.id_post,
+      })
+        .then((result) => {
+          if (!result) {
+            return res.status(404).json({
+              message: 'Post not found!',
+            });
+          }
+          React.find({ id_post: result._id }).then((reactions) => {
+            for ([index, value] of reactions.entries()) {
+              React.findOneAndRemove({ _id: value._id }).catch((err) => {
+                res.status(500).json({
+                  error: err,
+                });
+              });
+            }
+          });
+          Comment.find({ id_post: result._id }).then((comments) => {
+            for ([index, value] of comments.entries()) {
+              Comment.findOneAndRemove({ _id: value._id }).catch((err) => {
+                res.status(500).json({
+                  error: err,
+                });
+              });
+            }
+          });
+          res.status(200).json({
+            message: 'post removed',
+            post: result,
+          });
+        })
+        .catch((err) => {
+          res.status(500).json({
+            error: err,
+          });
         });
-      }
-      res.status(200).json({
-        message: 'post removed',
-        post: result,
-      });
     })
     .catch((err) => {
       res.status(500).json({

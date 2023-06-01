@@ -130,25 +130,69 @@ exports.accounts_get_all_friends = async (req, res, next) => {
         error: err,
       });
     });
-  // .then(async (listID) => {
-  //   let arrayFriend = [];
-  //   for (id of listID) {
-  //     await PersonalInfo.find({ id_account: id }, { fullName: 1, avatar: 1 }).then((result) =>
-  //       arrayFriend.push(result),
-  //     );
-  //   }
-  //   return await arrayFriend;
-  // })
-  // .then((finalList) => {
-  //   res.status(200).json({
-  //     listFriend: finalList,
-  //   });
-  // })
-  // .catch((err) => {
-  //   res.status(500).json({
-  //     error: err,
-  //   });
-  // });
+};
+
+// [GET] /accounts/:id/friends/search
+exports.accounts_search_friends = async (req, res, next) => {
+  const p = req.query.q;
+  await OtherInfo.findOne({ id_account: req.params.id }, { listFriend: 1 })
+    .then(async (result) => {
+      let friendInfos = [];
+      for ([index, value] of result.listFriend.entries()) {
+        await PersonalInfo.findOne({ id_account: value }, { fullName: 1, id_account: 1 })
+          .then((info) => {
+            friendInfos.push(info);
+          })
+          .catch((err) => {
+            res.status(500).json({
+              error: err,
+            });
+          });
+      }
+      const searchedFriends = await friendInfos.filter((friend) =>
+        friend.fullName.toLowerCase().includes(p.toLowerCase()),
+      );
+      let listFriend = [];
+      for ([index, value] of searchedFriends.entries()) {
+        let friendInfo = {};
+        let mutualFriends = [];
+        await PersonalInfo.findOne({ id_account: value.id_account }, { avatar: 1, aboutMe: 1 }).then(
+          async (personalInfo) => {
+            await OtherInfo.findOne({ id_account: value.id_account }, { listFriend: 1 })
+              .then(async (otherInfo) => {
+                mutualFriends = await otherInfo.listFriend.filter((value1) => {
+                  for (value2 of result.listFriend) {
+                    return value1 === value2;
+                  }
+                });
+                friendInfo = {
+                  id_account: value.id_account,
+                  avatar: personalInfo.avatar,
+                  fullName: value.fullName,
+                  aboutMe: personalInfo.aboutMe,
+                  friendAmount: otherInfo.listFriend.length,
+                  mutualFriends: mutualFriends.length,
+                };
+              })
+              .catch((err) => {
+                res.status(500).json({
+                  error: err,
+                });
+              });
+          },
+        );
+        listFriend.push(friendInfo);
+      }
+      res.json({
+        searchAmount: listFriend.length,
+        searchedFriends: listFriend,
+      });
+    })
+    .catch((err) => {
+      res.status(500).json({
+        error: err,
+      });
+    });
 };
 
 // [POST] /accounts/:id/react

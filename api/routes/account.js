@@ -14,6 +14,7 @@ router.get('/search', AccountController.accounts_search_accounts);
 
 //Interact with account's friends
 router.get('/:id/friends', AccountController.accounts_get_all_friends);
+router.get('/:id/friends/search', AccountController.accounts_search_friends);
 
 //Reaction
 router.post('/:id/react', AccountController.accounts_react);

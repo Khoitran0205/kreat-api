@@ -61,7 +61,7 @@ exports.auth_log_in = async (req, res, next) => {
     .then(async (account) => {
       if (!account)
         return res.status(400).json({
-          message: 'Log in failed',
+          message: 'Login information is incorrect',
         });
       try {
         if (await bcrypt.compare(req.body.password, account.password)) {
@@ -93,7 +93,7 @@ exports.auth_log_in = async (req, res, next) => {
             });
         } else {
           res.status(401).json({
-            message: 'Log in failed',
+            message: 'Login information is incorrect',
           });
         }
       } catch (error) {
@@ -122,7 +122,7 @@ exports.auth_log_out = (req, res, next) => {
           message: 'Log out failed',
         });
       res.status(200).json({
-        message: 'Log out successfully & refresh token deleted',
+        message: 'Log out successfully',
       });
     })
     .catch((err) => {
@@ -134,11 +134,18 @@ exports.auth_log_out = (req, res, next) => {
 
 // [POST] auth/token
 exports.auth_refresh_token = (req, res, next) => {
-  Account.findOne({ email: req.body.email }, { refreshToken: 1 })
+  const authHeader = req.header('Authorization');
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) return res.sendStatus(401);
+
+  var decodedToken = jwt_decode(token);
+  Account.findOne({ email: decodedToken.email }, { refreshToken: 1, email: 1 })
     .then((result) => {
       if (!result.refreshToken) return res.sendStatus(403);
 
-      jwt.verify(result.refreshToken, process.env.REFRESH_TOKEN_SECRET, (err, user) => {
+      const user = { email: result.email };
+      jwt.verify(result.refreshToken, process.env.REFRESH_TOKEN_SECRET, (err) => {
         if (err) return res.sendStatus(403);
         const accessToken = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '15s' });
         res.json({ accessToken });
