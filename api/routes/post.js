@@ -5,8 +5,9 @@ const authenticateToken = require('../../middleware/auth');
 
 const PostController = require('../controllers/PostController');
 
-//Create a new post
+//Interact with post
 router.post('/create_post', authenticateToken, PostController.posts_create_post);
+router.post('/share_post', authenticateToken, PostController.posts_share_post);
 router.patch('/update_post', authenticateToken, PostController.posts_update_post);
 router.delete('/delete_post', authenticateToken, PostController.posts_delete_post);
 

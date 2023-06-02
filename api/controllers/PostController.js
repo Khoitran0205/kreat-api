@@ -24,27 +24,94 @@ exports.posts_create_post = (req, res, next) => {
         return res.status(404).json({
           message: 'Account not found!',
         });
-      }
-      PersonalInfo.findOne({ id_account: account._id })
-        .then((personalInfo) => {
-          const post = new Post({
-            id_account: account._id,
-            fullName: personalInfo.fullName,
-            avatar: personalInfo.avatar,
-            ...req.body,
-          });
-          post.save().then((result) => {
-            res.status(201).json({
-              message: 'post created!',
-              post: result,
+      } else {
+        PersonalInfo.findOne({ id_account: account._id })
+          .then((personalInfo) => {
+            const post = new Post({
+              id_account: account._id,
+              fullName: personalInfo.fullName,
+              avatar: personalInfo.avatar,
+              ...req.body,
+            });
+            post.save().then((result) => {
+              res.status(201).json({
+                message: 'post created!',
+                post: result,
+              });
+            });
+          })
+          .catch((err) => {
+            res.status(500).json({
+              error: err,
             });
           });
-        })
-        .catch((err) => {
-          res.status(500).json({
-            error: err,
-          });
+      }
+    })
+    .catch((err) => {
+      res.status(500).json({
+        error: err,
+      });
+    });
+};
+
+// [POST] /posts/share_post
+exports.posts_share_post = (req, res, next) => {
+  const authHeader = req.header('Authorization');
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) return res.sendStatus(401);
+
+  var decodedToken = jwt_decode(token);
+  Account.findOne({ email: decodedToken.email })
+    .then(async (account) => {
+      if (!account) {
+        return res.status(404).json({
+          message: 'Account not found!',
         });
+      } else {
+        await PersonalInfo.findOne({ id_account: account._id })
+          .then(async (personalInfo) => {
+            let shareContent = {};
+            await Post.findOne({ _id: req.body.shareId })
+              .then(async (sharedPost) => {
+                shareContent = await {
+                  shared_accountName: sharedPost.fullName,
+                  shared_avatar: sharedPost.avatar,
+                  shared_id_visualMedia: sharedPost.id_visualMedia,
+                  shared_postContent: sharedPost.postContent,
+                  shared_postPrivacy: sharedPost.postPrivacy,
+                  shared_createdAt: sharedPost.createdAt,
+                  shared_id_friendTag: sharedPost.id_friendTag,
+                  shared_location: sharedPost.location,
+                };
+              })
+              .catch((err) => {
+                res.status(500).json({
+                  error: err,
+                });
+              });
+            const post = await new Post({
+              id_account: account._id,
+              fullName: personalInfo.fullName,
+              avatar: personalInfo.avatar,
+              isShared: true,
+              shareId: req.body.shareId,
+              shareContent,
+              ...req.body,
+            });
+            await post.save().then((result) => {
+              res.status(201).json({
+                message: 'post created!',
+                post: result,
+              });
+            });
+          })
+          .catch((err) => {
+            res.status(500).json({
+              error: err,
+            });
+          });
+      }
     })
     .catch((err) => {
       res.status(500).json({

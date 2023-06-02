@@ -66,7 +66,7 @@ exports.auth_log_in = async (req, res, next) => {
       try {
         if (await bcrypt.compare(req.body.password, account.password)) {
           const user = { email: account.email };
-          const accessToken = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '15s' });
+          const accessToken = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '100m' });
           const refreshToken = jwt.sign(user, process.env.REFRESH_TOKEN_SECRET);
 
           Account.findOneAndUpdate({ email: account.email }, { refreshToken: refreshToken })
