@@ -65,7 +65,7 @@ exports.auth_log_in = async (req, res, next) => {
         });
       try {
         if (await bcrypt.compare(req.body.password, account.password)) {
-          const user = { email: account.email };
+          const user = { email: account.email, id_account: account._id };
           const accessToken = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '100m' });
           const refreshToken = jwt.sign(user, process.env.REFRESH_TOKEN_SECRET);
 
@@ -140,11 +140,11 @@ exports.auth_refresh_token = (req, res, next) => {
   if (!token) return res.sendStatus(401);
 
   var decodedToken = jwt_decode(token);
-  Account.findOne({ email: decodedToken.email }, { refreshToken: 1, email: 1 })
+  Account.findOne({ email: decodedToken.email }, { refreshToken: 1, email: 1, _id: 1 })
     .then((result) => {
       if (!result.refreshToken) return res.sendStatus(403);
 
-      const user = { email: result.email };
+      const user = { email: result.email, id_account: result._id };
       jwt.verify(result.refreshToken, process.env.REFRESH_TOKEN_SECRET, (err) => {
         if (err) return res.sendStatus(403);
         const accessToken = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '15s' });

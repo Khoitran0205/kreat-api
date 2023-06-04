@@ -8,7 +8,6 @@ const React = require('../models/post/react');
 const Comment = require('../models/post/comment');
 
 const jwt_decode = require('jwt-decode');
-const account = require('../models/user/account');
 
 // [POST] /posts/create_post
 exports.posts_create_post = (req, res, next) => {
@@ -272,7 +271,7 @@ exports.posts_get_all_reaction = (req, res, next) => {
           await OtherInfo.findOne({ id_account: req.body.id_account }, { listFriend: 1 }).then(async (result) => {
             mutualFriends = await result.listFriend.filter((value1) => {
               for (value2 of other_info.listFriend) {
-                return value1 === value2;
+                return value1 == value2;
               }
             });
           });

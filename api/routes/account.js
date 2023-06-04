@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
 
+const authenticateToken = require('../../middleware/auth');
+
 const AccountController = require('../controllers/AccountController');
 
 //Interact with account's info
@@ -14,11 +16,15 @@ router.patch('/:id/update_favorite_info', AccountController.accounts_update_favo
 router.patch('/:id/update_education_info', AccountController.accounts_update_education_info);
 router.patch('/:id/update_other_info', AccountController.accounts_update_other_info);
 
-//Search account
+//Search
 router.get('/search', AccountController.accounts_search_accounts);
+router.get('/:id/friends/search', AccountController.accounts_search_friends);
 
 //Interact with account's friends
-router.get('/:id/friends/search', AccountController.accounts_search_friends);
+router.get('/friend_requests', authenticateToken, AccountController.accounts_get_all_friend_requests);
+router.post('/send_friend_request', authenticateToken, AccountController.accounts_send_friend_request);
+router.delete('/accept_friend_request', authenticateToken, AccountController.accounts_accept_friend_request);
+router.delete('/decline_friend_request', authenticateToken, AccountController.accounts_decline_friend_request);
 
 //Reaction
 router.post('/:id/react', AccountController.accounts_react);
