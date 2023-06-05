@@ -9,7 +9,7 @@ const AccountController = require('../controllers/AccountController');
 router.get('/:id/timeline', AccountController.accounts_get_timeline_info);
 router.get('/:id/about', AccountController.accounts_get_about_info);
 router.get('/:id/friends', AccountController.accounts_get_all_friends);
-// router.get('/:id/photos&videos', AccountController.accounts_get_visual_media_info);
+router.get('/:id/visual_media', AccountController.accounts_get_visual_media_info);
 
 router.patch('/:id/update_personal_info', AccountController.accounts_update_personal_info);
 router.patch('/:id/update_favorite_info', AccountController.accounts_update_favorite_info);

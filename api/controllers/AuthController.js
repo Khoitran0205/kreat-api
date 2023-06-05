@@ -15,11 +15,11 @@ exports.auth_sign_up = async (req, res, next) => {
   try {
     const salt = await bcrypt.genSalt();
     const hashedPassword = await bcrypt.hash(req.body.password, salt);
-    const account = new Account({
+    const account = await new Account({
       email: req.body.email,
       password: hashedPassword,
     });
-    account
+    await account
       .save()
       .then((result) => {
         res.status(201).json({
@@ -32,22 +32,24 @@ exports.auth_sign_up = async (req, res, next) => {
           error: err,
         });
       });
-    const personal_info = new PersonalInfo({
+    const personal_info = await new PersonalInfo({
+      id_account: account._id,
+      fullName: req.body.fullName,
+      aboutMe: `Hi, I'm ${req.body.fullName}. Nice to meet you.`,
+    });
+    await personal_info.save();
+    const favorite_info = await new FavoriteInfo({
       id_account: account._id,
     });
-    personal_info.save();
-    const favorite_info = new FavoriteInfo({
+    await favorite_info.save();
+    const education_info = await new EducationInfo({
       id_account: account._id,
     });
-    favorite_info.save();
-    const education_info = new EducationInfo({
+    await education_info.save();
+    const other_info = await new OtherInfo({
       id_account: account._id,
     });
-    education_info.save();
-    const other_info = new OtherInfo({
-      id_account: account._id,
-    });
-    other_info.save();
+    await other_info.save();
   } catch (error) {
     res.status(500).json({
       error: error,
@@ -57,7 +59,7 @@ exports.auth_sign_up = async (req, res, next) => {
 
 // [POST] auth/login
 exports.auth_log_in = async (req, res, next) => {
-  Account.findOne({ email: req.body.email })
+  await Account.findOne({ email: req.body.email })
     .then(async (account) => {
       if (!account)
         return res.status(400).json({
@@ -69,14 +71,14 @@ exports.auth_log_in = async (req, res, next) => {
           const accessToken = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '100m' });
           const refreshToken = jwt.sign(user, process.env.REFRESH_TOKEN_SECRET);
 
-          Account.findOneAndUpdate({ email: account.email }, { refreshToken: refreshToken })
+          await Account.findOneAndUpdate({ email: account.email }, { refreshToken: refreshToken })
             .then((result) => {})
             .catch((err) => {
               res.status(500).json({
                 error: err,
               });
             });
-          PersonalInfo.findOne({ id_account: account._id }, { avatar: 1, fullName: 1 })
+          await PersonalInfo.findOne({ id_account: account._id }, { avatar: 1, fullName: 1 })
             .then((user) => {
               res.status(200).json({
                 message: 'Log in successfully',
@@ -110,8 +112,8 @@ exports.auth_log_in = async (req, res, next) => {
 };
 
 // [POST] auth/logout
-exports.auth_log_out = (req, res, next) => {
-  Account.findOneAndUpdate({ email: req.body.email }, { refreshToken: '' })
+exports.auth_log_out = async (req, res, next) => {
+  await Account.findOneAndUpdate({ email: req.body.email }, { refreshToken: '' })
     .then((result) => {
       if (!result)
         return res.status(401).json({
@@ -133,15 +135,15 @@ exports.auth_log_out = (req, res, next) => {
 };
 
 // [POST] auth/token
-exports.auth_refresh_token = (req, res, next) => {
+exports.auth_refresh_token = async (req, res, next) => {
   const authHeader = req.header('Authorization');
   const token = authHeader && authHeader.split(' ')[1];
 
   if (!token) return res.sendStatus(401);
 
   var decodedToken = jwt_decode(token);
-  Account.findOne({ email: decodedToken.email }, { refreshToken: 1, email: 1, _id: 1 })
-    .then((result) => {
+  await Account.findOne({ email: decodedToken.email }, { refreshToken: 1, email: 1, _id: 1 })
+    .then(async (result) => {
       if (!result.refreshToken) return res.sendStatus(403);
 
       const user = { email: result.email, id_account: result._id };

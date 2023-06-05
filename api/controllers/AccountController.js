@@ -8,6 +8,7 @@ const React = require('../models/post/react');
 const Comment = require('../models/post/comment');
 const Post = require('../models/post/post');
 const FriendRequest = require('../models/request/friend_request');
+const VisualMedia = require('../models/post/visual_media');
 
 const jwt_decode = require('jwt-decode');
 const comment = require('../models/post/comment');
@@ -165,6 +166,22 @@ exports.accounts_get_all_friends = async (req, res, next) => {
             error: err,
           });
         });
+    })
+    .catch((err) => {
+      res.status(500).json({
+        error: err,
+      });
+    });
+};
+
+// [GET] /accounts/:id/visual_media
+exports.accounts_get_visual_media_info = async (req, res, next) => {
+  await VisualMedia.find({ id_account: req.params.id }, { url: 1 })
+    .then((listURL) => {
+      res.status(200).json({
+        message: 'get all images and videos successfully',
+        listURL,
+      });
     })
     .catch((err) => {
       res.status(500).json({

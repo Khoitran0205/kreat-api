@@ -6,38 +6,56 @@ const PersonalInfo = require('../models/user/personal_info');
 const OtherInfo = require('../models/user/other_info');
 const React = require('../models/post/react');
 const Comment = require('../models/post/comment');
+const VisualMedia = require('../models/post/visual_media');
 
 const jwt_decode = require('jwt-decode');
 
 // [POST] /posts/create_post
-exports.posts_create_post = (req, res, next) => {
+exports.posts_create_post = async (req, res, next) => {
   const authHeader = req.header('Authorization');
   const token = authHeader && authHeader.split(' ')[1];
 
   if (!token) return res.sendStatus(401);
 
   var decodedToken = jwt_decode(token);
-  Account.findOne({ email: decodedToken.email })
-    .then((account) => {
+  await Account.findOne({ _id: decodedToken.id_account })
+    .then(async (account) => {
       if (!account) {
         return res.status(404).json({
           message: 'Account not found!',
         });
       } else {
-        PersonalInfo.findOne({ id_account: account._id })
-          .then((personalInfo) => {
-            const post = new Post({
+        await PersonalInfo.findOne({ id_account: account._id })
+          .then(async (personalInfo) => {
+            const post = await new Post({
               id_account: account._id,
               fullName: personalInfo.fullName,
               avatar: personalInfo.avatar,
               ...req.body,
             });
-            post.save().then((result) => {
-              res.status(201).json({
-                message: 'post created!',
-                post: result,
+            await post
+              .save()
+              .then(async (result) => {
+                if (req.body.id_visualMedia) {
+                  for ([index, value] of req.body.id_visualMedia.entries()) {
+                    let visualMedia = await new VisualMedia({
+                      id_post: result._id,
+                      id_account: account._id,
+                      url: value,
+                    });
+                    await visualMedia.save();
+                  }
+                }
+                await res.status(201).json({
+                  message: 'post created!',
+                  post: result,
+                });
+              })
+              .catch((err) => {
+                res.status(500).json({
+                  error: err,
+                });
               });
-            });
           })
           .catch((err) => {
             res.status(500).json({
@@ -181,24 +199,51 @@ exports.posts_delete_post = async (req, res, next) => {
               message: 'Post not found!',
             });
           } else {
-            await React.find({ id_post: result._id }).then((reactions) => {
-              for ([index, value] of reactions.entries()) {
-                React.findOneAndRemove({ _id: value._id }).catch((err) => {
-                  res.status(500).json({
-                    error: err,
+            await React.find({ id_post: result._id })
+              .then(async (reactions) => {
+                for ([index, value] of reactions.entries()) {
+                  await React.findOneAndRemove({ _id: value._id }).catch((err) => {
+                    res.status(500).json({
+                      error: err,
+                    });
                   });
+                }
+              })
+              .catch((err) => {
+                res.status(500).json({
+                  error: err,
                 });
-              }
-            });
-            await Comment.find({ id_post: result._id }).then((comments) => {
-              for ([index, value] of comments.entries()) {
-                Comment.findOneAndRemove({ _id: value._id }).catch((err) => {
-                  res.status(500).json({
-                    error: err,
+              });
+            await Comment.find({ id_post: result._id })
+              .then(async (comments) => {
+                for ([index, value] of comments.entries()) {
+                  await Comment.findOneAndRemove({ _id: value._id }).catch((err) => {
+                    res.status(500).json({
+                      error: err,
+                    });
                   });
+                }
+              })
+              .catch((err) => {
+                res.status(500).json({
+                  error: err,
                 });
-              }
-            });
+              });
+            await VisualMedia.find({ id_post: result._id })
+              .then(async (visualMedias) => {
+                for ([index, value] of visualMedias.entries()) {
+                  await VisualMedia.findOneAndRemove({ _id: value._id }).catch((err) => {
+                    res.status(500).json({
+                      error: err,
+                    });
+                  });
+                }
+              })
+              .catch((err) => {
+                res.status(500).json({
+                  error: err,
+                });
+              });
             await res.status(200).json({
               message: 'post removed',
               post: result,
