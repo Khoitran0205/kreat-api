@@ -270,22 +270,19 @@ exports.posts_get_all_post = async (req, res, next) => {
     .then(async (listPost) => {
       let list = listPost;
       for ([index, value] of list.entries()) {
-        await React.find({ id_post: value._id }, { reactType: 1, id_account: 1 }).then(async (results) => {
-          let listReaction = [];
-          for (result of results) {
-            await PersonalInfo.findOne(
-              { id_account: result.id_account },
-              { fullName: 1, avatar: 1, reactType: result.reactType },
-            ).then((personal_info) => {
-              listReaction.push(personal_info);
+        await React.find({ id_post: value._id }, { reactType: 1, _id: 0 })
+          .then(async (listReaction) => {
+            let post = list[index];
+            list[index] = {
+              post,
+              listReaction,
+            };
+          })
+          .catch((err) => {
+            res.status(500).json({
+              error: err,
             });
-          }
-          let post = list[index];
-          list[index] = {
-            post,
-            listReaction,
-          };
-        });
+          });
         await Comment.find({ id_post: value._id }).then(async (results) => {
           list[index] = {
             ...list[index],
@@ -308,7 +305,7 @@ exports.posts_get_all_post = async (req, res, next) => {
     });
 };
 
-// [GET] /posts/get_all_reaction
+// [GET] /:id/posts/get_all_reaction
 exports.posts_get_all_reaction = async (req, res, next) => {
   const authHeader = req.header('Authorization');
   const token = authHeader && authHeader.split(' ')[1];
@@ -316,7 +313,7 @@ exports.posts_get_all_reaction = async (req, res, next) => {
   if (!token) return res.sendStatus(401);
 
   var decodedToken = jwt_decode(token);
-  await React.find({ id_post: req.body.id_post }, { id_account: 1, reactType: 1 })
+  await React.find({ id_post: req.params.id }, { id_account: 1, reactType: 1 })
     .then(async (listReaction) => {
       let list = [];
       for ([index, value] of listReaction.entries()) {
@@ -362,9 +359,9 @@ exports.posts_get_all_reaction = async (req, res, next) => {
     });
 };
 
-// [GET] /posts/get_all_comment
+// [GET] /:id/posts/get_all_comment
 exports.posts_get_all_comment = async (req, res, next) => {
-  await Comment.find({ id_post: req.body.id_post })
+  await Comment.find({ id_post: req.params.id })
     .then(async (listComment) => {
       let list = [];
       for ([index, value] of listComment.entries()) {
@@ -372,21 +369,18 @@ exports.posts_get_all_comment = async (req, res, next) => {
           { id_account: value.id_account },
           { id_account: 1, fullName: 1, avatar: 1, commentContent: value.commentContent },
         ).then(async (result) => {
-          await React.find({ id_comment: value._id }, { id_account: 1, reactType: 1 }).then(async (listReaction) => {
-            let list = [];
-            for (reaction of listReaction) {
-              await PersonalInfo.findOne(
-                { id_account: reaction.id_account },
-                { avatar: 1, fullName: 1, reactType: reaction.reactType },
-              ).then((result) => {
-                list.push(result);
+          await React.find({ id_comment: value._id }, { _id: 0, reactType: 1 })
+            .then(async (listReaction) => {
+              result = {
+                comment: result,
+                listReaction,
+              };
+            })
+            .catch((err) => {
+              res.status(500).json({
+                error: err,
               });
-            }
-            result = {
-              comment: result,
-              listReaction: list,
-            };
-          });
+            });
           list.push(result);
         });
       }
@@ -402,7 +396,7 @@ exports.posts_get_all_comment = async (req, res, next) => {
     });
 };
 
-// [GET] /posts/get_all_tagged_friend
+// [GET] /:id/posts/get_all_tagged_friend
 exports.posts_get_all_tagged_friend = async (req, res, next) => {
   const authHeader = req.header('Authorization');
   const token = authHeader && authHeader.split(' ')[1];
@@ -410,7 +404,7 @@ exports.posts_get_all_tagged_friend = async (req, res, next) => {
   if (!token) return res.sendStatus(401);
 
   var decodedToken = jwt_decode(token);
-  await Post.findOne({ _id: req.body.id_post }, { id_friendTag: 1 })
+  await Post.findOne({ _id: req.params.id }, { id_friendTag: 1 })
     .then(async (post) => {
       let listTaggedFriend = [];
       for ([index, value] of post.id_friendTag.entries()) {
