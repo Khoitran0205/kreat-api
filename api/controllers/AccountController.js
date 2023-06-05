@@ -13,12 +13,12 @@ const jwt_decode = require('jwt-decode');
 
 // [GET] /accounts/:id/timeline
 exports.accounts_get_timeline_info = (req, res, next) => {
-  const authHeader = req.header('Authorization');
-  const token = authHeader && authHeader.split(' ')[1];
+  // const authHeader = req.header('Authorization');
+  // const token = authHeader && authHeader.split(' ')[1];
 
-  if (!token) return res.sendStatus(401);
+  // if (!token) return res.sendStatus(401);
 
-  var decodedToken = jwt_decode(token);
+  // var decodedToken = jwt_decode(token);
   PersonalInfo.findOne({ id_account: req.params.id }, { id_account: 1, avatar: 1, fullName: 1 })
     .then((personalInfo) => {
       Post.find({ id_account: personalInfo.id_account })
