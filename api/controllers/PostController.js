@@ -321,15 +321,21 @@ exports.posts_get_all_reaction = async (req, res, next) => {
       let list = [];
       for ([index, value] of listReaction.entries()) {
         let mutualFriends = [];
-        await OtherInfo.findOne({ id_account: value.id_account }, { listFriend: 1 }).then(async (other_info) => {
-          await OtherInfo.findOne({ id_account: decodedToken.id_account }, { listFriend: 1 }).then(async (result) => {
-            mutualFriends = await result.listFriend.filter((value1) => {
-              for (value2 of other_info.listFriend) {
-                return value1 == value2;
-              }
+        await OtherInfo.findOne({ id_account: value.id_account }, { listFriend: 1 })
+          .then(async (otherInfo) => {
+            await OtherInfo.findOne({ id_account: decodedToken.id_account }, { listFriend: 1 }).then(async (result) => {
+              mutualFriends = await result.listFriend.filter((value1) => {
+                for (value2 of otherInfo.listFriend) {
+                  return value1 == value2;
+                }
+              });
+            });
+          })
+          .catch((err) => {
+            res.status(500).json({
+              error: err,
             });
           });
-        });
         await PersonalInfo.findOne(
           { id_account: value.id_account },
           { avatar: 1, fullName: 1, reactType: value.reactType },
@@ -408,9 +414,29 @@ exports.posts_get_all_tagged_friend = async (req, res, next) => {
     .then(async (post) => {
       let listTaggedFriend = [];
       for ([index, value] of post.id_friendTag.entries()) {
+        let mutualFriends = [];
         await PersonalInfo.findOne({ id_account: value }, { id_account: 1, avatar: 1, fullName: 1 })
           .then(async (personalInfo) => {
-            listTaggedFriend.push(personalInfo);
+            await OtherInfo.findOne({ id_account: value }, { listFriend: 1 }).then(async (otherInfo) => {
+              await OtherInfo.findOne({ id_account: decodedToken.id_account }, { listFriend: 1 })
+                .then(async (result) => {
+                  mutualFriends = await result.listFriend.filter((value1) => {
+                    for (value2 of otherInfo.listFriend) {
+                      return value1 == value2;
+                    }
+                  });
+                })
+                .catch((err) => {
+                  res.status(500).json({
+                    error: err,
+                  });
+                });
+            });
+            let a = {
+              personalInfo,
+              mutualFriends: mutualFriends.length,
+            };
+            listTaggedFriend.push(a);
           })
           .catch((err) => {
             res.status(500).json({
