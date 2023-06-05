@@ -118,8 +118,8 @@ exports.accounts_get_about_info = (req, res, next) => {
 // [GET] /accounts/:id/friends
 exports.accounts_get_all_friends = async (req, res, next) => {
   await PersonalInfo.findOne({ id_account: req.params.id_account })
-    .then((result) => {
-      OtherInfo.findOne({ id_account: result.id_account }, { listFriend: 1 })
+    .then(async (result) => {
+      await OtherInfo.findOne({ id_account: result.id_account }, { listFriend: 1 })
         .then(async (result) => {
           let listFriend = [];
           for ([index, value] of result.listFriend.entries()) {
