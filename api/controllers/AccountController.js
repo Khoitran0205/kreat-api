@@ -24,6 +24,7 @@ exports.accounts_get_timeline_info = async (req, res, next) => {
   await PersonalInfo.findOne({ id_account: req.params.id }, { id_account: 1, avatar: 1, fullName: 1 })
     .then(async (personalInfo) => {
       await Post.find({ id_account: personalInfo.id_account })
+        .sort({ createdAt: -1 })
         .then(async (listPost) => {
           let list = listPost;
           for ([index, value] of list.entries()) {

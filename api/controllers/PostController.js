@@ -266,6 +266,7 @@ exports.posts_delete_post = async (req, res, next) => {
 // [GET] /posts/:id/get_all_post
 exports.posts_get_all_post = async (req, res, next) => {
   await Post.find()
+    .sort({ createdAt: -1 })
     .then(async (listPost) => {
       let list = listPost;
       for ([index, value] of list.entries()) {
