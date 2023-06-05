@@ -14,16 +14,16 @@ const jwt_decode = require('jwt-decode');
 const comment = require('../models/post/comment');
 
 // [GET] /accounts/:id/timeline
-exports.accounts_get_timeline_info = (req, res, next) => {
+exports.accounts_get_timeline_info = async (req, res, next) => {
   // const authHeader = req.header('Authorization');
   // const token = authHeader && authHeader.split(' ')[1];
 
   // if (!token) return res.sendStatus(401);
 
   // var decodedToken = jwt_decode(token);
-  PersonalInfo.findOne({ id_account: req.params.id }, { id_account: 1, avatar: 1, fullName: 1 })
-    .then((personalInfo) => {
-      Post.find({ id_account: personalInfo.id_account })
+  await PersonalInfo.findOne({ id_account: req.params.id }, { id_account: 1, avatar: 1, fullName: 1 })
+    .then(async (personalInfo) => {
+      await Post.find({ id_account: personalInfo.id_account })
         .then(async (listPost) => {
           let list = listPost;
           for ([index, value] of list.entries()) {
@@ -74,17 +74,17 @@ exports.accounts_get_timeline_info = (req, res, next) => {
 };
 
 // [GET] /accounts/:id/about
-exports.accounts_get_about_info = (req, res, next) => {
-  PersonalInfo.findOne({ id_account: req.params.id })
-    .then((personalInfo) => {
+exports.accounts_get_about_info = async (req, res, next) => {
+  await PersonalInfo.findOne({ id_account: req.params.id })
+    .then(async (personalInfo) => {
       if (!personalInfo) {
         res.status(404).json({
           message: 'account not found',
         });
       } else {
-        FavoriteInfo.findOne({ id_account: req.params.id })
-          .then((favoriteInfo) => {
-            EducationInfo.findOne({ id_account: req.params.id })
+        await FavoriteInfo.findOne({ id_account: req.params.id })
+          .then(async (favoriteInfo) => {
+            await EducationInfo.findOne({ id_account: req.params.id })
               .then((educationInfo) => {
                 res.status(200).json({
                   message: 'get about info successfully',
@@ -176,12 +176,23 @@ exports.accounts_get_all_friends = async (req, res, next) => {
 
 // [GET] /accounts/:id/visual_media
 exports.accounts_get_visual_media_info = async (req, res, next) => {
-  await VisualMedia.find({ id_account: req.params.id }, { url: 1 })
-    .then((listURL) => {
-      res.status(200).json({
-        message: 'get all images and videos successfully',
-        listURL,
-      });
+  await PersonalInfo.findOne({ id_account: req.params.id })
+    .then(async (personalInfo) => {
+      await VisualMedia.find({ id_account: personalInfo.id_account }, { url: 1 })
+        .then((listURL) => {
+          res.status(200).json({
+            message: 'get all images and videos successfully',
+            id_account: personalInfo.id_account,
+            avatar: personalInfo.avatar,
+            fullName: personalInfo.fullName,
+            listURL,
+          });
+        })
+        .catch((err) => {
+          res.status(500).json({
+            error: err,
+          });
+        });
     })
     .catch((err) => {
       res.status(500).json({
