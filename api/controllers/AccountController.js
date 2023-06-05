@@ -13,40 +13,50 @@ const jwt_decode = require('jwt-decode');
 
 // [GET] /accounts/:id/timeline
 exports.accounts_get_timeline_info = (req, res, next) => {
-  Post.find({ id_account: req.params.id })
-    .then(async (listPost) => {
-      let list = listPost;
-      for ([index, value] of list.entries()) {
-        await React.find({ id_post: value._id }, { reactType: 1, id_account: 1 }).then(async (results) => {
-          let listReaction = [];
-          for (result of results) {
-            await PersonalInfo.findOne(
-              { id_account: result.id_account },
-              { fullName: 1, avatar: 1, reactType: result.reactType },
-            ).then((personal_info) => {
-              listReaction.push(personal_info);
+  PersonalInfo.findOne({ id_account: req.params.id }, { id_account: 1, avatar: 1, fullName: 1 })
+    .then((personalInfo) => {
+      Post.find({ id_account: personalInfo.id_account })
+        .then(async (listPost) => {
+          let list = listPost;
+          for ([index, value] of list.entries()) {
+            await React.find({ id_post: value._id }, { reactType: 1, id_account: 1 }).then(async (results) => {
+              let listReaction = [];
+              for (result of results) {
+                await PersonalInfo.findOne(
+                  { id_account: result.id_account },
+                  { fullName: 1, avatar: 1, reactType: result.reactType },
+                ).then((personal_info) => {
+                  listReaction.push(personal_info);
+                });
+              }
+              let post = list[index];
+              list[index] = {
+                post,
+                listReaction,
+              };
+            });
+            await Comment.find({ id_post: value._id }).then(async (results) => {
+              list[index] = {
+                ...list[index],
+                amountComment: results.length,
+              };
             });
           }
-          let post = list[index];
-          list[index] = {
-            post,
-            listReaction,
-          };
+          return await list;
+        })
+        .then((listPost) => {
+          res.status(200).json({
+            message: 'get timeline info successfully',
+            avatar: personalInfo.avatar,
+            fullName: personalInfo.fullName,
+            timeline: listPost,
+          });
+        })
+        .catch((err) => {
+          res.status(500).json({
+            error: err,
+          });
         });
-        await Comment.find({ id_post: value._id }).then(async (results) => {
-          list[index] = {
-            ...list[index],
-            amountComment: results.length,
-          };
-        });
-      }
-      return await list;
-    })
-    .then((listPost) => {
-      res.status(200).json({
-        message: 'get timeline info successfully',
-        timeline: listPost,
-      });
     })
     .catch((err) => {
       res.status(500).json({
