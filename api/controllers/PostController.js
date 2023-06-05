@@ -263,7 +263,7 @@ exports.posts_delete_post = async (req, res, next) => {
     });
 };
 
-// [GET] /posts/:id/get_all_post
+// [GET] /posts/get_all_post
 exports.posts_get_all_post = async (req, res, next) => {
   await Post.find()
     .sort({ createdAt: -1 })
@@ -308,15 +308,21 @@ exports.posts_get_all_post = async (req, res, next) => {
     });
 };
 
-// [GET] /posts/:id/get_all_reaction
+// [GET] /posts/get_all_reaction
 exports.posts_get_all_reaction = async (req, res, next) => {
-  await React.find({ id_post: req.params.id }, { id_account: 1, reactType: 1 })
+  const authHeader = req.header('Authorization');
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) return res.sendStatus(401);
+
+  var decodedToken = jwt_decode(token);
+  await React.find({ id_post: req.body.id_post }, { id_account: 1, reactType: 1 })
     .then(async (listReaction) => {
       let list = [];
       for ([index, value] of listReaction.entries()) {
         let mutualFriends = [];
         await OtherInfo.findOne({ id_account: value.id_account }, { listFriend: 1 }).then(async (other_info) => {
-          await OtherInfo.findOne({ id_account: req.body.id_account }, { listFriend: 1 }).then(async (result) => {
+          await OtherInfo.findOne({ id_account: decodedToken.id_account }, { listFriend: 1 }).then(async (result) => {
             mutualFriends = await result.listFriend.filter((value1) => {
               for (value2 of other_info.listFriend) {
                 return value1 == value2;
@@ -350,15 +356,15 @@ exports.posts_get_all_reaction = async (req, res, next) => {
     });
 };
 
-// [GET] /posts/:id/get_all_comment
+// [GET] /posts/get_all_comment
 exports.posts_get_all_comment = async (req, res, next) => {
-  await Comment.find({ id_post: req.params.id })
+  await Comment.find({ id_post: req.body.id_post })
     .then(async (listComment) => {
       let list = [];
       for ([index, value] of listComment.entries()) {
         await PersonalInfo.findOne(
           { id_account: value.id_account },
-          { fullName: 1, avatar: 1, commentContent: value.commentContent },
+          { id_account: 1, fullName: 1, avatar: 1, commentContent: value.commentContent },
         ).then(async (result) => {
           await React.find({ id_comment: value._id }, { id_account: 1, reactType: 1 }).then(async (listReaction) => {
             let list = [];
@@ -381,6 +387,40 @@ exports.posts_get_all_comment = async (req, res, next) => {
       res.status(200).json({
         message: 'get all comments successfully',
         listComment: list,
+      });
+    })
+    .catch((err) => {
+      res.status(500).json({
+        error: err,
+      });
+    });
+};
+
+// [GET] /posts/get_all_tagged_friend
+exports.posts_get_all_tagged_friend = async (req, res, next) => {
+  const authHeader = req.header('Authorization');
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) return res.sendStatus(401);
+
+  var decodedToken = jwt_decode(token);
+  await Post.findOne({ _id: req.body.id_post }, { id_friendTag: 1 })
+    .then(async (post) => {
+      let listTaggedFriend = [];
+      for ([index, value] of post.id_friendTag.entries()) {
+        await PersonalInfo.findOne({ id_account: value }, { id_account: 1, avatar: 1, fullName: 1 })
+          .then(async (personalInfo) => {
+            listTaggedFriend.push(personalInfo);
+          })
+          .catch((err) => {
+            res.status(500).json({
+              error: err,
+            });
+          });
+      }
+      res.status(200).json({
+        message: 'get all tagged friends successfully',
+        listTaggedFriend,
       });
     })
     .catch((err) => {

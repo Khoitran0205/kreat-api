@@ -12,12 +12,15 @@ router.patch('/update_post', authenticateToken, PostController.posts_update_post
 router.delete('/delete_post', authenticateToken, PostController.posts_delete_post);
 
 //Get all posts
-router.get('/:id/get_all_post', authenticateToken, PostController.posts_get_all_post);
+router.get('/get_all_post', authenticateToken, PostController.posts_get_all_post);
 
 //Get all reactions of a post
-router.get('/:id/get_all_reaction', PostController.posts_get_all_reaction);
+router.get('/get_all_reaction', authenticateToken, PostController.posts_get_all_reaction);
 
-//Get all comment of a post
-router.get('/:id/get_all_comment', PostController.posts_get_all_comment);
+//Get all comments of a post
+router.get('/get_all_comment', authenticateToken, PostController.posts_get_all_comment);
+
+//Get all tagged friends
+router.get('/get_all_tagged_friend', authenticateToken, PostController.posts_get_all_tagged_friend);
 
 module.exports = router;
