@@ -78,12 +78,13 @@ exports.auth_log_in = async (req, res, next) => {
                 error: err,
               });
             });
-          await PersonalInfo.findOne({ id_account: account._id }, { avatar: 1, fullName: 1 })
+          await PersonalInfo.findOne({ id_account: account._id }, { id_account: 1, avatar: 1, fullName: 1 })
             .then((user) => {
               res.status(200).json({
                 message: 'Log in successfully',
                 accessToken,
                 refreshToken,
+                id_account,
                 fullName: user.fullName,
                 avatar: user.avatar,
               });
