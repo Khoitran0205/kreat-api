@@ -264,8 +264,8 @@ exports.posts_delete_post = async (req, res, next) => {
 };
 
 // [GET] /posts/:id/get_all_post
-exports.posts_get_all_post = (req, res, next) => {
-  Post.find()
+exports.posts_get_all_post = async (req, res, next) => {
+  await Post.find()
     .then(async (listPost) => {
       let list = listPost;
       for ([index, value] of list.entries()) {
@@ -308,8 +308,8 @@ exports.posts_get_all_post = (req, res, next) => {
 };
 
 // [GET] /posts/:id/get_all_reaction
-exports.posts_get_all_reaction = (req, res, next) => {
-  React.find({ id_post: req.params.id }, { id_account: 1, reactType: 1 })
+exports.posts_get_all_reaction = async (req, res, next) => {
+  await React.find({ id_post: req.params.id }, { id_account: 1, reactType: 1 })
     .then(async (listReaction) => {
       let list = [];
       for ([index, value] of listReaction.entries()) {
@@ -350,8 +350,8 @@ exports.posts_get_all_reaction = (req, res, next) => {
 };
 
 // [GET] /posts/:id/get_all_comment
-exports.posts_get_all_comment = (req, res, next) => {
-  Comment.find({ id_post: req.params.id })
+exports.posts_get_all_comment = async (req, res, next) => {
+  await Comment.find({ id_post: req.params.id })
     .then(async (listComment) => {
       let list = [];
       for ([index, value] of listComment.entries()) {
