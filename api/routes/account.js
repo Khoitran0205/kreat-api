@@ -27,13 +27,13 @@ router.delete('/accept_friend_request', authenticateToken, AccountController.acc
 router.delete('/decline_friend_request', authenticateToken, AccountController.accounts_decline_friend_request);
 
 //Reaction
-router.post('/:id/react', AccountController.accounts_react);
-router.patch('/:id/update_react', AccountController.accounts_update_react);
-router.delete('/:id/unreact', AccountController.accounts_unreact);
+router.post('/react', authenticateToken, AccountController.accounts_react);
+router.patch('/update_react', authenticateToken, AccountController.accounts_update_react);
+router.delete('/unreact', authenticateToken, AccountController.accounts_unreact);
 
 //Comment
-router.post('/:id/comment_post', AccountController.accounts_comment_post);
-router.patch('/:id/update_comment_post', AccountController.accounts_update_comment_post);
-router.delete('/:id/delete_comment_post', AccountController.accounts_delete_comment_post);
+router.post('/comment_post', authenticateToken, AccountController.accounts_comment_post);
+router.patch('/update_comment_post', authenticateToken, AccountController.accounts_update_comment_post);
+router.delete('/delete_comment_post', authenticateToken, AccountController.accounts_delete_comment_post);
 
 module.exports = router;

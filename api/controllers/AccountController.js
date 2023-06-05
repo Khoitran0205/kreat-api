@@ -467,10 +467,16 @@ exports.accounts_decline_friend_request = async (req, res, next) => {
     });
 };
 
-// [POST] /accounts/:id/react
+// [POST] /accounts/react
 exports.accounts_react = (req, res, next) => {
+  const authHeader = req.header('Authorization');
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) return res.sendStatus(401);
+
+  var decodedToken = jwt_decode(token);
   const react = new React({
-    id_account: req.params.id,
+    id_account: decodedToken.id_account,
     ...req.body,
   });
   react
@@ -488,11 +494,17 @@ exports.accounts_react = (req, res, next) => {
     });
 };
 
-// [PATCH] /accounts/:id/update_react
+// [PATCH] /accounts/update_react
 exports.accounts_update_react = (req, res, next) => {
+  const authHeader = req.header('Authorization');
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) return res.sendStatus(401);
+
+  var decodedToken = jwt_decode(token);
   React.findOneAndUpdate(
     {
-      id_account: req.params.id,
+      id_account: decodedToken.id_account,
       id_post: req.body.id_post,
       id_comment: req.body.id_comment,
     },
@@ -511,10 +523,16 @@ exports.accounts_update_react = (req, res, next) => {
     });
 };
 
-// [DELETE] /accounts/:id/unreact
+// [DELETE] /accounts/unreact
 exports.accounts_unreact = (req, res, next) => {
+  const authHeader = req.header('Authorization');
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) return res.sendStatus(401);
+
+  var decodedToken = jwt_decode(token);
   React.findOneAndRemove({
-    id_account: req.params.id,
+    id_account: decodedToken.id_account,
     id_post: req.body.id_post,
     id_comment: req.body.id_comment,
   })
@@ -531,10 +549,16 @@ exports.accounts_unreact = (req, res, next) => {
     });
 };
 
-// [POST] /accounts/:id/comment_post
+// [POST] /accounts/comment_post
 exports.accounts_comment_post = (req, res, next) => {
+  const authHeader = req.header('Authorization');
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) return res.sendStatus(401);
+
+  var decodedToken = jwt_decode(token);
   const comment = new Comment({
-    id_account: req.params.id,
+    id_account: decodedToken.id_account,
     ...req.body,
   });
   comment
@@ -552,11 +576,18 @@ exports.accounts_comment_post = (req, res, next) => {
     });
 };
 
-// [PATCH] /accounts/:id/update_comment_post
+// [PATCH] /accounts/update_comment_post
 exports.accounts_update_comment_post = (req, res, next) => {
+  const authHeader = req.header('Authorization');
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) return res.sendStatus(401);
+
+  var decodedToken = jwt_decode(token);
   Comment.findOneAndUpdate(
     {
       _id: req.body.id_comment,
+      id_account: decodedToken.id_account,
     },
     req.body,
   )
@@ -573,10 +604,17 @@ exports.accounts_update_comment_post = (req, res, next) => {
     });
 };
 
-// [DELETE] /accounts/:id/delete_comment_post
+// [DELETE] /accounts/delete_comment_post
 exports.accounts_delete_comment_post = (req, res, next) => {
+  const authHeader = req.header('Authorization');
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) return res.sendStatus(401);
+
+  var decodedToken = jwt_decode(token);
   Comment.findOneAndRemove({
     _id: req.body.id_comment,
+    id_account: decodedToken.id_account,
   })
     .then((result) => {
       res.status(200).json({
