@@ -122,9 +122,9 @@ exports.accounts_get_all_friends = async (req, res, next) => {
   await PersonalInfo.findOne({ id_account: req.params.id })
     .then(async (result) => {
       await OtherInfo.findOne({ id_account: result.id_account }, { listFriend: 1 })
-        .then(async (result) => {
+        .then(async (result2) => {
           let listFriend = [];
-          for ([index, value] of result.listFriend.entries()) {
+          for ([index, value] of result2.listFriend.entries()) {
             let friendInfo = {};
             let mutualFriends = [];
             await PersonalInfo.findOne({ id_account: value }, { fullName: 1, avatar: 1, aboutMe: 1 }).then(
@@ -132,7 +132,7 @@ exports.accounts_get_all_friends = async (req, res, next) => {
                 await OtherInfo.findOne({ id_account: value }, { listFriend: 1 })
                   .then(async (otherInfo) => {
                     mutualFriends = await otherInfo.listFriend.filter((value1) => {
-                      for (value2 of result.listFriend) {
+                      for (value2 of result2.listFriend) {
                         return value1 == value2;
                       }
                     });
