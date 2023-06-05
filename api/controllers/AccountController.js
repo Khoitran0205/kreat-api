@@ -10,6 +10,7 @@ const Post = require('../models/post/post');
 const FriendRequest = require('../models/request/friend_request');
 
 const jwt_decode = require('jwt-decode');
+const comment = require('../models/post/comment');
 
 // [GET] /accounts/:id/timeline
 exports.accounts_get_timeline_info = (req, res, next) => {
@@ -117,7 +118,7 @@ exports.accounts_get_about_info = (req, res, next) => {
 
 // [GET] /accounts/:id/friends
 exports.accounts_get_all_friends = async (req, res, next) => {
-  await PersonalInfo.findOne({ id_account: req.params.id_account })
+  await PersonalInfo.findOne({ id_account: req.params.id })
     .then(async (result) => {
       await OtherInfo.findOne({ id_account: result.id_account }, { listFriend: 1 })
         .then(async (result) => {
@@ -496,30 +497,53 @@ exports.accounts_decline_friend_request = async (req, res, next) => {
 };
 
 // [POST] /accounts/react
-exports.accounts_react = (req, res, next) => {
+exports.accounts_react = async (req, res, next) => {
   const authHeader = req.header('Authorization');
   const token = authHeader && authHeader.split(' ')[1];
 
   if (!token) return res.sendStatus(401);
 
   var decodedToken = jwt_decode(token);
-  const react = new React({
+  const react = await new React({
     id_account: decodedToken.id_account,
     ...req.body,
   });
-  react
-    .save()
-    .then((result) => {
-      res.status(201).json({
-        message: 'reaction stored',
-        reaction: result,
+  await Post.findOne({ _id: req.body.id_post }).then(async (post) => {
+    if (!post) {
+      await Comment.findOne({ _id: req.body.id_comment }).then(async (comment) => {
+        if (!comment) res.status(404).json({ message: 'post or comment not found' });
+        else {
+          await react
+            .save()
+            .then((result) => {
+              res.status(201).json({
+                message: 'reaction on comment stored',
+                reaction: result,
+              });
+            })
+            .catch((err) => {
+              res.status(500).json({
+                error: err,
+              });
+            });
+        }
       });
-    })
-    .catch((err) => {
-      res.status(500).json({
-        error: err,
-      });
-    });
+    } else {
+      await react
+        .save()
+        .then((result) => {
+          res.status(201).json({
+            message: 'reaction on post stored',
+            reaction: result,
+          });
+        })
+        .catch((err) => {
+          res.status(500).json({
+            error: err,
+          });
+        });
+    }
+  });
 };
 
 // [PATCH] /accounts/update_react
@@ -532,17 +556,19 @@ exports.accounts_update_react = (req, res, next) => {
   var decodedToken = jwt_decode(token);
   React.findOneAndUpdate(
     {
+      _id: req.body.id_react,
       id_account: decodedToken.id_account,
-      id_post: req.body.id_post,
-      id_comment: req.body.id_comment,
     },
     req.body,
   )
     .then((result) => {
-      res.status(200).json({
-        message: 'reaction updated',
-        reaction: result,
-      });
+      if (!result) res.sendStatus(401);
+      else {
+        res.status(200).json({
+          message: 'reaction updated',
+          reaction: result,
+        });
+      }
     })
     .catch((err) => {
       res.status(500).json({
@@ -560,15 +586,17 @@ exports.accounts_unreact = (req, res, next) => {
 
   var decodedToken = jwt_decode(token);
   React.findOneAndRemove({
+    _id: req.body.id_react,
     id_account: decodedToken.id_account,
-    id_post: req.body.id_post,
-    id_comment: req.body.id_comment,
   })
     .then((result) => {
-      res.status(200).json({
-        message: 'reaction removed',
-        reaction: result,
-      });
+      if (!result) res.sendStatus(401);
+      else {
+        res.status(200).json({
+          message: 'reaction removed',
+          reaction: result,
+        });
+      }
     })
     .catch((err) => {
       res.status(500).json({
@@ -578,24 +606,35 @@ exports.accounts_unreact = (req, res, next) => {
 };
 
 // [POST] /accounts/comment_post
-exports.accounts_comment_post = (req, res, next) => {
+exports.accounts_comment_post = async (req, res, next) => {
   const authHeader = req.header('Authorization');
   const token = authHeader && authHeader.split(' ')[1];
 
   if (!token) return res.sendStatus(401);
 
   var decodedToken = jwt_decode(token);
-  const comment = new Comment({
+  const comment = await new Comment({
     id_account: decodedToken.id_account,
     ...req.body,
   });
-  comment
-    .save()
-    .then((result) => {
-      res.status(201).json({
-        message: 'comment stored',
-        comment: result,
-      });
+  await Post.findOne({ _id: req.body.id_post })
+    .then(async (post) => {
+      if (!post) res.status(404).json({ message: 'post not found' });
+      else {
+        await comment
+          .save()
+          .then((result) => {
+            res.status(201).json({
+              message: 'comment stored',
+              comment: result,
+            });
+          })
+          .catch((err) => {
+            res.status(500).json({
+              error: err,
+            });
+          });
+      }
     })
     .catch((err) => {
       res.status(500).json({
@@ -620,10 +659,13 @@ exports.accounts_update_comment_post = (req, res, next) => {
     req.body,
   )
     .then((result) => {
-      res.status(200).json({
-        message: 'comment updated',
-        comment: result,
-      });
+      if (!result) res.sendStatus(401);
+      else {
+        res.status(200).json({
+          message: 'comment updated',
+          comment: result,
+        });
+      }
     })
     .catch((err) => {
       res.status(500).json({
@@ -645,10 +687,13 @@ exports.accounts_delete_comment_post = (req, res, next) => {
     id_account: decodedToken.id_account,
   })
     .then((result) => {
-      res.status(200).json({
-        message: 'comment removed',
-        comment: result,
-      });
+      if (!result) res.sendStatus(401);
+      else {
+        res.status(200).json({
+          message: 'comment removed',
+          comment: result,
+        });
+      }
     })
     .catch((err) => {
       res.status(500).json({

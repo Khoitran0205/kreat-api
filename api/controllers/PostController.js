@@ -54,14 +54,14 @@ exports.posts_create_post = (req, res, next) => {
 };
 
 // [POST] /posts/share_post
-exports.posts_share_post = (req, res, next) => {
+exports.posts_share_post = async (req, res, next) => {
   const authHeader = req.header('Authorization');
   const token = authHeader && authHeader.split(' ')[1];
 
   if (!token) return res.sendStatus(401);
 
   var decodedToken = jwt_decode(token);
-  Account.findOne({ email: decodedToken.email })
+  await Account.findOne({ email: decodedToken.email })
     .then(async (account) => {
       if (!account) {
         return res.status(404).json({
@@ -120,16 +120,16 @@ exports.posts_share_post = (req, res, next) => {
 };
 
 // [PATCH] /posts/update_post
-exports.posts_update_post = (req, res, next) => {
+exports.posts_update_post = async (req, res, next) => {
   const authHeader = req.header('Authorization');
   const token = authHeader && authHeader.split(' ')[1];
 
   if (!token) return res.sendStatus(401);
 
   var decodedToken = jwt_decode(token);
-  Account.findOne({ email: decodedToken.email })
-    .then((account) => {
-      Post.findOneAndUpdate(
+  await Account.findOne({ email: decodedToken.email })
+    .then(async (account) => {
+      await Post.findOneAndUpdate(
         {
           id_account: account._id,
           _id: req.body.id_post,
@@ -141,11 +141,12 @@ exports.posts_update_post = (req, res, next) => {
             return res.status(404).json({
               message: 'Post not found!',
             });
+          } else {
+            res.status(200).json({
+              message: 'post updated',
+              post: result,
+            });
           }
-          res.status(200).json({
-            message: 'post updated',
-            post: result,
-          });
         })
         .catch((err) => {
           res.status(500).json({
@@ -161,47 +162,48 @@ exports.posts_update_post = (req, res, next) => {
 };
 
 // [DELETE] /posts/delete_post
-exports.posts_delete_post = (req, res, next) => {
+exports.posts_delete_post = async (req, res, next) => {
   const authHeader = req.header('Authorization');
   const token = authHeader && authHeader.split(' ')[1];
 
   if (!token) return res.sendStatus(401);
 
   var decodedToken = jwt_decode(token);
-  Account.findOne({ email: decodedToken.email })
-    .then((account) => {
-      Post.findOneAndRemove({
+  await Account.findOne({ email: decodedToken.email })
+    .then(async (account) => {
+      await Post.findOneAndRemove({
         id_account: account._id,
         _id: req.body.id_post,
       })
-        .then((result) => {
+        .then(async (result) => {
           if (!result) {
             return res.status(404).json({
               message: 'Post not found!',
             });
+          } else {
+            await React.find({ id_post: result._id }).then((reactions) => {
+              for ([index, value] of reactions.entries()) {
+                React.findOneAndRemove({ _id: value._id }).catch((err) => {
+                  res.status(500).json({
+                    error: err,
+                  });
+                });
+              }
+            });
+            await Comment.find({ id_post: result._id }).then((comments) => {
+              for ([index, value] of comments.entries()) {
+                Comment.findOneAndRemove({ _id: value._id }).catch((err) => {
+                  res.status(500).json({
+                    error: err,
+                  });
+                });
+              }
+            });
+            await res.status(200).json({
+              message: 'post removed',
+              post: result,
+            });
           }
-          React.find({ id_post: result._id }).then((reactions) => {
-            for ([index, value] of reactions.entries()) {
-              React.findOneAndRemove({ _id: value._id }).catch((err) => {
-                res.status(500).json({
-                  error: err,
-                });
-              });
-            }
-          });
-          Comment.find({ id_post: result._id }).then((comments) => {
-            for ([index, value] of comments.entries()) {
-              Comment.findOneAndRemove({ _id: value._id }).catch((err) => {
-                res.status(500).json({
-                  error: err,
-                });
-              });
-            }
-          });
-          res.status(200).json({
-            message: 'post removed',
-            post: result,
-          });
         })
         .catch((err) => {
           res.status(500).json({
