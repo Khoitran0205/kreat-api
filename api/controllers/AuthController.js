@@ -84,7 +84,7 @@ exports.auth_log_in = async (req, res, next) => {
                 message: 'Log in successfully',
                 accessToken,
                 refreshToken,
-                id_account,
+                id_account: user.id_account,
                 fullName: user.fullName,
                 avatar: user.avatar,
               });
