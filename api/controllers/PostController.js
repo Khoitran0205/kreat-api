@@ -335,7 +335,7 @@ exports.posts_get_all_reaction = async (req, res, next) => {
           });
         await PersonalInfo.findOne(
           { id_account: value.id_account },
-          { avatar: 1, fullName: 1, reactType: value.reactType },
+          { id_account: 1, avatar: 1, fullName: 1, reactType: value.reactType },
         ).then(async (personal_info) => {
           if (value.id_account != req.body.id_account) {
             const a = personal_info;
