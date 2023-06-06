@@ -119,47 +119,61 @@ exports.accounts_get_about_info = async (req, res, next) => {
 
 // [GET] /accounts/:id/friends
 exports.accounts_get_all_friends = async (req, res, next) => {
-  await PersonalInfo.findOne({ id_account: req.params.id })
-    .then(async (result) => {
-      await OtherInfo.findOne({ id_account: result.id_account }, { listFriend: 1 })
-        .then(async (result2) => {
-          let listFriend = [];
-          for ([index, value] of result2.listFriend.entries()) {
-            let friendInfo = {};
-            let mutualFriends = [];
-            await PersonalInfo.findOne({ id_account: value }, { fullName: 1, avatar: 1, aboutMe: 1 }).then(
-              async (personalInfo) => {
-                await OtherInfo.findOne({ id_account: value }, { listFriend: 1 })
-                  .then(async (otherInfo) => {
-                    mutualFriends = await otherInfo.listFriend.filter((value1) => {
-                      for (value2 of result2.listFriend) {
-                        return value1 == value2;
-                      }
-                    });
-                    friendInfo = {
-                      id_account: value,
-                      avatar: personalInfo.avatar,
-                      fullName: personalInfo.fullName,
-                      aboutMe: personalInfo.aboutMe,
-                      friendAmount: otherInfo.listFriend.length,
-                      mutualFriends: mutualFriends.length,
-                    };
-                  })
-                  .catch((err) => {
-                    res.status(500).json({
-                      error: err,
-                    });
-                  });
-              },
-            );
-            listFriend.push(friendInfo);
-          }
-          res.status(200).json({
-            message: 'get all friends successfully',
-            avatar: result.avatar,
-            fullName: result.fullName,
-            listFriend,
-          });
+  const authHeader = req.header('Authorization');
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) return res.sendStatus(401);
+
+  var decodedToken = jwt_decode(token);
+  await OtherInfo.findOne({ id_account: decodedToken.id_account }, { listFriend: 1 })
+    .then(async (myInfo) => {
+      await PersonalInfo.findOne({ id_account: req.params.id })
+        .then(async (result) => {
+          await OtherInfo.findOne({ id_account: result.id_account }, { listFriend: 1 })
+            .then(async (result2) => {
+              let listFriend = [];
+              for ([index, value] of result2.listFriend.entries()) {
+                let friendInfo = {};
+                let mutualFriends = [];
+                await PersonalInfo.findOne({ id_account: value }, { fullName: 1, avatar: 1, aboutMe: 1 }).then(
+                  async (personalInfo) => {
+                    await OtherInfo.findOne({ id_account: value }, { listFriend: 1 })
+                      .then(async (otherInfo) => {
+                        mutualFriends = await otherInfo.listFriend.filter((value1) => {
+                          for (value2 of myInfo.listFriend) {
+                            return value1 == value2;
+                          }
+                        });
+                        friendInfo = {
+                          id_account: value,
+                          avatar: personalInfo.avatar,
+                          fullName: personalInfo.fullName,
+                          aboutMe: personalInfo.aboutMe,
+                          friendAmount: otherInfo.listFriend.length,
+                          mutualFriends: mutualFriends.length,
+                        };
+                      })
+                      .catch((err) => {
+                        res.status(500).json({
+                          error: err,
+                        });
+                      });
+                  },
+                );
+                listFriend.push(friendInfo);
+              }
+              res.status(200).json({
+                message: 'get all friends successfully',
+                avatar: result.avatar,
+                fullName: result.fullName,
+                listFriend,
+              });
+            })
+            .catch((err) => {
+              res.status(500).json({
+                error: err,
+              });
+            });
         })
         .catch((err) => {
           res.status(500).json({
@@ -209,10 +223,11 @@ exports.accounts_update_personal_info = async (req, res, next) => {
   if (!token) return res.sendStatus(401);
 
   var decodedToken = jwt_decode(token);
-  await PersonalInfo.findOneAndUpdate({ id_account: decodedToken.id_account }, req.body)
+  await PersonalInfo.findOneAndUpdate({ id_account: decodedToken.id_account }, req.body, { new: true })
     .then((result) => {
       res.status(200).json({
         message: 'update successfully',
+        result,
       });
     })
     .catch((err) => {
@@ -230,10 +245,11 @@ exports.accounts_update_favorite_info = async (req, res, next) => {
   if (!token) return res.sendStatus(401);
 
   var decodedToken = jwt_decode(token);
-  await FavoriteInfo.findOneAndUpdate({ id_account: decodedToken.id_account }, req.body)
+  await FavoriteInfo.findOneAndUpdate({ id_account: decodedToken.id_account }, req.body, { new: true })
     .then((result) => {
       res.status(200).json({
         message: 'update successfully',
+        result,
       });
     })
     .catch((err) => {
@@ -251,10 +267,11 @@ exports.accounts_update_education_info = async (req, res, next) => {
   if (!token) return res.sendStatus(401);
 
   var decodedToken = jwt_decode(token);
-  await EducationInfo.findOneAndUpdate({ id_account: decodedToken.id_account }, req.body)
+  await EducationInfo.findOneAndUpdate({ id_account: decodedToken.id_account }, req.body, { new: true })
     .then((result) => {
       res.status(200).json({
         message: 'update successfully',
+        result,
       });
     })
     .catch((err) => {
@@ -272,10 +289,11 @@ exports.accounts_update_other_info = async (req, res, next) => {
   if (!token) return res.sendStatus(401);
 
   var decodedToken = jwt_decode(token);
-  await OtherInfo.findOneAndUpdate({ id_account: decodedToken.id_account }, req.body)
+  await OtherInfo.findOneAndUpdate({ id_account: decodedToken.id_account }, req.body, { new: true })
     .then((result) => {
       res.status(200).json({
         message: 'update successfully',
+        result,
       });
     })
     .catch((err) => {

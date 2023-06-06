@@ -6,10 +6,10 @@ const authenticateToken = require('../../middleware/auth');
 const AccountController = require('../controllers/AccountController');
 
 //Interact with account's info
-router.get('/:id/timeline', AccountController.accounts_get_timeline_info);
-router.get('/:id/about', AccountController.accounts_get_about_info);
-router.get('/:id/friends', AccountController.accounts_get_all_friends);
-router.get('/:id/visual_media', AccountController.accounts_get_visual_media_info);
+router.get('/:id/timeline', authenticateToken, AccountController.accounts_get_timeline_info);
+router.get('/:id/about', authenticateToken, AccountController.accounts_get_about_info);
+router.get('/:id/friends', authenticateToken, AccountController.accounts_get_all_friends);
+router.get('/:id/visual_media', authenticateToken, AccountController.accounts_get_visual_media_info);
 
 router.patch('/update_personal_info', authenticateToken, AccountController.accounts_update_personal_info);
 router.patch('/update_favorite_info', authenticateToken, AccountController.accounts_update_favorite_info);
