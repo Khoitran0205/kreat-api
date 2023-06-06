@@ -484,40 +484,44 @@ exports.accounts_accept_friend_request = async (req, res, next) => {
 
   var decodedToken = jwt_decode(token);
 
-  await FriendRequest.findOne({ id_receiver: decodedToken.id_account })
+  await FriendRequest.findOne({ _id: req.body.id_friendRequest })
     .then(async (friendRequest) => {
-      const infoSender = await OtherInfo.findOne({ id_account: friendRequest.id_sender });
-      try {
-        const updatedListFriend = [...infoSender.listFriend, friendRequest.id_receiver];
-        infoSender.listFriend = updatedListFriend;
-        await infoSender.save();
-      } catch (error) {
-        res.status(500).json({
-          error,
-        });
-      }
-      const infoReceiver = await OtherInfo.findOne({ id_account: friendRequest.id_receiver });
-      try {
-        const updatedListFriend = [...infoReceiver.listFriend, friendRequest.id_sender];
-        infoReceiver.listFriend = updatedListFriend;
-        await infoReceiver.save();
-      } catch (error) {
-        res.status(500).json({
-          error,
-        });
-      }
-      await FriendRequest.findOneAndDelete({ _id: req.body.id_friendRequest })
-        .then((result) => {
-          res.status(200).json({
-            message: 'friend request accepted',
-            friendRequest: result,
-          });
-        })
-        .catch((err) => {
+      if (decodedToken.id_account != friendRequest.id_receiver) {
+        res.sendStatus(401);
+      } else {
+        const infoSender = await OtherInfo.findOne({ id_account: friendRequest.id_sender });
+        try {
+          const updatedListFriend = [...infoSender.listFriend, friendRequest.id_receiver];
+          infoSender.listFriend = updatedListFriend;
+          await infoSender.save();
+        } catch (error) {
           res.status(500).json({
-            error: err,
+            error,
           });
-        });
+        }
+        const infoReceiver = await OtherInfo.findOne({ id_account: friendRequest.id_receiver });
+        try {
+          const updatedListFriend = [...infoReceiver.listFriend, friendRequest.id_sender];
+          infoReceiver.listFriend = updatedListFriend;
+          await infoReceiver.save();
+        } catch (error) {
+          res.status(500).json({
+            error,
+          });
+        }
+        await FriendRequest.findOneAndDelete({ _id: req.body.id_friendRequest })
+          .then((result) => {
+            res.status(200).json({
+              message: 'friend request accepted',
+              friendRequest: result,
+            });
+          })
+          .catch((err) => {
+            res.status(500).json({
+              error: err,
+            });
+          });
+      }
     })
     .catch((err) => {
       res.status(500).json({
