@@ -11,10 +11,10 @@ router.get('/:id/about', AccountController.accounts_get_about_info);
 router.get('/:id/friends', AccountController.accounts_get_all_friends);
 router.get('/:id/visual_media', AccountController.accounts_get_visual_media_info);
 
-router.patch('/:id/update_personal_info', AccountController.accounts_update_personal_info);
-router.patch('/:id/update_favorite_info', AccountController.accounts_update_favorite_info);
-router.patch('/:id/update_education_info', AccountController.accounts_update_education_info);
-router.patch('/:id/update_other_info', AccountController.accounts_update_other_info);
+router.patch('/update_personal_info', authenticateToken, AccountController.accounts_update_personal_info);
+router.patch('/update_favorite_info', authenticateToken, AccountController.accounts_update_favorite_info);
+router.patch('/update_education_info', authenticateToken, AccountController.accounts_update_education_info);
+router.patch('/update_other_info', authenticateToken, AccountController.accounts_update_other_info);
 
 //Search
 router.get('/search', AccountController.accounts_search_accounts);
@@ -35,5 +35,8 @@ router.delete('/unreact', authenticateToken, AccountController.accounts_unreact)
 router.post('/comment_post', authenticateToken, AccountController.accounts_comment_post);
 router.patch('/update_comment_post', authenticateToken, AccountController.accounts_update_comment_post);
 router.delete('/delete_comment_post', authenticateToken, AccountController.accounts_delete_comment_post);
+
+//Friend suggestions
+router.get('/friend_suggestion', authenticateToken, AccountController.accounts_get_friend_suggestions);
 
 module.exports = router;

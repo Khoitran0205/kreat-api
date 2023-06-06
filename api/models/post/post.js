@@ -7,7 +7,7 @@ const sharedPostSchema = mongoose.Schema(
     shared_id_visualMedia: { type: Array, default: [] },
     shared_postContent: { type: String, default: '' },
     shared_postPrivacy: { type: String, default: '' },
-    shared_createdAt: { type: String, default: '' },
+    shared_createdAt: { type: Date, default: '' },
     shared_id_friendTag: { type: Array, default: [] },
     shared_location: { type: String, default: '' },
   },

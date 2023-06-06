@@ -11,7 +11,6 @@ const FriendRequest = require('../models/request/friend_request');
 const VisualMedia = require('../models/post/visual_media');
 
 const jwt_decode = require('jwt-decode');
-const comment = require('../models/post/comment');
 
 // [GET] /accounts/:id/timeline
 exports.accounts_get_timeline_info = async (req, res, next) => {
@@ -202,9 +201,15 @@ exports.accounts_get_visual_media_info = async (req, res, next) => {
     });
 };
 
-// [PATCH] /accounts/:id/update_personal_info
-exports.accounts_update_personal_info = (req, res, next) => {
-  PersonalInfo.findOneAndUpdate({ id_account: req.params.id }, req.body)
+// [PATCH] /accounts/update_personal_info
+exports.accounts_update_personal_info = async (req, res, next) => {
+  const authHeader = req.header('Authorization');
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) return res.sendStatus(401);
+
+  var decodedToken = jwt_decode(token);
+  await PersonalInfo.findOneAndUpdate({ id_account: decodedToken.id_account }, req.body)
     .then((result) => {
       res.status(200).json({
         message: 'update successfully',
@@ -217,9 +222,15 @@ exports.accounts_update_personal_info = (req, res, next) => {
     });
 };
 
-// [PATCH] /accounts/:id/update_favorite_info
-exports.accounts_update_favorite_info = (req, res, next) => {
-  FavoriteInfo.findOneAndUpdate({ id_account: req.params.id }, req.body)
+// [PATCH] /accounts/update_favorite_info
+exports.accounts_update_favorite_info = async (req, res, next) => {
+  const authHeader = req.header('Authorization');
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) return res.sendStatus(401);
+
+  var decodedToken = jwt_decode(token);
+  await FavoriteInfo.findOneAndUpdate({ id_account: decodedToken.id_account }, req.body)
     .then((result) => {
       res.status(200).json({
         message: 'update successfully',
@@ -232,9 +243,15 @@ exports.accounts_update_favorite_info = (req, res, next) => {
     });
 };
 
-// [PATCH] /accounts/:id/update_education_info
-exports.accounts_update_education_info = (req, res, next) => {
-  EducationInfo.findOneAndUpdate({ id_account: req.params.id }, req.body)
+// [PATCH] /accounts/update_education_info
+exports.accounts_update_education_info = async (req, res, next) => {
+  const authHeader = req.header('Authorization');
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) return res.sendStatus(401);
+
+  var decodedToken = jwt_decode(token);
+  await EducationInfo.findOneAndUpdate({ id_account: decodedToken.id_account }, req.body)
     .then((result) => {
       res.status(200).json({
         message: 'update successfully',
@@ -247,9 +264,15 @@ exports.accounts_update_education_info = (req, res, next) => {
     });
 };
 
-// [PATCH] /accounts/:id/update_other_info
-exports.accounts_update_other_info = (req, res, next) => {
-  OtherInfo.findOneAndUpdate({ id_account: req.params.id }, req.body)
+// [PATCH] /accounts/update_other_info
+exports.accounts_update_other_info = async (req, res, next) => {
+  const authHeader = req.header('Authorization');
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) return res.sendStatus(401);
+
+  var decodedToken = jwt_decode(token);
+  await OtherInfo.findOneAndUpdate({ id_account: decodedToken.id_account }, req.body)
     .then((result) => {
       res.status(200).json({
         message: 'update successfully',
@@ -704,14 +727,14 @@ exports.accounts_update_comment_post = (req, res, next) => {
 };
 
 // [DELETE] /accounts/delete_comment_post
-exports.accounts_delete_comment_post = (req, res, next) => {
+exports.accounts_delete_comment_post = async (req, res, next) => {
   const authHeader = req.header('Authorization');
   const token = authHeader && authHeader.split(' ')[1];
 
   if (!token) return res.sendStatus(401);
 
   var decodedToken = jwt_decode(token);
-  Comment.findOneAndRemove({
+  await Comment.findOneAndRemove({
     _id: req.body.id_comment,
     id_account: decodedToken.id_account,
   })
@@ -729,4 +752,14 @@ exports.accounts_delete_comment_post = (req, res, next) => {
         error: err,
       });
     });
+};
+
+// [GET] /accounts/friend_suggestion
+exports.accounts_get_friend_suggestions = async (req, res, next) => {
+  const authHeader = req.header('Authorization');
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) return res.sendStatus(401);
+
+  var decodedToken = jwt_decode(token);
 };

@@ -26,7 +26,7 @@ exports.auth_sign_up = async (req, res, next) => {
           id_account: account._id,
           fullName: req.body.fullName,
           aboutMe: `Hi, I'm ${req.body.fullName}. Nice to meet you.`,
-          joined: result.createdAt,
+          joined: new Date(),
         });
         await personal_info.save();
         const favorite_info = await new FavoriteInfo({
