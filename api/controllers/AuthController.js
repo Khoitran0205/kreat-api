@@ -21,7 +21,26 @@ exports.auth_sign_up = async (req, res, next) => {
     });
     await account
       .save()
-      .then((result) => {
+      .then(async (result) => {
+        const personal_info = await new PersonalInfo({
+          id_account: account._id,
+          fullName: req.body.fullName,
+          aboutMe: `Hi, I'm ${req.body.fullName}. Nice to meet you.`,
+          joined: result.createdAt,
+        });
+        await personal_info.save();
+        const favorite_info = await new FavoriteInfo({
+          id_account: account._id,
+        });
+        await favorite_info.save();
+        const education_info = await new EducationInfo({
+          id_account: account._id,
+        });
+        await education_info.save();
+        const other_info = await new OtherInfo({
+          id_account: account._id,
+        });
+        await other_info.save();
         res.status(201).json({
           message: 'account created',
           account: result,
@@ -32,24 +51,6 @@ exports.auth_sign_up = async (req, res, next) => {
           error: err,
         });
       });
-    const personal_info = await new PersonalInfo({
-      id_account: account._id,
-      fullName: req.body.fullName,
-      aboutMe: `Hi, I'm ${req.body.fullName}. Nice to meet you.`,
-    });
-    await personal_info.save();
-    const favorite_info = await new FavoriteInfo({
-      id_account: account._id,
-    });
-    await favorite_info.save();
-    const education_info = await new EducationInfo({
-      id_account: account._id,
-    });
-    await education_info.save();
-    const other_info = await new OtherInfo({
-      id_account: account._id,
-    });
-    await other_info.save();
   } catch (error) {
     res.status(500).json({
       error: error,

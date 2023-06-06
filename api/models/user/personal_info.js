@@ -13,6 +13,7 @@ const personalInfo = mongoose.Schema({
   birthday: { type: String, default: '' },
   liveIn: { type: String, default: '' },
   occupation: { type: String, default: '' },
+  joined: { type: String, default: '' },
   religion: { type: String, default: '' },
   maritalStatus: { type: String, default: '' },
 });
