@@ -17,8 +17,8 @@ router.patch('/update_education_info', authenticateToken, AccountController.acco
 router.patch('/update_other_info', authenticateToken, AccountController.accounts_update_other_info);
 
 //Search
-router.get('/search', AccountController.accounts_search_accounts);
-router.get('/:id/friends/search', AccountController.accounts_search_friends);
+router.get('/search', authenticateToken, AccountController.accounts_search_accounts);
+router.get('/:id/friends/search', authenticateToken, AccountController.accounts_search_friends);
 
 //Interact with account's friends
 router.get('/friend_requests', authenticateToken, AccountController.accounts_get_all_friend_requests);

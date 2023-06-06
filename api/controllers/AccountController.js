@@ -391,8 +391,7 @@ exports.accounts_get_all_friend_requests = async (req, res, next) => {
   if (!token) return res.sendStatus(401);
 
   var decodedToken = jwt_decode(token);
-
-  FriendRequest.find({ id_receiver: decodedToken.id_account }, { _id: 0, id_sender: 1 })
+  await FriendRequest.find({ id_receiver: decodedToken.id_account }, { _id: 0, id_sender: 1 })
     .then(async (senders) => {
       await OtherInfo.findOne({ id_account: decodedToken.id_account }, { listFriend: 1 })
         .then(async (result) => {
