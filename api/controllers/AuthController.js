@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
 const env = require('dotenv');
 const bcrypt = require('bcrypt');
+const jwt_decode = require('jwt-decode');
 
 const Account = require('../models/user/account');
 const PersonalInfo = require('../models/user/personal_info');
@@ -121,15 +122,15 @@ exports.auth_log_out = async (req, res, next) => {
   if (!token) return res.sendStatus(401);
 
   var decodedToken = jwt_decode(token);
-  await Account.findOneAndUpdate({ id_account: decodedToken.id_account }, { refreshToken: '' })
+  await Account.findOneAndUpdate({ _id: decodedToken.id_account }, { refreshToken: '' })
     .then(async (result) => {
       if (!result) {
-        return res.status(401).json({
+        await res.status(401).json({
           message: 'Log out failed',
         });
       } else {
         if (!result.refreshToken) {
-          return res.status(401).json({
+          await res.status(401).json({
             message: 'Log out failed',
           });
         } else {
