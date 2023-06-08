@@ -41,7 +41,10 @@ exports.posts_create_post = async (req, res, next) => {
                     let visualMedia = await new VisualMedia({
                       id_post: result._id,
                       id_account: account._id,
-                      url: value,
+                      url: {
+                        visualType: value.type,
+                        visualUrl: value.url,
+                      },
                     });
                     await visualMedia.save();
                   }
