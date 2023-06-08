@@ -115,19 +115,29 @@ exports.auth_log_in = async (req, res, next) => {
 
 // [POST] auth/logout
 exports.auth_log_out = async (req, res, next) => {
-  await Account.findOneAndUpdate({ email: req.body.email }, { refreshToken: '' })
-    .then((result) => {
-      if (!result)
+  const authHeader = req.header('Authorization');
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) return res.sendStatus(401);
+
+  var decodedToken = jwt_decode(token);
+  await Account.findOneAndUpdate({ id_account: decodedToken.id_account }, { refreshToken: '' })
+    .then(async (result) => {
+      if (!result) {
         return res.status(401).json({
           message: 'Log out failed',
         });
-      if (!result.refreshToken)
-        return res.status(401).json({
-          message: 'Log out failed',
-        });
-      res.status(200).json({
-        message: 'Log out successfully',
-      });
+      } else {
+        if (!result.refreshToken) {
+          return res.status(401).json({
+            message: 'Log out failed',
+          });
+        } else {
+          await res.status(200).json({
+            message: 'Log out successfully',
+          });
+        }
+      }
     })
     .catch((err) => {
       res.status(500).json({
