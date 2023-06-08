@@ -418,11 +418,7 @@ exports.posts_get_all_tagged_friend = async (req, res, next) => {
             await OtherInfo.findOne({ id_account: value }, { listFriend: 1 }).then(async (otherInfo) => {
               await OtherInfo.findOne({ id_account: decodedToken.id_account }, { listFriend: 1 })
                 .then(async (result) => {
-                  mutualFriends = await result.listFriend.filter((value1) => {
-                    for (value2 of otherInfo.listFriend) {
-                      return value1 == value2;
-                    }
-                  });
+                  mutualFriends = await result.listFriend.filter((value1) => otherInfo.listFriend.includes(value1));
                 })
                 .catch((err) => {
                   res.status(500).json({
