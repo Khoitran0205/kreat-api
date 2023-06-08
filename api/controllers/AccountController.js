@@ -15,51 +15,61 @@ const jwt_decode = require('jwt-decode');
 
 // [GET] /accounts/:id/timeline
 exports.accounts_get_timeline_info = async (req, res, next) => {
-  // const authHeader = req.header('Authorization');
-  // const token = authHeader && authHeader.split(' ')[1];
+  const authHeader = req.header('Authorization');
+  const token = authHeader && authHeader.split(' ')[1];
 
-  // if (!token) return res.sendStatus(401);
+  if (!token) return res.sendStatus(401);
 
-  // var decodedToken = jwt_decode(token);
-  await PersonalInfo.findOne({ id_account: req.params.id }, { id_account: 1, avatar: 1, fullName: 1 })
-    .then(async (personalInfo) => {
-      await Post.find({ id_account: personalInfo.id_account })
-        .sort({ createdAt: -1 })
-        .then(async (listPost) => {
-          let list = listPost;
-          for ([index, value] of list.entries()) {
-            await React.find({ id_post: value._id }, { reactType: 1, id_account: 1 }).then(async (results) => {
-              let listReaction = [];
-              for (result of results) {
-                await PersonalInfo.findOne(
-                  { id_account: result.id_account },
-                  { fullName: 1, avatar: 1, reactType: result.reactType },
-                ).then((personal_info) => {
-                  listReaction.push(personal_info);
+  var decodedToken = jwt_decode(token);
+  await OtherInfo.findOne({ id_account: decodedToken.id_account }, { _id: 0, listFriend: 1 })
+    .then(async (myFriends) => {
+      const isFriend = await myFriends.listFriend.includes(req.params.id);
+      await PersonalInfo.findOne({ id_account: req.params.id }, { id_account: 1, avatar: 1, fullName: 1 })
+        .then(async (personalInfo) => {
+          await Post.find({ id_account: personalInfo.id_account })
+            .sort({ createdAt: -1 })
+            .then(async (listPost) => {
+              let list = listPost;
+              for ([index, value] of list.entries()) {
+                await React.find({ id_post: value._id }, { reactType: 1, id_account: 1 }).then(async (results) => {
+                  let listReaction = [];
+                  for (result of results) {
+                    await PersonalInfo.findOne(
+                      { id_account: result.id_account },
+                      { fullName: 1, avatar: 1, reactType: result.reactType },
+                    ).then((personal_info) => {
+                      listReaction.push(personal_info);
+                    });
+                  }
+                  let post = list[index];
+                  list[index] = {
+                    post,
+                    listReaction,
+                  };
+                });
+                await Comment.find({ id_post: value._id }).then(async (results) => {
+                  list[index] = {
+                    ...list[index],
+                    amountComment: results.length,
+                  };
                 });
               }
-              let post = list[index];
-              list[index] = {
-                post,
-                listReaction,
-              };
+              return await list;
+            })
+            .then((listPost) => {
+              res.status(200).json({
+                message: 'get timeline info successfully',
+                avatar: personalInfo.avatar,
+                fullName: personalInfo.fullName,
+                isFriend,
+                timeline: listPost,
+              });
+            })
+            .catch((err) => {
+              res.status(500).json({
+                error: err,
+              });
             });
-            await Comment.find({ id_post: value._id }).then(async (results) => {
-              list[index] = {
-                ...list[index],
-                amountComment: results.length,
-              };
-            });
-          }
-          return await list;
-        })
-        .then((listPost) => {
-          res.status(200).json({
-            message: 'get timeline info successfully',
-            avatar: personalInfo.avatar,
-            fullName: personalInfo.fullName,
-            timeline: listPost,
-          });
         })
         .catch((err) => {
           res.status(500).json({
@@ -90,8 +100,6 @@ exports.accounts_get_about_info = async (req, res, next) => {
                 res.status(200).json({
                   message: 'get about info successfully',
                   about: {
-                    avatar: personalInfo.avatar,
-                    fullName: personalInfo.fullName,
                     personalInfo,
                     favoriteInfo,
                     educationInfo,
@@ -128,53 +136,47 @@ exports.accounts_get_all_friends = async (req, res, next) => {
   var decodedToken = jwt_decode(token);
   await OtherInfo.findOne({ id_account: decodedToken.id_account }, { listFriend: 1 })
     .then(async (myInfo) => {
-      await PersonalInfo.findOne({ id_account: req.params.id })
+      await OtherInfo.findOne({ id_account: req.params.id }, { listFriend: 1 })
         .then(async (result) => {
-          await OtherInfo.findOne({ id_account: result.id_account }, { listFriend: 1 })
-            .then(async (result2) => {
-              let listFriend = [];
-              for ([index, value] of result2.listFriend.entries()) {
-                let friendInfo = {};
-                let mutualFriends = [];
-                await PersonalInfo.findOne({ id_account: value }, { fullName: 1, avatar: 1, aboutMe: 1 }).then(
-                  async (personalInfo) => {
-                    await OtherInfo.findOne({ id_account: value }, { listFriend: 1 })
-                      .then(async (otherInfo) => {
-                        mutualFriends = await otherInfo.listFriend.filter((value1) => {
-                          for (value2 of myInfo.listFriend) {
-                            return value1 == value2;
-                          }
-                        });
-                        friendInfo = {
-                          id_account: value,
-                          avatar: personalInfo.avatar,
-                          fullName: personalInfo.fullName,
-                          aboutMe: personalInfo.aboutMe,
-                          friendAmount: otherInfo.listFriend.length,
-                          mutualFriends: mutualFriends.length,
-                        };
-                      })
-                      .catch((err) => {
-                        res.status(500).json({
-                          error: err,
-                        });
-                      });
-                  },
-                );
-                listFriend.push(friendInfo);
-              }
-              res.status(200).json({
-                message: 'get all friends successfully',
-                avatar: result.avatar,
-                fullName: result.fullName,
-                listFriend,
+          let listFriend = [];
+          for ([index, value] of result.listFriend.entries()) {
+            let friendInfo = {};
+            let mutualFriends = [];
+            await PersonalInfo.findOne({ id_account: value }, { avatar: 1, fullName: 1, aboutMe: 1 })
+              .then(async (personalInfo) => {
+                await OtherInfo.findOne({ id_account: value }, { listFriend: 1 })
+                  .then(async (otherInfo) => {
+                    mutualFriends = await otherInfo.listFriend.filter((value1) => {
+                      for (value2 of myInfo.listFriend) {
+                        return value1 == value2;
+                      }
+                    });
+                    friendInfo = {
+                      id_account: value,
+                      avatar: personalInfo.avatar,
+                      fullName: personalInfo.fullName,
+                      aboutMe: personalInfo.aboutMe,
+                      friendAmount: otherInfo.listFriend.length,
+                      mutualFriends: mutualFriends.length,
+                    };
+                  })
+                  .catch((err) => {
+                    res.status(500).json({
+                      error: err,
+                    });
+                  });
+              })
+              .catch((err) => {
+                res.status(500).json({
+                  error: err,
+                });
               });
-            })
-            .catch((err) => {
-              res.status(500).json({
-                error: err,
-              });
-            });
+            listFriend.push(friendInfo);
+          }
+          res.status(200).json({
+            message: 'get all friends successfully',
+            listFriend,
+          });
         })
         .catch((err) => {
           res.status(500).json({
@@ -191,23 +193,12 @@ exports.accounts_get_all_friends = async (req, res, next) => {
 
 // [GET] /accounts/:id/visual_media
 exports.accounts_get_visual_media_info = async (req, res, next) => {
-  await PersonalInfo.findOne({ id_account: req.params.id })
-    .then(async (personalInfo) => {
-      await VisualMedia.find({ id_account: personalInfo.id_account }, { url: 1 })
-        .then((listURL) => {
-          res.status(200).json({
-            message: 'get all images and videos successfully',
-            id_account: personalInfo.id_account,
-            avatar: personalInfo.avatar,
-            fullName: personalInfo.fullName,
-            listURL,
-          });
-        })
-        .catch((err) => {
-          res.status(500).json({
-            error: err,
-          });
-        });
+  await VisualMedia.find({ id_account: req.params.id }, { url: 1 })
+    .then((listURL) => {
+      res.status(200).json({
+        message: 'get all images and videos successfully',
+        listURL,
+      });
     })
     .catch((err) => {
       res.status(500).json({
