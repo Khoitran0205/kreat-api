@@ -30,7 +30,7 @@ const postSchema = mongoose.Schema(
     location: { type: String, default: '' },
     isShared: { type: Boolean, default: false },
     shareId: { type: mongoose.Types.ObjectId, default: null },
-    shareContent: { type: sharedPostSchema, default: null },
+    shareContent: { type: sharedPostSchema, default: {} },
   },
   {
     timestamps: true,
