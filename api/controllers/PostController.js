@@ -415,21 +415,32 @@ exports.posts_get_all_tagged_friend = async (req, res, next) => {
         let mutualFriends = [];
         await PersonalInfo.findOne({ id_account: value }, { id_account: 1, avatar: 1, fullName: 1 })
           .then(async (personalInfo) => {
-            await OtherInfo.findOne({ id_account: value }, { listFriend: 1 }).then(async (otherInfo) => {
-              await OtherInfo.findOne({ id_account: decodedToken.id_account }, { listFriend: 1 })
-                .then(async (result) => {
-                  mutualFriends = await result.listFriend.filter((value1) => otherInfo.listFriend.includes(value1));
+            let a = {};
+            if (value == decodedToken.id_account) {
+              a = { personalInfo };
+            } else {
+              await OtherInfo.findOne({ id_account: value }, { listFriend: 1 })
+                .then(async (otherInfo) => {
+                  await OtherInfo.findOne({ id_account: decodedToken.id_account }, { listFriend: 1 })
+                    .then(async (result) => {
+                      mutualFriends = await result.listFriend.filter((value1) => otherInfo.listFriend.includes(value1));
+                    })
+                    .catch((err) => {
+                      res.status(500).json({
+                        error: err,
+                      });
+                    });
                 })
                 .catch((err) => {
                   res.status(500).json({
                     error: err,
                   });
                 });
-            });
-            let a = {
-              personalInfo,
-              mutualFriends: mutualFriends.length,
-            };
+              a = {
+                personalInfo,
+                mutualFriends: mutualFriends.length,
+              };
+            }
             listTaggedFriend.push(a);
           })
           .catch((err) => {
