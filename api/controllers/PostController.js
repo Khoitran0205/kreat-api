@@ -96,6 +96,7 @@ exports.posts_share_post = async (req, res, next) => {
                   shared_avatar: sharedPost.avatar,
                   shared_id_visualMedia: sharedPost.id_visualMedia,
                   shared_postContent: sharedPost.postContent,
+                  shared_postFeeling: sharedPost.postFeeling,
                   shared_postPrivacy: sharedPost.postPrivacy,
                   shared_createdAt: sharedPost.createdAt,
                   shared_id_friendTag: sharedPost.id_friendTag,
