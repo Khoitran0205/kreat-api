@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 
+const Account = require('../models/user/account');
 const PersonalInfo = require('../models/user/personal_info');
 const FavoriteInfo = require('../models/user/favorite_info');
 const EducationInfo = require('../models/user/education_info');
@@ -779,4 +780,60 @@ exports.accounts_get_friend_suggestions = async (req, res, next) => {
   if (!token) return res.sendStatus(401);
 
   var decodedToken = jwt_decode(token);
+  await OtherInfo.findOne({ id_account: decodedToken.id_account }, { listFriend: 1 })
+    .then(async (otherInfo) => {
+      let notFriendList = [];
+      await Account.find({ _id: { $ne: decodedToken.id_account } }, { _id: 1 })
+        .then(async (account) => {
+          notFriendList = await account.filter((value1) => !otherInfo.listFriend.includes(value1._id));
+          let friendSuggestionList = [];
+          let friendSuggestionInfo = {};
+          for ([index, value] of notFriendList.entries()) {
+            await OtherInfo.findOne({ id_account: value._id }, { id_account: 1, listFriend: 1, _id: 0 })
+              .then(async (listFriend) => {
+                let mutualFriends = await listFriend.listFriend.filter((value1) =>
+                  otherInfo.listFriend.includes(value1),
+                );
+                await PersonalInfo.findOne({ id_account: listFriend.id_account }, { avatar: 1, fullName: 1 })
+                  .then(async (personalInfo) => {
+                    friendSuggestionInfo = {
+                      id_account: listFriend.id_account,
+                      avatar: personalInfo.avatar,
+                      fullName: personalInfo.fullName,
+                      mutualFriends: mutualFriends.length,
+                    };
+                    friendSuggestionList.push(friendSuggestionInfo);
+                  })
+                  .catch((err) => {
+                    res.status(500).json({
+                      error: err,
+                    });
+                  });
+              })
+              .catch((err) => {
+                res.status(500).json({
+                  error: err,
+                });
+              });
+          }
+          friendSuggestionList.sort((a, b) => {
+            return b.mutualFriends - a.mutualFriends;
+          });
+          friendSuggestionList = friendSuggestionList.slice(0, 5);
+          res.status(200).json({
+            message: 'get friend suggestions successfully',
+            friendSuggestionList,
+          });
+        })
+        .catch((err) => {
+          res.status(500).json({
+            error: err,
+          });
+        });
+    })
+    .catch((err) => {
+      res.status(500).json({
+        error: err,
+      });
+    });
 };
