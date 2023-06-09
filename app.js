@@ -13,10 +13,11 @@ connectToDb();
 app.use(morgan('dev'));
 app.use(
   bodyParser.urlencoded({
+    limit: '500mb',
     extended: true,
   }),
 );
-app.use(bodyParser.json());
+app.use(bodyParser.json({ limit: '500mb' }));
 
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');

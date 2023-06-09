@@ -1,5 +1,3 @@
-const mongoose = require('mongoose');
-
 const Account = require('../models/user/account');
 const PersonalInfo = require('../models/user/personal_info');
 const FavoriteInfo = require('../models/user/favorite_info');
