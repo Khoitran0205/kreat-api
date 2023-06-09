@@ -373,7 +373,7 @@ exports.posts_get_all_comment = async (req, res, next) => {
           { id_account: value.id_account },
           { id_account: 1, fullName: 1, avatar: 1, commentContent: value.commentContent },
         ).then(async (result) => {
-          await React.find({ id_comment: value._id }, { _id: 0, reactType: 1 })
+          await React.find({ id_comment: value._id }, { _id: 1, id_account: 1, reactType: 1 })
             .then(async (listReaction) => {
               result = {
                 comment: result,
