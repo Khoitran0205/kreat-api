@@ -719,10 +719,10 @@ exports.accounts_unreact = async (req, res, next) => {
     _id: req.body.id_react,
     id_account: decodedToken.id_account,
   })
-    .then((result) => {
-      if (!result) res.sendStatus(401);
+    .then(async (result) => {
+      if (!result) await res.sendStatus(401);
       else {
-        res.status(200).json({
+        await res.status(200).json({
           message: 'reaction removed',
           reaction: result,
         });
