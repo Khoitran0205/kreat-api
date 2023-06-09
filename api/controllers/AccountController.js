@@ -707,7 +707,7 @@ exports.accounts_update_react = async (req, res, next) => {
     });
 };
 
-// [DELETE] /accounts/unreact
+// [DELETE] /accounts/:id/unreact
 exports.accounts_unreact = async (req, res, next) => {
   const authHeader = req.header('Authorization');
   const token = authHeader && authHeader.split(' ')[1];
@@ -716,7 +716,7 @@ exports.accounts_unreact = async (req, res, next) => {
 
   var decodedToken = jwt_decode(token);
   await React.findOneAndRemove({
-    _id: req.body.id_react,
+    _id: req.params.id,
     id_account: decodedToken.id_account,
   })
     .then(async (result) => {

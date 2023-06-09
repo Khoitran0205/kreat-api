@@ -29,7 +29,7 @@ router.delete('/decline_friend_request', authenticateToken, AccountController.ac
 //Reaction
 router.post('/react', authenticateToken, AccountController.accounts_react);
 router.patch('/update_react', authenticateToken, AccountController.accounts_update_react);
-router.delete('/unreact', authenticateToken, AccountController.accounts_unreact);
+router.delete('/:id/unreact', authenticateToken, AccountController.accounts_unreact);
 
 //Comment
 router.post('/comment_post', authenticateToken, AccountController.accounts_comment_post);
