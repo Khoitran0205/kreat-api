@@ -677,14 +677,14 @@ exports.accounts_react = async (req, res, next) => {
 };
 
 // [PATCH] /accounts/update_react
-exports.accounts_update_react = (req, res, next) => {
+exports.accounts_update_react = async (req, res, next) => {
   const authHeader = req.header('Authorization');
   const token = authHeader && authHeader.split(' ')[1];
 
   if (!token) return res.sendStatus(401);
 
   var decodedToken = jwt_decode(token);
-  React.findOneAndUpdate(
+  await React.findOneAndUpdate(
     {
       _id: req.body.id_react,
       id_account: decodedToken.id_account,
@@ -708,14 +708,14 @@ exports.accounts_update_react = (req, res, next) => {
 };
 
 // [DELETE] /accounts/unreact
-exports.accounts_unreact = (req, res, next) => {
+exports.accounts_unreact = async (req, res, next) => {
   const authHeader = req.header('Authorization');
   const token = authHeader && authHeader.split(' ')[1];
 
   if (!token) return res.sendStatus(401);
 
   var decodedToken = jwt_decode(token);
-  React.findOneAndRemove({
+  await React.findOneAndRemove({
     _id: req.body.id_react,
     id_account: decodedToken.id_account,
   })
@@ -774,14 +774,14 @@ exports.accounts_comment_post = async (req, res, next) => {
 };
 
 // [PATCH] /accounts/update_comment_post
-exports.accounts_update_comment_post = (req, res, next) => {
+exports.accounts_update_comment_post = async (req, res, next) => {
   const authHeader = req.header('Authorization');
   const token = authHeader && authHeader.split(' ')[1];
 
   if (!token) return res.sendStatus(401);
 
   var decodedToken = jwt_decode(token);
-  Comment.findOneAndUpdate(
+  await Comment.findOneAndUpdate(
     {
       _id: req.body.id_comment,
       id_account: decodedToken.id_account,
