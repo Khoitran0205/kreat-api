@@ -274,7 +274,7 @@ exports.posts_get_all_post = async (req, res, next) => {
     .then(async (listPost) => {
       let list = listPost;
       for ([index, value] of list.entries()) {
-        await React.find({ id_post: value._id }, { id_account: 1, reactType: 1, _id: 0 })
+        await React.find({ id_post: value._id }, { id_account: 1, reactType: 1 })
           .then(async (listReaction) => {
             let post = list[index];
             list[index] = {
