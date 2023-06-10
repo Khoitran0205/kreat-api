@@ -23,8 +23,8 @@ router.get('/:id/friends/search', authenticateToken, AccountController.accounts_
 //Interact with account's friends
 router.get('/friend_requests', authenticateToken, AccountController.accounts_get_all_friend_requests);
 router.post('/send_friend_request', authenticateToken, AccountController.accounts_send_friend_request);
-router.delete('/accept_friend_request', authenticateToken, AccountController.accounts_accept_friend_request);
-router.delete('/decline_friend_request', authenticateToken, AccountController.accounts_decline_friend_request);
+router.delete('/:id/accept_friend_request', authenticateToken, AccountController.accounts_accept_friend_request);
+router.delete('/:id/decline_friend_request', authenticateToken, AccountController.accounts_decline_friend_request);
 
 //Reaction
 router.post('/react', authenticateToken, AccountController.accounts_react);
@@ -34,7 +34,7 @@ router.delete('/:id/unreact', authenticateToken, AccountController.accounts_unre
 //Comment
 router.post('/comment_post', authenticateToken, AccountController.accounts_comment_post);
 router.patch('/update_comment_post', authenticateToken, AccountController.accounts_update_comment_post);
-router.delete('/delete_comment_post', authenticateToken, AccountController.accounts_delete_comment_post);
+router.delete('/:id/delete_comment_post', authenticateToken, AccountController.accounts_delete_comment_post);
 
 //Friend suggestions
 router.get('/friend_suggestion', authenticateToken, AccountController.accounts_get_friend_suggestions);
