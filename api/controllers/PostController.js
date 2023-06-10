@@ -6,6 +6,8 @@ const React = require('../models/post/react');
 const Comment = require('../models/post/comment');
 const VisualMedia = require('../models/post/visual_media');
 
+const { cloudinary } = require('../../utils/cloudinary');
+
 const jwt_decode = require('jwt-decode');
 
 // [POST] /posts/create_post
@@ -25,17 +27,45 @@ exports.posts_create_post = async (req, res, next) => {
       } else {
         await PersonalInfo.findOne({ id_account: account._id })
           .then(async (personalInfo) => {
+            let id_visualMedia = [];
+            if (req.body.visualData) {
+              const fileStr = req.body.visualData;
+              for ([index, url] of fileStr.entries()) {
+                if (url.type == 'image') {
+                  uploadedResponse = await cloudinary.uploader.upload(url.data, {
+                    resource_type: 'image',
+                    upload_preset: 'dev_setups',
+                  });
+                  id_visualMedia.push({
+                    type: 'image',
+                    url: uploadedResponse.public_id,
+                  });
+                } else {
+                  if (url.type == 'video') {
+                    uploadedResponse = await cloudinary.uploader.upload(url.data, {
+                      resource_type: 'video',
+                      upload_preset: 'dev_setups',
+                    });
+                    id_visualMedia.push({
+                      type: 'video',
+                      url: uploadedResponse.public_id,
+                    });
+                  }
+                }
+              }
+            }
             const post = await new Post({
               id_account: account._id,
               fullName: personalInfo.fullName,
               avatar: personalInfo.avatar,
+              id_visualMedia,
               ...req.body,
             });
             await post
               .save()
               .then(async (result) => {
-                if (req.body.id_visualMedia) {
-                  for ([index, value] of req.body.id_visualMedia.entries()) {
+                if (result.id_visualMedia) {
+                  for ([index, value] of result.id_visualMedia.entries()) {
                     let visualMedia = await new VisualMedia({
                       id_post: result._id,
                       id_account: account._id,
@@ -181,7 +211,7 @@ exports.posts_update_post = async (req, res, next) => {
     });
 };
 
-// [DELETE] /posts/delete_post
+// [DELETE] /posts/:id/delete_post
 exports.posts_delete_post = async (req, res, next) => {
   const authHeader = req.header('Authorization');
   const token = authHeader && authHeader.split(' ')[1];
@@ -189,11 +219,11 @@ exports.posts_delete_post = async (req, res, next) => {
   if (!token) return res.sendStatus(401);
 
   var decodedToken = jwt_decode(token);
-  await Account.findOne({ email: decodedToken.email })
+  await Account.findOne({ _id: decodedToken.id_account })
     .then(async (account) => {
       await Post.findOneAndRemove({
         id_account: account._id,
-        _id: req.body.id_post,
+        _id: req.params.id,
       })
         .then(async (result) => {
           if (!result) {
@@ -234,6 +264,13 @@ exports.posts_delete_post = async (req, res, next) => {
             await VisualMedia.find({ id_post: result._id })
               .then(async (visualMedias) => {
                 for ([index, value] of visualMedias.entries()) {
+                  try {
+                    await cloudinary.uploader.destroy(value.url.visualUrl, { upload_preset: 'dev_setups' });
+                  } catch (error) {
+                    res.status(500).json({
+                      error,
+                    });
+                  }
                   await VisualMedia.findOneAndRemove({ _id: value._id }).catch((err) => {
                     res.status(500).json({
                       error: err,

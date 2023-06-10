@@ -684,10 +684,13 @@ exports.accounts_update_react = async (req, res, next) => {
   var decodedToken = jwt_decode(token);
   await React.findOneAndUpdate(
     {
-      _id: req.body.id_react,
+      id_post: req.body.id_post,
+      id_comment: req.body.id_comment,
       id_account: decodedToken.id_account,
     },
-    req.body,
+    {
+      reactType: req.body.reactType,
+    },
   )
     .then((result) => {
       if (!result) res.sendStatus(401);

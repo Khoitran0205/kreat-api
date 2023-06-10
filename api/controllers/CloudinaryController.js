@@ -15,3 +15,19 @@ exports.cloudinary_upload = async (req, res, next) => {
     });
   }
 };
+
+// [POST] /cloudinary/delete_upload
+exports.cloudinary_delete_upload = async (req, res, next) => {
+  try {
+    const fileStr = req.body.data;
+    const uploadedResponse = await cloudinary.uploader.destroy(fileStr, { upload_preset: 'dev_setups' });
+    res.status(201).json({
+      message: 'image deleted successfully',
+      uploadedResponse,
+    });
+  } catch (error) {
+    res.status(500).json({
+      error,
+    });
+  }
+};

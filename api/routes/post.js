@@ -9,7 +9,7 @@ const PostController = require('../controllers/PostController');
 router.post('/create_post', authenticateToken, PostController.posts_create_post);
 router.post('/share_post', authenticateToken, PostController.posts_share_post);
 router.patch('/update_post', authenticateToken, PostController.posts_update_post);
-router.delete('/delete_post', authenticateToken, PostController.posts_delete_post);
+router.delete('/:id/delete_post', authenticateToken, PostController.posts_delete_post);
 
 //Get all posts
 router.get('/get_all_post', authenticateToken, PostController.posts_get_all_post);
