@@ -756,8 +756,8 @@ exports.accounts_update_react = async (req, res, next) => {
     });
 };
 
-// [DELETE] /accounts/:id/unreact
-exports.accounts_unreact = async (req, res, next) => {
+// [DELETE] /accounts/:id/unreact_post
+exports.accounts_unreact_post = async (req, res, next) => {
   const authHeader = req.header('Authorization');
   const token = authHeader && authHeader.split(' ')[1];
 
@@ -765,14 +765,42 @@ exports.accounts_unreact = async (req, res, next) => {
 
   var decodedToken = jwt_decode(token);
   await React.findOneAndRemove({
-    _id: req.params.id,
+    id_post: req.params.id,
     id_account: decodedToken.id_account,
   })
     .then(async (result) => {
       if (!result) await res.sendStatus(401);
       else {
         await res.status(200).json({
-          message: 'reaction removed',
+          message: 'reaction on post removed',
+          reaction: result,
+        });
+      }
+    })
+    .catch((err) => {
+      res.status(500).json({
+        error: err,
+      });
+    });
+};
+
+// [DELETE] /accounts/:id/unreact_comment
+exports.accounts_unreact_comment = async (req, res, next) => {
+  const authHeader = req.header('Authorization');
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) return res.sendStatus(401);
+
+  var decodedToken = jwt_decode(token);
+  await React.findOneAndRemove({
+    id_comment: req.params.id,
+    id_account: decodedToken.id_account,
+  })
+    .then(async (result) => {
+      if (!result) await res.sendStatus(401);
+      else {
+        await res.status(200).json({
+          message: 'reaction on comment removed',
           reaction: result,
         });
       }
