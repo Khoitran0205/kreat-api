@@ -499,7 +499,7 @@ exports.accounts_get_all_friend_requests = async (req, res, next) => {
   if (!token) return res.sendStatus(401);
 
   var decodedToken = jwt_decode(token);
-  await FriendRequest.find({ id_receiver: decodedToken.id_account }, { _id: 1, id_sender: 1 })
+  await FriendRequest.find({ id_receiver: decodedToken.id_account }, { id_sender: 1 })
     .then(async (senders) => {
       await OtherInfo.findOne({ id_account: decodedToken.id_account }, { listFriend: 1 })
         .then(async (result) => {
@@ -517,7 +517,7 @@ exports.accounts_get_all_friend_requests = async (req, res, next) => {
                       }
                     });
                     friendRequestInfo = {
-                      _id: senders._id,
+                      _id: value._id,
                       id_account: value.id_sender,
                       avatar: personalInfo.avatar,
                       fullName: personalInfo.fullName,
