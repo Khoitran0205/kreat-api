@@ -315,21 +315,32 @@ exports.posts_get_all_post = async (req, res, next) => {
     .then(async (listPost) => {
       let list = [];
       for ([index, value] of listPost.entries()) {
+        let postInfo = {};
         if (value) {
           await React.find({ id_post: value._id }, { id_account: 1, reactType: 1 })
             .then(async (listReaction) => {
               if (listReaction) {
-                list[index] = {
+                postInfo = {
                   post: value,
                   listReaction,
+                };
+              } else {
+                postInfo = {
+                  post: value,
+                  listReaction: [],
                 };
               }
               await Comment.find({ id_post: value._id })
                 .then(async (results) => {
                   if (results) {
-                    list[index] = await {
-                      ...list[index],
+                    postInfo = {
+                      ...postInfo,
                       amountComment: results.length,
+                    };
+                  } else {
+                    postInfo = {
+                      ...postInfo,
+                      amountComment: 0,
                     };
                   }
                 })
@@ -344,6 +355,9 @@ exports.posts_get_all_post = async (req, res, next) => {
                 error: err,
               });
             });
+          list.push(postInfo);
+        } else {
+          list.push({});
         }
       }
       await res.status(200).json({
