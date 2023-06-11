@@ -739,6 +739,9 @@ exports.accounts_update_react = async (req, res, next) => {
     {
       reactType: req.body.reactType,
     },
+    {
+      new: true,
+    },
   )
     .then((result) => {
       if (!result) res.sendStatus(401);

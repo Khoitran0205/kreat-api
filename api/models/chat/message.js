@@ -4,7 +4,7 @@ const messageSchema = mongoose.Schema(
   {
     id_conversation: { type: mongoose.Types.ObjectId, require: true },
     id_sender: { type: mongoose.Types.ObjectId, require: true },
-    messageContent: { type: String, default: '' },
+    messageContent: { type: String, require: true },
   },
   {
     timestamps: true,
