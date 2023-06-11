@@ -9,6 +9,8 @@ const Post = require('../models/post/post');
 const FriendRequest = require('../models/request/friend_request');
 const VisualMedia = require('../models/post/visual_media');
 
+const { cloudinary } = require('../../utils/cloudinary');
+
 const jwt_decode = require('jwt-decode');
 
 // [GET] /accounts/:id/timeline
@@ -21,7 +23,37 @@ exports.accounts_get_timeline_info = async (req, res, next) => {
   var decodedToken = jwt_decode(token);
   await OtherInfo.findOne({ id_account: decodedToken.id_account }, { _id: 0, listFriend: 1 })
     .then(async (myFriends) => {
+      let friendStatus = '';
       const isFriend = await myFriends.listFriend.includes(req.params.id);
+      if (isFriend) {
+        friendStatus = 'friend';
+      } else {
+        await FriendRequest.findOne({ id_sender: decodedToken.id_account, id_receiver: req.params.id })
+          .then(async (sentRequest) => {
+            if (sentRequest) {
+              friendStatus = 'friend request sent';
+            } else {
+              await FriendRequest.findOne({ id_receiver: decodedToken.id_account, id_sender: req.params.id })
+                .then((receivedRequest) => {
+                  if (receivedRequest) {
+                    friendStatus = 'friend request received';
+                  } else {
+                    friendStatus = 'not friend';
+                  }
+                })
+                .catch((err) => {
+                  res.status(500).json({
+                    error: err,
+                  });
+                });
+            }
+          })
+          .catch((err) => {
+            res.status(500).json({
+              error: err,
+            });
+          });
+      }
       await PersonalInfo.findOne({ id_account: req.params.id }, { id_account: 1, avatar: 1, fullName: 1 })
         .then(async (personalInfo) => {
           await Post.find({ id_account: personalInfo.id_account })
@@ -59,7 +91,7 @@ exports.accounts_get_timeline_info = async (req, res, next) => {
                 message: 'get timeline info successfully',
                 avatar: personalInfo.avatar,
                 fullName: personalInfo.fullName,
-                isFriend,
+                friendStatus,
                 timeline: listPost,
               });
             })
@@ -220,10 +252,26 @@ exports.accounts_update_personal_info = async (req, res, next) => {
 
   var decodedToken = jwt_decode(token);
   await PersonalInfo.findOneAndUpdate({ id_account: decodedToken.id_account }, req.body, { new: true })
-    .then((result) => {
+    .then(async (result) => {
+      if (req.body.avatarData) {
+        const fileStr = req.body.avatarData;
+        let uploadedResponse = await cloudinary.uploader.upload(fileStr, {
+          resource_type: 'image',
+          upload_preset: 'avatar_setups',
+        });
+        await PersonalInfo.findOneAndUpdate(
+          { id_account: decodedToken.id_account },
+          { avatar: uploadedResponse.public_id },
+        )
+          .then((result2) => {})
+          .catch((err) => {
+            res.status(500).json({
+              error: err,
+            });
+          });
+      }
       res.status(200).json({
         message: 'update successfully',
-        result,
       });
     })
     .catch((err) => {
@@ -843,66 +891,77 @@ exports.accounts_get_friend_suggestions = async (req, res, next) => {
   var decodedToken = jwt_decode(token);
   await OtherInfo.findOne({ id_account: decodedToken.id_account }, { listFriend: 1 })
     .then(async (otherInfo) => {
-      let notFriendList = [];
       await Account.find({ _id: { $ne: decodedToken.id_account } }, { _id: 1 })
         .then(async (account) => {
-          notFriendList = await account.filter((value1) => !otherInfo.listFriend.includes(value1._id));
+          let notFriendList = await account.filter((value1) => !otherInfo.listFriend.includes(value1._id));
           await FriendRequest.find({ id_sender: decodedToken.id_account }, { _id: 0, id_receiver: 1 })
             .then(async (mySentRequest) => {
               let listSentRequest = [];
-              console.log(notFriendList);
               for ([index, value] of mySentRequest.entries()) {
-                listSentRequest.push({ _id: value.id_receiver });
+                listSentRequest.push(value.id_receiver.toString());
               }
-              console.log(listSentRequest);
-              let firstFilteredList = await notFriendList.filter((value1) => !listSentRequest.includes(value1));
-              console.log(firstFilteredList);
-              // console.log(firstFilteredList);
-              // let friendSuggestionList = [];
-              // let friendSuggestionInfo = {};
-              // for ([index, value] of notFriendList.entries()) {
-              //   await OtherInfo.findOne({ id_account: value._id }, { id_account: 1, listFriend: 1, _id: 0 })
-              //     .then(async (listFriend) => {
-              //       let mutualFriends = await listFriend.listFriend.filter((value1) =>
-              //         otherInfo.listFriend.includes(value1),
-              //       );
-              //       await PersonalInfo.findOne({ id_account: listFriend.id_account }, { avatar: 1, fullName: 1 })
-              //         .then(async (personalInfo) => {
-              //           friendSuggestionInfo = {
-              //             id_account: listFriend.id_account,
-              //             avatar: personalInfo.avatar,
-              //             fullName: personalInfo.fullName,
-              //             mutualFriends: mutualFriends.length,
-              //           };
-              //           friendSuggestionList.push(friendSuggestionInfo);
-              //         })
-              //         .catch((err) => {
-              //           res.status(500).json({
-              //             error: err,
-              //           });
-              //         });
-              //     })
-              //     .catch((err) => {
-              //       res.status(500).json({
-              //         error: err,
-              //       });
-              //     });
-              // }
+              let firstFilteredList = await notFriendList.filter(
+                (value1) => !listSentRequest.includes(value1._id.toString()),
+              );
+              await FriendRequest.find({ id_receiver: decodedToken.id_account }, { _id: 0, id_sender: 1 })
+                .then(async (myReceivedRequest) => {
+                  let listReceivedRequest = [];
+                  for ([index, value] of myReceivedRequest.entries()) {
+                    listReceivedRequest.push(value.id_sender.toString());
+                  }
+                  let secondFilteredList = await firstFilteredList.filter(
+                    (value1) => !listReceivedRequest.includes(value1._id.toString()),
+                  );
+                  let friendSuggestionList = [];
+                  let friendSuggestionInfo = {};
+                  for ([index, notFriend] of secondFilteredList.entries()) {
+                    await OtherInfo.findOne({ id_account: notFriend._id }, { id_account: 1, listFriend: 1, _id: 0 })
+                      .then(async (listFriend) => {
+                        let mutualFriends = await listFriend.listFriend.filter((value1) =>
+                          otherInfo.listFriend.includes(value1),
+                        );
+                        await PersonalInfo.findOne({ id_account: listFriend.id_account }, { avatar: 1, fullName: 1 })
+                          .then(async (personalInfo) => {
+                            friendSuggestionInfo = {
+                              id_account: listFriend.id_account,
+                              avatar: personalInfo.avatar,
+                              fullName: personalInfo.fullName,
+                              mutualFriends: mutualFriends.length,
+                            };
+                            friendSuggestionList.push(friendSuggestionInfo);
+                          })
+                          .catch((err) => {
+                            res.status(500).json({
+                              error: err,
+                            });
+                          });
+                      })
+                      .catch((err) => {
+                        res.status(500).json({
+                          error: err,
+                        });
+                      });
+                  }
+                  friendSuggestionList.sort((a, b) => {
+                    return b.mutualFriends - a.mutualFriends;
+                  });
+                  friendSuggestionList = friendSuggestionList.slice(0, 10);
+                  res.status(200).json({
+                    message: 'get friend suggestions successfully',
+                    friendSuggestionList,
+                  });
+                })
+                .catch((err) => {
+                  res.status(500).json({
+                    error: err,
+                  });
+                });
             })
             .catch((err) => {
               res.status(500).json({
                 error: err,
               });
             });
-
-          friendSuggestionList.sort((a, b) => {
-            return b.mutualFriends - a.mutualFriends;
-          });
-          friendSuggestionList = friendSuggestionList.slice(0, 10);
-          res.status(200).json({
-            message: 'get friend suggestions successfully',
-            friendSuggestionList,
-          });
         })
         .catch((err) => {
           res.status(500).json({

@@ -4,8 +4,7 @@ const personalInfo = mongoose.Schema({
   id_account: { type: mongoose.Types.ObjectId, required: true },
   avatar: {
     type: String,
-    default:
-      'https://banner2.cleanpng.com/20180802/icj/kisspng-user-profile-default-computer-icons-network-video-the-foot-problems-of-the-disinall-foot-care-founde-5b6346121ec769.0929994515332326581261.jpg',
+    default: 'avatars/uvn95cpjesp8ez5jnbz2.jpg',
   },
   fullName: { type: String, default: '' },
   gender: { type: String, default: '' },

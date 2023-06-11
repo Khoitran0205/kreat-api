@@ -32,7 +32,7 @@ exports.posts_create_post = async (req, res, next) => {
               const fileStr = req.body.visualData;
               for ([index, url] of fileStr.entries()) {
                 if (url.type == 'image') {
-                  uploadedResponse = await cloudinary.uploader.upload(url.data, {
+                  let uploadedResponse = await cloudinary.uploader.upload(url.data, {
                     resource_type: 'image',
                     upload_preset: 'dev_setups',
                   });
@@ -42,7 +42,7 @@ exports.posts_create_post = async (req, res, next) => {
                   });
                 } else {
                   if (url.type == 'video') {
-                    uploadedResponse = await cloudinary.uploader.upload(url.data, {
+                    let uploadedResponse = await cloudinary.uploader.upload(url.data, {
                       resource_type: 'video',
                       upload_preset: 'dev_setups',
                     });
