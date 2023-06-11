@@ -620,23 +620,36 @@ exports.accounts_accept_friend_request = async (req, res, next) => {
         }
         await FriendRequest.findOneAndDelete({ _id: req.params.id })
           .then(async (result) => {
-            const newConversation = await Conversation({
-              members: [decodedToken.id_account, friendRequest.id_sender],
-              status: true,
-            });
-            await newConversation
-              .save()
-              .then((conversation) => {
+            await Conversation.findOneAndUpdate(
+              { members: [decodedToken.id_account, result.id_sender] },
+              { status: true },
+            ).then(async (result2) => {
+              console.log(result2);
+              if (!result2) {
+                const newConversation = await Conversation({
+                  members: [decodedToken.id_account, friendRequest.id_sender],
+                  status: true,
+                });
+                await newConversation
+                  .save()
+                  .then((conversation) => {
+                    res.status(200).json({
+                      message: 'friend request accepted',
+                      friendRequest: result,
+                    });
+                  })
+                  .catch((err) => {
+                    res.status(500).json({
+                      error: err,
+                    });
+                  });
+              } else {
                 res.status(200).json({
                   message: 'friend request accepted',
                   friendRequest: result,
                 });
-              })
-              .catch((err) => {
-                res.status(500).json({
-                  error: err,
-                });
-              });
+              }
+            });
           })
           .catch((err) => {
             res.status(500).json({
@@ -707,7 +720,10 @@ exports.accounts_unfriend = async (req, res, next) => {
             );
             await OtherInfo.findOneAndUpdate({ id_account: req.params.id }, { listFriend: secondRemove })
               .then(async (result) => {
-                Conversation.findOneAndUpdate({ members: [decodedToken.id_account, req.params.id] }, { status: false })
+                Conversation.findOneAndUpdate(
+                  { members: { $in: [decodedToken.id_account, req.params.id] } },
+                  { status: false },
+                )
                   .then((result2) => {
                     res.status(200).json({
                       message: 'unfriend successfully',
