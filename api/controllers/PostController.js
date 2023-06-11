@@ -307,11 +307,11 @@ exports.posts_get_all_post = async (req, res, next) => {
   await Post.find()
     .sort({ createdAt: -1 })
     .then(async (listPost) => {
-      let list = listPost;
+      let list = await listPost;
       for ([index, value] of list.entries()) {
         await React.find({ id_post: value._id }, { id_account: 1, reactType: 1 })
           .then(async (listReaction) => {
-            let post = list[index];
+            let post = await list[index];
             list[index] = {
               post,
               listReaction,
@@ -323,7 +323,7 @@ exports.posts_get_all_post = async (req, res, next) => {
             });
           });
         await Comment.find({ id_post: value._id }).then(async (results) => {
-          list[index] = {
+          list[index] = await {
             ...list[index],
             amountComment: results.length,
           };
@@ -331,8 +331,8 @@ exports.posts_get_all_post = async (req, res, next) => {
       }
       return await list;
     })
-    .then((listPost) => {
-      res.status(200).json({
+    .then(async (listPost) => {
+      await res.status(200).json({
         message: 'get all posts successfully',
         listPost: listPost,
       });
