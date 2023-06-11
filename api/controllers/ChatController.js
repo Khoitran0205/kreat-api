@@ -67,13 +67,25 @@ exports.chat_send_message = async (req, res, next) => {
   if (!req.body.id_conversation || !req.body.messageContent) {
     res.sendStatus(500);
   } else {
-    await newMessage
-      .save()
-      .then((result) => {
-        res.status(201).json({
-          message: 'message sent successfully',
-          message: result,
-        });
+    await Conversation.findOne({ _id: req.body.id_conversation })
+      .then(async (conversation) => {
+        if (!conversation.status) {
+          res.sendStatus();
+        } else {
+          await newMessage
+            .save()
+            .then((result) => {
+              res.status(201).json({
+                message: 'message sent successfully',
+                message: result,
+              });
+            })
+            .catch((err) => {
+              res.status(500).json({
+                error: err,
+              });
+            });
+        }
       })
       .catch((err) => {
         res.status(500).json({

@@ -622,6 +622,7 @@ exports.accounts_accept_friend_request = async (req, res, next) => {
           .then(async (result) => {
             const newConversation = await Conversation({
               members: [decodedToken.id_account, friendRequest.id_sender],
+              status: true,
             });
             await newConversation
               .save()
@@ -697,7 +698,38 @@ exports.accounts_unfriend = async (req, res, next) => {
   OtherInfo.findOne({ id_account: decodedToken.id_account }, { listFriend: 1 })
     .then(async (myListFriend) => {
       if (myListFriend.listFriend.includes(req.params.id)) {
-        console.log(myListFriend.listFriend.includes(req.params.id));
+        const friendRemovedArray = await myListFriend.listFriend.filter((friend) => friend != req.params.id);
+        await OtherInfo.findOneAndUpdate({ id_account: decodedToken.id_account }, { listFriend: friendRemovedArray })
+          .then(async (firstRemove) => {
+            const friendRemovedArray2 = await OtherInfo.findOne({ id_account: req.params.id }, { listFriend: 1 });
+            const secondRemove = await friendRemovedArray2.listFriend.filter(
+              (friend) => friend != decodedToken.id_account,
+            );
+            await OtherInfo.findOneAndUpdate({ id_account: req.params.id }, { listFriend: secondRemove })
+              .then(async (result) => {
+                Conversation.findOneAndUpdate({ members: [decodedToken.id_account, req.params.id] }, { status: false })
+                  .then((result2) => {
+                    res.status(200).json({
+                      message: 'unfriend successfully',
+                    });
+                  })
+                  .catch((err) => {
+                    res.status(500).json({
+                      error: err,
+                    });
+                  });
+              })
+              .catch((err) => {
+                res.status(500).json({
+                  error: err,
+                });
+              });
+          })
+          .catch((err) => {
+            res.status(500).json({
+              error: err,
+            });
+          });
       }
     })
     .catch((err) => {
