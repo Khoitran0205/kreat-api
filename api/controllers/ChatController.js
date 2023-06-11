@@ -70,7 +70,7 @@ exports.chat_send_message = async (req, res, next) => {
     await Conversation.findOne({ _id: req.body.id_conversation })
       .then(async (conversation) => {
         if (!conversation.status) {
-          res.sendStatus();
+          res.sendStatus(403);
         } else {
           await newMessage
             .save()
