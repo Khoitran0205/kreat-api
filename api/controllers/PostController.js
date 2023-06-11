@@ -317,16 +317,20 @@ exports.posts_get_all_post = async (req, res, next) => {
       for ([index, value] of listPost.entries()) {
         await React.find({ id_post: value._id }, { id_account: 1, reactType: 1 })
           .then(async (listReaction) => {
-            list[index] = {
-              post: value,
-              listReaction,
-            };
+            if (listReaction) {
+              list[index] = {
+                post: value,
+                listReaction,
+              };
+            }
             await Comment.find({ id_post: value._id })
               .then(async (results) => {
-                list[index] = await {
-                  ...list[index],
-                  amountComment: results.length,
-                };
+                if (results) {
+                  list[index] = await {
+                    ...list[index],
+                    amountComment: results.length,
+                  };
+                }
               })
               .catch((err) => {
                 res.status(500).json({
