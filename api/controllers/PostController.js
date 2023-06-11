@@ -321,18 +321,24 @@ exports.posts_get_all_post = async (req, res, next) => {
               post: value,
               listReaction,
             };
+            await Comment.find({ id_post: value._id })
+              .then(async (results) => {
+                list[index] = await {
+                  ...list[index],
+                  amountComment: results.length,
+                };
+              })
+              .catch((err) => {
+                res.status(500).json({
+                  error: err,
+                });
+              });
           })
           .catch((err) => {
             res.status(500).json({
               error: err,
             });
           });
-        await Comment.find({ id_post: value._id }).then(async (results) => {
-          list[index] = await {
-            ...list[index],
-            amountComment: results.length,
-          };
-        });
       }
       await res.status(200).json({
         message: 'get all posts successfully',
