@@ -304,16 +304,21 @@ exports.posts_delete_post = async (req, res, next) => {
 
 // [GET] /posts/get_all_post
 exports.posts_get_all_post = async (req, res, next) => {
+  // const authHeader = req.header('Authorization');
+  // const token = authHeader && authHeader.split(' ')[1];
+
+  // if (!token) return res.sendStatus(401);
+
+  // var decodedToken = jwt_decode(token);
   await Post.find()
     .sort({ createdAt: -1 })
     .then(async (listPost) => {
-      let list = await listPost;
-      for ([index, value] of list.entries()) {
+      let list = [];
+      for ([index, value] of listPost.entries()) {
         await React.find({ id_post: value._id }, { id_account: 1, reactType: 1 })
           .then(async (listReaction) => {
-            let post = await list[index];
             list[index] = {
-              post,
+              post: value,
               listReaction,
             };
           })
@@ -329,12 +334,9 @@ exports.posts_get_all_post = async (req, res, next) => {
           };
         });
       }
-      return await list;
-    })
-    .then(async (listPost) => {
       await res.status(200).json({
         message: 'get all posts successfully',
-        listPost: listPost,
+        listPost: list,
       });
     })
     .catch((err) => {
