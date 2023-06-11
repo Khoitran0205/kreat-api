@@ -25,6 +25,7 @@ router.get('/friend_requests', authenticateToken, AccountController.accounts_get
 router.post('/send_friend_request', authenticateToken, AccountController.accounts_send_friend_request);
 router.delete('/:id/accept_friend_request', authenticateToken, AccountController.accounts_accept_friend_request);
 router.delete('/:id/decline_friend_request', authenticateToken, AccountController.accounts_decline_friend_request);
+router.delete('/:id/unfriend', authenticateToken, AccountController.accounts_unfriend);
 
 //Reaction
 router.post('/react', authenticateToken, AccountController.accounts_react);

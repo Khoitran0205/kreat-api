@@ -1,6 +1,4 @@
-const conversation = require('../models/chat/conversation');
 const Conversation = require('../models/chat/conversation');
-const message = require('../models/chat/message');
 const Message = require('../models/chat/message');
 
 const jwt_decode = require('jwt-decode');

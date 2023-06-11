@@ -8,6 +8,7 @@ const Comment = require('../models/post/comment');
 const Post = require('../models/post/post');
 const FriendRequest = require('../models/request/friend_request');
 const VisualMedia = require('../models/post/visual_media');
+const Conversation = require('../models/chat/conversation');
 
 const { cloudinary } = require('../../utils/cloudinary');
 
@@ -498,7 +499,7 @@ exports.accounts_get_all_friend_requests = async (req, res, next) => {
   if (!token) return res.sendStatus(401);
 
   var decodedToken = jwt_decode(token);
-  await FriendRequest.find({ id_receiver: decodedToken.id_account }, { _id: 0, id_sender: 1 })
+  await FriendRequest.find({ id_receiver: decodedToken.id_account }, { _id: 1, id_sender: 1 })
     .then(async (senders) => {
       await OtherInfo.findOne({ id_account: decodedToken.id_account }, { listFriend: 1 })
         .then(async (result) => {
@@ -516,6 +517,7 @@ exports.accounts_get_all_friend_requests = async (req, res, next) => {
                       }
                     });
                     friendRequestInfo = {
+                      _id: senders._id,
                       id_account: value.id_sender,
                       avatar: personalInfo.avatar,
                       fullName: personalInfo.fullName,
@@ -617,11 +619,23 @@ exports.accounts_accept_friend_request = async (req, res, next) => {
           });
         }
         await FriendRequest.findOneAndDelete({ _id: req.params.id })
-          .then((result) => {
-            res.status(200).json({
-              message: 'friend request accepted',
-              friendRequest: result,
+          .then(async (result) => {
+            const newConversation = await Conversation({
+              members: [decodedToken.id_account, friendRequest.id_sender],
             });
+            await newConversation
+              .save()
+              .then((conversation) => {
+                res.status(200).json({
+                  message: 'friend request accepted',
+                  friendRequest: result,
+                });
+              })
+              .catch((err) => {
+                res.status(500).json({
+                  error: err,
+                });
+              });
           })
           .catch((err) => {
             res.status(500).json({
@@ -663,6 +677,27 @@ exports.accounts_decline_friend_request = async (req, res, next) => {
               error: err,
             });
           });
+      }
+    })
+    .catch((err) => {
+      res.status(500).json({
+        error: err,
+      });
+    });
+};
+
+// [DELETE] /accounts/:id/unfriend
+exports.accounts_unfriend = async (req, res, next) => {
+  const authHeader = req.header('Authorization');
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) return res.sendStatus(401);
+
+  var decodedToken = jwt_decode(token);
+  OtherInfo.findOne({ id_account: decodedToken.id_account }, { listFriend: 1 })
+    .then(async (myListFriend) => {
+      if (myListFriend.listFriend.includes(req.params.id)) {
+        console.log(myListFriend.listFriend.includes(req.params.id));
       }
     })
     .catch((err) => {
