@@ -315,34 +315,36 @@ exports.posts_get_all_post = async (req, res, next) => {
     .then(async (listPost) => {
       let list = [];
       for ([index, value] of listPost.entries()) {
-        await React.find({ id_post: value._id }, { id_account: 1, reactType: 1 })
-          .then(async (listReaction) => {
-            if (listReaction) {
-              list[index] = {
-                post: value,
-                listReaction,
-              };
-            }
-            await Comment.find({ id_post: value._id })
-              .then(async (results) => {
-                if (results) {
-                  list[index] = await {
-                    ...list[index],
-                    amountComment: results.length,
-                  };
-                }
-              })
-              .catch((err) => {
-                res.status(500).json({
-                  error: err,
+        if (value) {
+          await React.find({ id_post: value._id }, { id_account: 1, reactType: 1 })
+            .then(async (listReaction) => {
+              if (listReaction) {
+                list[index] = {
+                  post: value,
+                  listReaction,
+                };
+              }
+              await Comment.find({ id_post: value._id })
+                .then(async (results) => {
+                  if (results) {
+                    list[index] = await {
+                      ...list[index],
+                      amountComment: results.length,
+                    };
+                  }
+                })
+                .catch((err) => {
+                  res.status(500).json({
+                    error: err,
+                  });
                 });
+            })
+            .catch((err) => {
+              res.status(500).json({
+                error: err,
               });
-          })
-          .catch((err) => {
-            res.status(500).json({
-              error: err,
             });
-          });
+        }
       }
       await res.status(200).json({
         message: 'get all posts successfully',
