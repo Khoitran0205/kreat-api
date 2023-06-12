@@ -401,13 +401,13 @@ exports.posts_get_all_reaction = async (req, res, next) => {
   await React.find({ id_post: req.params.id }, { id_account: 1, reactType: 1 })
     .then(async (listReaction) => {
       let list = [];
-      for ([index, value] of listReaction.entries()) {
+      for ([index, value] of await listReaction.entries()) {
         let mutualFriends = [];
         await OtherInfo.findOne({ id_account: value.id_account }, { listFriend: 1 })
           .then(async (otherInfo) => {
             await OtherInfo.findOne({ id_account: decodedToken.id_account }, { listFriend: 1 }).then(async (result) => {
-              mutualFriends = await result.listFriend.filter((value1) => {
-                for (value2 of otherInfo.listFriend) {
+              mutualFriends = await result.listFriend.filter(async (value1) => {
+                for (value2 of await otherInfo.listFriend) {
                   return value1 == value2;
                 }
               });
@@ -449,7 +449,7 @@ exports.posts_get_all_comment = async (req, res, next) => {
   await Comment.find({ id_post: req.params.id })
     .then(async (listComment) => {
       let list = [];
-      for ([index, value] of listComment.entries()) {
+      for ([index, value] of await listComment.entries()) {
         await PersonalInfo.findOne(
           { id_account: value.id_account },
           { id_account: 1, fullName: 1, avatar: 1, commentContent: value.commentContent },
@@ -492,7 +492,7 @@ exports.posts_get_all_tagged_friend = async (req, res, next) => {
   await Post.findOne({ _id: req.params.id }, { id_friendTag: 1 })
     .then(async (post) => {
       let listTaggedFriend = [];
-      for ([index, value] of post.id_friendTag.entries()) {
+      for ([index, value] of await post.id_friendTag.entries()) {
         let mutualFriends = [];
         await PersonalInfo.findOne({ id_account: value }, { id_account: 1, avatar: 1, fullName: 1 })
           .then(async (personalInfo) => {

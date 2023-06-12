@@ -589,6 +589,40 @@ exports.accounts_send_friend_request = async (req, res, next) => {
   }
 };
 
+// [DELETE] /accounts/:id/cancel_friend_request
+exports.accounts_cancel_friend_request = async (req, res, next) => {
+  const authHeader = req.header('Authorization');
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) return res.sendStatus(401);
+
+  var decodedToken = jwt_decode(token);
+  await FriendRequest.findOne({ id_sender: decodedToken.id_account, id_receiver: req.params.id })
+    .then(async (friendRequest) => {
+      if (decodedToken.id_account != friendRequest.id_sender) {
+        res.sendStatus(401);
+      } else {
+        await FriendRequest.findOneAndDelete({ _id: friendRequest._id })
+          .then((result) => {
+            res.status(200).json({
+              message: 'friend request canceled',
+              friendRequest: result,
+            });
+          })
+          .catch((err) => {
+            res.status(500).json({
+              error: err,
+            });
+          });
+      }
+    })
+    .catch((err) => {
+      res.status(500).json({
+        error: err,
+      });
+    });
+};
+
 // [DELETE] /accounts/:id/accept_friend_request
 exports.accounts_accept_friend_request = async (req, res, next) => {
   const authHeader = req.header('Authorization');
@@ -697,7 +731,7 @@ exports.accounts_decline_friend_request = async (req, res, next) => {
 
   await FriendRequest.findOne({ _id: req.params.id })
     .then(async (friendRequest) => {
-      if (decodedToken.id_account != friendRequest.id_sender && decodedToken.id_account != friendRequest.id_receiver) {
+      if (decodedToken.id_account != friendRequest.id_receiver) {
         res.sendStatus(401);
       } else {
         await FriendRequest.findOneAndDelete({ _id: req.params.id })

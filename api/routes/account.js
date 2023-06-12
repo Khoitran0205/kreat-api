@@ -23,6 +23,7 @@ router.get('/:id/friends/search', authenticateToken, AccountController.accounts_
 //Interact with account's friends
 router.get('/friend_requests', authenticateToken, AccountController.accounts_get_all_friend_requests);
 router.post('/send_friend_request', authenticateToken, AccountController.accounts_send_friend_request);
+router.delete('/:id/cancel_friend_request', authenticateToken, AccountController.accounts_cancel_friend_request);
 router.delete('/:id/accept_friend_request', authenticateToken, AccountController.accounts_accept_friend_request);
 router.delete('/:id/decline_friend_request', authenticateToken, AccountController.accounts_decline_friend_request);
 router.delete('/:id/unfriend', authenticateToken, AccountController.accounts_unfriend);
