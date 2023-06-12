@@ -13,6 +13,7 @@ const Conversation = require('../models/chat/conversation');
 const { cloudinary } = require('../../utils/cloudinary');
 
 const jwt_decode = require('jwt-decode');
+const mongoose = require('mongoose');
 
 // [GET] /accounts/:id/timeline
 exports.accounts_get_timeline_info = async (req, res, next) => {
@@ -621,13 +622,12 @@ exports.accounts_accept_friend_request = async (req, res, next) => {
         await FriendRequest.findOneAndDelete({ _id: req.params.id })
           .then(async (result) => {
             await Conversation.findOneAndUpdate(
-              { members: [decodedToken.id_account, result.id_sender] },
+              { members: [decodedToken.id_account, result.id_sender.toString()] },
               { status: true },
             ).then(async (result2) => {
-              console.log(result2);
               if (!result2) {
                 const newConversation = await Conversation({
-                  members: [decodedToken.id_account, friendRequest.id_sender],
+                  members: [decodedToken.id_account, friendRequest.id_sender.toString()],
                   status: true,
                 });
                 await newConversation
@@ -721,10 +721,10 @@ exports.accounts_unfriend = async (req, res, next) => {
             await OtherInfo.findOneAndUpdate({ id_account: req.params.id }, { listFriend: secondRemove })
               .then(async (result) => {
                 Conversation.findOneAndUpdate(
-                  { members: { $in: [decodedToken.id_account, req.params.id] } },
+                  { members: { $in: [decodedToken.id_account], $in: [req.params.id] } },
                   { status: false },
                 )
-                  .then((result2) => {
+                  .then(async (result2) => {
                     res.status(200).json({
                       message: 'unfriend successfully',
                     });
@@ -746,6 +746,10 @@ exports.accounts_unfriend = async (req, res, next) => {
               error: err,
             });
           });
+      } else {
+        res.status(500).json({
+          message: 'this person is not your friend',
+        });
       }
     })
     .catch((err) => {
@@ -1082,6 +1086,48 @@ exports.accounts_get_friend_suggestions = async (req, res, next) => {
             error: err,
           });
         });
+    })
+    .catch((err) => {
+      res.status(500).json({
+        error: err,
+      });
+    });
+};
+
+// [GET] /accounts/contact
+exports.accounts_get_all_contacts = async (req, res, next) => {
+  const authHeader = req.header('Authorization');
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) return res.sendStatus(401);
+
+  var decodedToken = jwt_decode(token);
+  await Conversation.find({ members: { $in: [decodedToken.id_account] }, status: true })
+    .then(async (conversations) => {
+      let listContact = [];
+      for ([index, value] of conversations.entries()) {
+        let contactInfo = {};
+        const contact = await value.members.filter((member) => member != decodedToken.id_account);
+        await PersonalInfo.findOne({ id_account: contact[0] }, { _id: 0, id_account: 1, avatar: 1, fullName: 1 })
+          .then(async (personalInfo) => {
+            contactInfo = {
+              id_conversation: value._id,
+              id_account: personalInfo.id_account,
+              avatar: personalInfo.avatar,
+              fullName: personalInfo.fullName,
+            };
+          })
+          .catch((err) => {
+            res.status(500).json({
+              error: err,
+            });
+          });
+        listContact.push(contactInfo);
+      }
+      res.status(200).json({
+        message: 'get all contacts successfully',
+        listContact,
+      });
     })
     .catch((err) => {
       res.status(500).json({

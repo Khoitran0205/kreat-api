@@ -41,4 +41,7 @@ router.delete('/:id/delete_comment_post', authenticateToken, AccountController.a
 //Friend suggestions
 router.get('/friend_suggestion', authenticateToken, AccountController.accounts_get_friend_suggestions);
 
+//Contacts
+router.get('/contact', authenticateToken, AccountController.accounts_get_all_contacts);
+
 module.exports = router;

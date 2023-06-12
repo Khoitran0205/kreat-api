@@ -37,7 +37,7 @@ exports.chat_get_all_conversation = async (req, res, next) => {
   if (!token) return res.sendStatus(401);
 
   var decodedToken = jwt_decode(token);
-  Conversation.find({ members: { $in: [decodedToken.id_account] } })
+  await Conversation.find({ members: { $in: [decodedToken.id_account] } })
     .then((conversations) => {
       res.status(200).json({
         message: 'get all conversations successfully',
