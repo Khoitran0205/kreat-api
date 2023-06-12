@@ -522,7 +522,7 @@ exports.accounts_get_all_friend_requests = async (req, res, next) => {
                       }
                     });
                     friendRequestInfo = {
-                      _id: value._id,
+                      id_friendRequest: value._id,
                       id_account: value.id_sender,
                       avatar: personalInfo.avatar,
                       fullName: personalInfo.fullName,
