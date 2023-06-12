@@ -310,7 +310,7 @@ exports.posts_get_all_post = async (req, res, next) => {
   // if (!token) return res.sendStatus(401);
 
   // var decodedToken = jwt_decode(token);
-  await Post.find()
+  await Post.find({})
     .sort({ createdAt: -1 })
     .then(async (posts) => {
       let listPost = [];
@@ -378,6 +378,7 @@ exports.posts_get_all_post = async (req, res, next) => {
           });
         listPost.push(postInfo);
       }
+      console.log(listPost);
       await res.status(200).json({
         message: 'get all posts successfully',
         listPost,
