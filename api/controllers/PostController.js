@@ -119,8 +119,6 @@ exports.posts_share_post = async (req, res, next) => {
                   .then(async (sharedPersonalInfo) => {
                     shareContent = await {
                       shared_id_account: sharedPersonalInfo.id_account,
-                      shared_avatar: sharedPersonalInfo.avatar,
-                      shared_accountName: sharedPersonalInfo.fullName,
                       shared_id_visualMedia: sharedPost.id_visualMedia,
                       shared_postContent: sharedPost.postContent,
                       shared_postFeeling: sharedPost.postFeeling,
@@ -324,6 +322,25 @@ exports.posts_get_all_post = async (req, res, next) => {
               .then(async (listReaction) => {
                 await Comment.find({ id_post: value._id })
                   .then(async (comments) => {
+                    let shareContent = {};
+                    if (value.isShared) {
+                      const sharedPersonalInfo = await PersonalInfo.findOne(
+                        { id_account: value.shareContent.shared_id_account },
+                        { _id: 0, avatar: 1, fullName: 1 },
+                      );
+                      shareContent = await {
+                        shared_id_account: value.shareContent.shared_id_account,
+                        shared_avatar: sharedPersonalInfo.avatar,
+                        shared_fullName: sharedPersonalInfo.fullName,
+                        shared_id_visualMedia: value.shareContent.shared_id_visualMedia,
+                        shared_postContent: value.shareContent.shared_postContent,
+                        shared_postFeeling: value.shareContent.shared_postFeeling,
+                        shared_postPrivacy: value.shareContent.shared_postPrivacy,
+                        shared_createdAt: value.shareContent.shared_createdAt,
+                        shared_id_friendTag: value.shareContent.shared_id_friendTag,
+                        shared_location: value.shareContent.shared_location,
+                      };
+                    }
                     postInfo = {
                       id_account: value.id_account,
                       avatar: personalInfo.avatar,
@@ -336,7 +353,7 @@ exports.posts_get_all_post = async (req, res, next) => {
                       location: value.location,
                       isShared: value.isShared,
                       shareId: value.shareId,
-                      shareContent: value.shareContent,
+                      shareContent,
                       createdAt: value.createdAt,
                       listReaction,
                       commentAmount: comments.length,
