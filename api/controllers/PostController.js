@@ -314,7 +314,7 @@ exports.posts_get_all_post = async (req, res, next) => {
     .sort({ createdAt: -1 })
     .then(async (posts) => {
       let listPost = [];
-      for ([index, value] of posts.entries()) {
+      for ([index, value] of await posts.entries()) {
         let postInfo = {};
         await PersonalInfo.findOne({ id_account: value.id_account }, { _id: 0, avatar: 1, fullName: 1 })
           .then(async (personalInfo) => {
@@ -328,7 +328,7 @@ exports.posts_get_all_post = async (req, res, next) => {
                         { id_account: value.shareContent.shared_id_account },
                         { _id: 0, avatar: 1, fullName: 1 },
                       );
-                      shareContent = await {
+                      shareContent = {
                         shared_id_account: value.shareContent.shared_id_account,
                         shared_avatar: sharedPersonalInfo.avatar,
                         shared_fullName: sharedPersonalInfo.fullName,
