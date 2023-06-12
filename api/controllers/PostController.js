@@ -117,7 +117,7 @@ exports.posts_share_post = async (req, res, next) => {
                   { _id: 0, id_account: 1, avatar: 1, fullName: 1 },
                 )
                   .then(async (sharedPersonalInfo) => {
-                    shareContent = await {
+                    shareContent = {
                       shared_id_account: sharedPersonalInfo.id_account,
                       shared_id_visualMedia: sharedPost.id_visualMedia,
                       shared_postContent: sharedPost.postContent,
@@ -310,85 +310,146 @@ exports.posts_get_all_post = async (req, res, next) => {
   // if (!token) return res.sendStatus(401);
 
   // var decodedToken = jwt_decode(token);
-  await Post.find({})
-    .sort({ createdAt: -1 })
-    .then(async (posts) => {
-      let listPost = [];
-      for ([index, value] of await posts.entries()) {
-        let postInfo = {};
-        await PersonalInfo.findOne({ id_account: value.id_account }, { _id: 0, avatar: 1, fullName: 1 })
-          .then(async (personalInfo) => {
-            await React.find({ id_post: value._id, id_comment: null }, { id_account: 1, reactType: 1 })
-              .then(async (listReaction) => {
-                await Comment.find({ id_post: value._id })
-                  .then(async (comments) => {
-                    let shareContent = {};
-                    if (value.isShared) {
-                      const sharedPersonalInfo = await PersonalInfo.findOne(
-                        { id_account: value.shareContent.shared_id_account },
-                        { _id: 0, avatar: 1, fullName: 1 },
-                      );
-                      shareContent = {
-                        shared_id_account: value.shareContent.shared_id_account,
-                        shared_avatar: sharedPersonalInfo.avatar,
-                        shared_fullName: sharedPersonalInfo.fullName,
-                        shared_id_visualMedia: value.shareContent.shared_id_visualMedia,
-                        shared_postContent: value.shareContent.shared_postContent,
-                        shared_postFeeling: value.shareContent.shared_postFeeling,
-                        shared_postPrivacy: value.shareContent.shared_postPrivacy,
-                        shared_createdAt: value.shareContent.shared_createdAt,
-                        shared_id_friendTag: value.shareContent.shared_id_friendTag,
-                        shared_location: value.shareContent.shared_location,
-                      };
-                    }
-                    postInfo = {
-                      id_account: value.id_account,
-                      avatar: personalInfo.avatar,
-                      fullName: personalInfo.fullName,
-                      id_visualMedia: value.id_visualMedia,
-                      postContent: value.postContent,
-                      postFeeling: value.postFeeling,
-                      postPrivacy: value.postPrivacy,
-                      id_friendTag: value.id_friendTag,
-                      location: value.location,
-                      isShared: value.isShared,
-                      shareId: value.shareId,
-                      shareContent,
-                      createdAt: value.createdAt,
-                      listReaction,
-                      commentAmount: comments.length,
-                    };
-                  })
-                  .catch((err) => {
-                    res.status(500).json({
-                      error: err,
-                    });
-                  });
-              })
-              .catch((err) => {
-                res.status(500).json({
-                  error: err,
-                });
-              });
-          })
-          .catch((err) => {
-            res.status(500).json({
-              error: err,
-            });
-          });
-        listPost.push(postInfo);
+  // await Post.find({})
+  //   .sort({ createdAt: -1 })
+  //   .then(async (posts) => {
+  //     let listPost = [];
+  //     for ([index, value] of posts.entries()) {
+  //       let postInfo = {};
+  //       await PersonalInfo.findOne({ id_account: value.id_account }, { _id: 0, avatar: 1, fullName: 1 })
+  //         .then(async (personalInfo) => {
+  //           await React.find({ id_post: value._id, id_comment: null }, { id_account: 1, reactType: 1 })
+  //             .then(async (listReaction) => {
+  //               await Comment.find({ id_post: value._id })
+  //                 .then(async (comments) => {
+  //                   let shareContent = {};
+  //                   if (value.isShared) {
+  //                     const sharedPersonalInfo = await PersonalInfo.findOne(
+  //                       { id_account: value.shareContent.shared_id_account },
+  //                       { _id: 0, avatar: 1, fullName: 1 },
+  //                     );
+  //                     shareContent = {
+  //                       shared_id_account: value.shareContent.shared_id_account,
+  //                       shared_avatar: sharedPersonalInfo.avatar,
+  //                       shared_fullName: sharedPersonalInfo.fullName,
+  //                       shared_id_visualMedia: value.shareContent.shared_id_visualMedia,
+  //                       shared_postContent: value.shareContent.shared_postContent,
+  //                       shared_postFeeling: value.shareContent.shared_postFeeling,
+  //                       shared_postPrivacy: value.shareContent.shared_postPrivacy,
+  //                       shared_createdAt: value.shareContent.shared_createdAt,
+  //                       shared_id_friendTag: value.shareContent.shared_id_friendTag,
+  //                       shared_location: value.shareContent.shared_location,
+  //                     };
+  //                   }
+  //                   postInfo = {
+  //                     id_account: value.id_account,
+  //                     avatar: personalInfo.avatar,
+  //                     fullName: personalInfo.fullName,
+  //                     id_visualMedia: value.id_visualMedia,
+  //                     postContent: value.postContent,
+  //                     postFeeling: value.postFeeling,
+  //                     postPrivacy: value.postPrivacy,
+  //                     id_friendTag: value.id_friendTag,
+  //                     location: value.location,
+  //                     isShared: value.isShared,
+  //                     shareId: value.shareId,
+  //                     shareContent,
+  //                     createdAt: value.createdAt,
+  //                     listReaction,
+  //                     commentAmount: comments.length,
+  //                   };
+  //                 })
+  //                 .catch((err) => {
+  //                   res.status(500).json({
+  //                     error: err,
+  //                   });
+  //                 });
+  //             })
+  //             .catch((err) => {
+  //               res.status(500).json({
+  //                 error: err,
+  //               });
+  //             });
+  //         })
+  //         .catch((err) => {
+  //           res.status(500).json({
+  //             error: err,
+  //           });
+  //         });
+  //       listPost.push(postInfo);
+  //     }
+  //     await res.status(200).json({
+  //       message: 'get all posts successfully',
+  //       listPost,
+  //     });
+  //   })
+  //   .catch((err) => {
+  //     res.status(500).json({
+  //       error: err,
+  //     });
+  //   });
+  try {
+    const posts = await Post.find({}).sort({ createdAt: -1 });
+
+    let listPost = [];
+    for (const [index, value] of posts.entries()) {
+      let postInfo = {};
+      const personalInfo = await PersonalInfo.findOne(
+        { id_account: value.id_account },
+        { _id: 0, avatar: 1, fullName: 1 },
+      );
+      const listReaction = await React.find({ id_post: value._id, id_comment: null }, { id_account: 1, reactType: 1 });
+      const comments = await Comment.find({ id_post: value._id });
+
+      let shareContent = {};
+      if (value.isShared) {
+        const sharedPersonalInfo = await PersonalInfo.findOne(
+          { id_account: value.shareContent.shared_id_account },
+          { _id: 0, avatar: 1, fullName: 1 },
+        );
+        shareContent = {
+          shared_id_account: value.shareContent.shared_id_account,
+          shared_avatar: sharedPersonalInfo.avatar,
+          shared_fullName: sharedPersonalInfo.fullName,
+          shared_id_visualMedia: value.shareContent.shared_id_visualMedia,
+          shared_postContent: value.shareContent.shared_postContent,
+          shared_postFeeling: value.shareContent.shared_postFeeling,
+          shared_postPrivacy: value.shareContent.shared_postPrivacy,
+          shared_createdAt: value.shareContent.shared_createdAt,
+          shared_id_friendTag: value.shareContent.shared_id_friendTag,
+          shared_location: value.shareContent.shared_location,
+        };
       }
-      console.log(listPost);
-      await res.status(200).json({
-        message: 'get all posts successfully',
-        listPost,
-      });
-    })
-    .catch((err) => {
-      res.status(500).json({
-        error: err,
-      });
+
+      postInfo = {
+        id_account: value.id_account,
+        avatar: personalInfo.avatar,
+        fullName: personalInfo.fullName,
+        id_visualMedia: value.id_visualMedia,
+        postContent: value.postContent,
+        postFeeling: value.postFeeling,
+        postPrivacy: value.postPrivacy,
+        id_friendTag: value.id_friendTag,
+        location: value.location,
+        isShared: value.isShared,
+        shareId: value.shareId,
+        shareContent,
+        createdAt: value.createdAt,
+        listReaction,
+        commentAmount: comments.length,
+      };
+
+      listPost.push(postInfo);
+    }
+    res.status(200).json({
+      message: 'get all posts successfully',
+      listPost,
     });
+  } catch (err) {
+    res.status(500).json({
+      error: err,
+    });
+  }
 };
 
 // [GET] /:id/posts/get_all_reaction
@@ -402,13 +463,13 @@ exports.posts_get_all_reaction = async (req, res, next) => {
   await React.find({ id_post: req.params.id }, { id_account: 1, reactType: 1 })
     .then(async (listReaction) => {
       let list = [];
-      for ([index, value] of await listReaction.entries()) {
+      for ([index, value] of listReaction.entries()) {
         let mutualFriends = [];
         await OtherInfo.findOne({ id_account: value.id_account }, { listFriend: 1 })
           .then(async (otherInfo) => {
             await OtherInfo.findOne({ id_account: decodedToken.id_account }, { listFriend: 1 }).then(async (result) => {
               mutualFriends = await result.listFriend.filter(async (value1) => {
-                for (value2 of await otherInfo.listFriend) {
+                for (value2 of otherInfo.listFriend) {
                   return value1 == value2;
                 }
               });
@@ -450,7 +511,7 @@ exports.posts_get_all_comment = async (req, res, next) => {
   await Comment.find({ id_post: req.params.id })
     .then(async (listComment) => {
       let list = [];
-      for ([index, value] of await listComment.entries()) {
+      for ([index, value] of listComment.entries()) {
         await PersonalInfo.findOne(
           { id_account: value.id_account },
           { id_account: 1, fullName: 1, avatar: 1, commentContent: value.commentContent },
@@ -493,7 +554,7 @@ exports.posts_get_all_tagged_friend = async (req, res, next) => {
   await Post.findOne({ _id: req.params.id }, { id_friendTag: 1 })
     .then(async (post) => {
       let listTaggedFriend = [];
-      for ([index, value] of await post.id_friendTag.entries()) {
+      for ([index, value] of post.id_friendTag.entries()) {
         let mutualFriends = [];
         await PersonalInfo.findOne({ id_account: value }, { id_account: 1, avatar: 1, fullName: 1 })
           .then(async (personalInfo) => {
