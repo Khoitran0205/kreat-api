@@ -77,7 +77,7 @@ exports.chat_send_message = async (req, res, next) => {
             .then((result) => {
               res.status(201).json({
                 message: 'message sent successfully',
-                message: result,
+                newMessage: result,
               });
             })
             .catch((err) => {
