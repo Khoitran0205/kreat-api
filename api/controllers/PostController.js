@@ -25,68 +25,58 @@ exports.posts_create_post = async (req, res, next) => {
           message: 'Account not found!',
         });
       } else {
-        await PersonalInfo.findOne({ id_account: account._id })
-          .then(async (personalInfo) => {
-            let id_visualMedia = [];
-            if (req.body.visualData) {
-              const fileStr = req.body.visualData;
-              for ([index, url] of fileStr.entries()) {
-                if (url.type == 'image') {
-                  let uploadedResponse = await cloudinary.uploader.upload(url.data, {
-                    resource_type: 'image',
-                    upload_preset: 'dev_setups',
-                  });
-                  id_visualMedia.push({
-                    type: 'image',
-                    url: uploadedResponse.public_id,
-                  });
-                } else {
-                  if (url.type == 'video') {
-                    let uploadedResponse = await cloudinary.uploader.upload(url.data, {
-                      resource_type: 'video',
-                      upload_preset: 'dev_setups',
-                    });
-                    id_visualMedia.push({
-                      type: 'video',
-                      url: uploadedResponse.public_id,
-                    });
-                  }
-                }
+        let id_visualMedia = [];
+        if (req.body.visualData) {
+          const fileStr = req.body.visualData;
+          for ([index, url] of fileStr.entries()) {
+            if (url.type == 'image') {
+              let uploadedResponse = await cloudinary.uploader.upload(url.data, {
+                resource_type: 'image',
+                upload_preset: 'dev_setups',
+              });
+              id_visualMedia.push({
+                type: 'image',
+                url: uploadedResponse.public_id,
+              });
+            } else {
+              if (url.type == 'video') {
+                let uploadedResponse = await cloudinary.uploader.upload(url.data, {
+                  resource_type: 'video',
+                  upload_preset: 'dev_setups',
+                });
+                id_visualMedia.push({
+                  type: 'video',
+                  url: uploadedResponse.public_id,
+                });
               }
             }
-            const post = await new Post({
-              id_account: account._id,
-              fullName: personalInfo.fullName,
-              avatar: personalInfo.avatar,
-              id_visualMedia,
-              ...req.body,
+          }
+        }
+        const post = await new Post({
+          id_account: account._id,
+          id_visualMedia,
+          ...req.body,
+        });
+        await post
+          .save()
+          .then(async (result) => {
+            if (result.id_visualMedia) {
+              for ([index, value] of result.id_visualMedia.entries()) {
+                let visualMedia = await new VisualMedia({
+                  id_post: result._id,
+                  id_account: account._id,
+                  url: {
+                    visualType: value.type,
+                    visualUrl: value.url,
+                  },
+                });
+                await visualMedia.save();
+              }
+            }
+            await res.status(201).json({
+              message: 'post created!',
+              post: result,
             });
-            await post
-              .save()
-              .then(async (result) => {
-                if (result.id_visualMedia) {
-                  for ([index, value] of result.id_visualMedia.entries()) {
-                    let visualMedia = await new VisualMedia({
-                      id_post: result._id,
-                      id_account: account._id,
-                      url: {
-                        visualType: value.type,
-                        visualUrl: value.url,
-                      },
-                    });
-                    await visualMedia.save();
-                  }
-                }
-                await res.status(201).json({
-                  message: 'post created!',
-                  post: result,
-                });
-              })
-              .catch((err) => {
-                res.status(500).json({
-                  error: err,
-                });
-              });
           })
           .catch((err) => {
             res.status(500).json({
@@ -110,7 +100,7 @@ exports.posts_share_post = async (req, res, next) => {
   if (!token) return res.sendStatus(401);
 
   var decodedToken = jwt_decode(token);
-  await Account.findOne({ email: decodedToken.email })
+  await Account.findOne({ _id: decodedToken.id_account })
     .then(async (account) => {
       if (!account) {
         return res.status(404).json({
@@ -122,17 +112,29 @@ exports.posts_share_post = async (req, res, next) => {
             let shareContent = {};
             await Post.findOne({ _id: req.body.shareId })
               .then(async (sharedPost) => {
-                shareContent = await {
-                  shared_accountName: sharedPost.fullName,
-                  shared_avatar: sharedPost.avatar,
-                  shared_id_visualMedia: sharedPost.id_visualMedia,
-                  shared_postContent: sharedPost.postContent,
-                  shared_postFeeling: sharedPost.postFeeling,
-                  shared_postPrivacy: sharedPost.postPrivacy,
-                  shared_createdAt: sharedPost.createdAt,
-                  shared_id_friendTag: sharedPost.id_friendTag,
-                  shared_location: sharedPost.location,
-                };
+                await PersonalInfo.findOne(
+                  { id_account: sharedPost.id_account },
+                  { _id: 0, id_account: 1, avatar: 1, fullName: 1 },
+                )
+                  .then(async (sharedPersonalInfo) => {
+                    shareContent = await {
+                      shared_id_account: sharedPersonalInfo.id_account,
+                      shared_avatar: sharedPersonalInfo.avatar,
+                      shared_accountName: sharedPersonalInfo.fullName,
+                      shared_id_visualMedia: sharedPost.id_visualMedia,
+                      shared_postContent: sharedPost.postContent,
+                      shared_postFeeling: sharedPost.postFeeling,
+                      shared_postPrivacy: sharedPost.postPrivacy,
+                      shared_createdAt: sharedPost.createdAt,
+                      shared_id_friendTag: sharedPost.id_friendTag,
+                      shared_location: sharedPost.location,
+                    };
+                  })
+                  .catch((err) => {
+                    res.status(500).json({
+                      error: err,
+                    });
+                  });
               })
               .catch((err) => {
                 res.status(500).json({
@@ -141,8 +143,8 @@ exports.posts_share_post = async (req, res, next) => {
               });
             const post = await new Post({
               id_account: account._id,
-              fullName: personalInfo.fullName,
               avatar: personalInfo.avatar,
+              fullName: personalInfo.fullName,
               isShared: true,
               shareId: req.body.shareId,
               shareContent,
@@ -150,7 +152,7 @@ exports.posts_share_post = async (req, res, next) => {
             });
             await post.save().then((result) => {
               res.status(201).json({
-                message: 'post created!',
+                message: 'shared post created!',
                 post: result,
               });
             });
@@ -177,7 +179,7 @@ exports.posts_update_post = async (req, res, next) => {
   if (!token) return res.sendStatus(401);
 
   var decodedToken = jwt_decode(token);
-  await Account.findOne({ email: decodedToken.email })
+  await Account.findOne({ _id: decodedToken.id_account })
     .then(async (account) => {
       await Post.findOneAndUpdate(
         {
@@ -312,57 +314,56 @@ exports.posts_get_all_post = async (req, res, next) => {
   // var decodedToken = jwt_decode(token);
   await Post.find()
     .sort({ createdAt: -1 })
-    .then(async (listPost) => {
-      let list = [];
-      for ([index, value] of listPost.entries()) {
+    .then(async (posts) => {
+      let listPost = [];
+      for ([index, value] of posts.entries()) {
         let postInfo = {};
-        if (value) {
-          await React.find({ id_post: value._id }, { id_account: 1, reactType: 1 })
-            .then(async (listReaction) => {
-              if (listReaction) {
-                postInfo = {
-                  post: value,
-                  listReaction,
-                };
-              } else {
-                postInfo = {
-                  post: value,
-                  listReaction: [],
-                };
-              }
-              await Comment.find({ id_post: value._id })
-                .then(async (results) => {
-                  if (results) {
+        await PersonalInfo.findOne({ id_account: value.id_account }, { _id: 0, avatar: 1, fullName: 1 })
+          .then(async (personalInfo) => {
+            await React.find({ id_post: value._id }, { id_account: 1, reactType: 1 })
+              .then(async (listReaction) => {
+                await Comment.find({ id_post: value._id })
+                  .then(async (comments) => {
                     postInfo = {
-                      ...postInfo,
-                      amountComment: results.length,
+                      id_account: value.id_account,
+                      avatar: personalInfo.avatar,
+                      fullName: personalInfo.fullName,
+                      id_visualMedia: value.id_visualMedia,
+                      postContent: value.postContent,
+                      postFeeling: value.postFeeling,
+                      postPrivacy: value.postPrivacy,
+                      id_friendTag: value.id_friendTag,
+                      location: value.location,
+                      isShared: value.isShared,
+                      shareId: value.shareId,
+                      shareContent: value.shareContent,
+                      createdAt: value.createdAt,
+                      listReaction,
+                      commentAmount: comments.length,
                     };
-                  } else {
-                    postInfo = {
-                      ...postInfo,
-                      amountComment: 0,
-                    };
-                  }
-                })
-                .catch((err) => {
-                  res.status(500).json({
-                    error: err,
+                  })
+                  .catch((err) => {
+                    res.status(500).json({
+                      error: err,
+                    });
                   });
+              })
+              .catch((err) => {
+                res.status(500).json({
+                  error: err,
                 });
-            })
-            .catch((err) => {
-              res.status(500).json({
-                error: err,
               });
+          })
+          .catch((err) => {
+            res.status(500).json({
+              error: err,
             });
-          list.push(postInfo);
-        } else {
-          list.push({});
-        }
+          });
+        listPost.push(postInfo);
       }
       await res.status(200).json({
         message: 'get all posts successfully',
-        listPost: list,
+        listPost,
       });
     })
     .catch((err) => {

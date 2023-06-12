@@ -2,8 +2,7 @@ const mongoose = require('mongoose');
 
 const sharedPostSchema = mongoose.Schema(
   {
-    shared_accountName: { type: String, default: '' },
-    shared_avatar: { type: String, default: '' },
+    shared_id_account: { type: mongoose.Types.ObjectId, default: null },
     shared_id_visualMedia: { type: Array, default: [] },
     shared_postContent: { type: String, default: '' },
     shared_postFeeling: { type: String, default: '' },
@@ -20,8 +19,6 @@ const sharedPostSchema = mongoose.Schema(
 const postSchema = mongoose.Schema(
   {
     id_account: { type: mongoose.Types.ObjectId, default: null },
-    fullName: { type: String, default: '' },
-    avatar: { type: String, default: '' },
     id_visualMedia: { type: Array, default: [] },
     postContent: { type: String, default: '' },
     postFeeling: { type: String, default: '' },
