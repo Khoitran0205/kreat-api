@@ -70,7 +70,9 @@ exports.chat_send_message = async (req, res, next) => {
     await Conversation.findOne({ _id: req.body.id_conversation })
       .then(async (conversation) => {
         if (!conversation.status) {
-          res.sendStatus(403);
+          res.status(403).json({
+            message: 'you are not friends right now',
+          });
         } else {
           await newMessage
             .save()

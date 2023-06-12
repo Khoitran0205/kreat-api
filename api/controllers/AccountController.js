@@ -625,35 +625,52 @@ exports.accounts_accept_friend_request = async (req, res, next) => {
         }
         await FriendRequest.findOneAndDelete({ _id: req.params.id })
           .then(async (result) => {
-            await Conversation.findOneAndUpdate(
-              { members: [decodedToken.id_account, result.id_sender.toString()] },
-              { status: true },
-            ).then(async (result2) => {
-              if (!result2) {
-                const newConversation = await Conversation({
-                  members: [decodedToken.id_account, friendRequest.id_sender.toString()],
-                  status: true,
-                });
-                await newConversation
-                  .save()
-                  .then((conversation) => {
-                    res.status(200).json({
-                      message: 'friend request accepted',
-                      friendRequest: result,
-                    });
-                  })
-                  .catch((err) => {
-                    res.status(500).json({
-                      error: err,
-                    });
+            await Conversation.find({ members: { $in: [decodedToken.id_account] }, status: false })
+              .then(async (conversations) => {
+                let flag = 0;
+                for ([index, value] of conversations.entries()) {
+                  const contact = await value.members.filter((member) => member != decodedToken.id_account);
+                  if (contact[0] == friendRequest.id_sender) {
+                    flag = 1;
+                    await Conversation.findOneAndUpdate({ _id: value._id }, { status: true })
+                      .then(async (conv) => {
+                        return await res.status(200).json({
+                          message: 'friend request accepted',
+                          friendRequest: result,
+                        });
+                      })
+                      .catch((err) => {
+                        res.status(500).json({
+                          error: err,
+                        });
+                      });
+                  }
+                }
+                if (flag == 0) {
+                  const newConversation = await Conversation({
+                    members: [decodedToken.id_account, friendRequest.id_sender.toString()],
+                    status: true,
                   });
-              } else {
-                res.status(200).json({
-                  message: 'friend request accepted',
-                  friendRequest: result,
+                  await newConversation
+                    .save()
+                    .then((conversation) => {
+                      res.status(200).json({
+                        message: 'friend request accepted',
+                        friendRequest: result,
+                      });
+                    })
+                    .catch((err) => {
+                      res.status(500).json({
+                        error: err,
+                      });
+                    });
+                }
+              })
+              .catch((err) => {
+                res.status(500).json({
+                  error: err,
                 });
-              }
-            });
+              });
           })
           .catch((err) => {
             res.status(500).json({
@@ -724,14 +741,24 @@ exports.accounts_unfriend = async (req, res, next) => {
             );
             await OtherInfo.findOneAndUpdate({ id_account: req.params.id }, { listFriend: secondRemove })
               .then(async (result) => {
-                Conversation.findOneAndUpdate(
-                  { members: { $in: [decodedToken.id_account], $in: [req.params.id] } },
-                  { status: false },
-                )
-                  .then(async (result2) => {
-                    res.status(200).json({
-                      message: 'unfriend successfully',
-                    });
+                Conversation.find({ members: { $in: [decodedToken.id_account] }, status: true })
+                  .then(async (conversations) => {
+                    for ([index, value] of conversations.entries()) {
+                      const unfrienedFriend = await value.members.filter((member) => member != decodedToken.id_account);
+                      if (unfrienedFriend[0] == req.params.id) {
+                        await Conversation.findOneAndUpdate({ _id: value._id }, { status: false })
+                          .then((result2) => {
+                            return res.status(200).json({
+                              message: 'unfriend successfully',
+                            });
+                          })
+                          .catch((err) => {
+                            res.status(500).json({
+                              error: err,
+                            });
+                          });
+                      }
+                    }
                   })
                   .catch((err) => {
                     res.status(500).json({
