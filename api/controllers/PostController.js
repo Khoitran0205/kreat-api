@@ -318,7 +318,7 @@ exports.posts_get_all_post = async (req, res, next) => {
         let postInfo = {};
         await PersonalInfo.findOne({ id_account: value.id_account }, { _id: 0, avatar: 1, fullName: 1 })
           .then(async (personalInfo) => {
-            await React.find({ id_post: value._id }, { id_account: 1, reactType: 1 })
+            await React.find({ id_post: value._id, id_comment: null }, { id_account: 1, reactType: 1 })
               .then(async (listReaction) => {
                 await Comment.find({ id_post: value._id })
                   .then(async (comments) => {
