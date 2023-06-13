@@ -1,7 +1,10 @@
 require('dotenv').config();
+const connectToDb = require('./config/db/index');
 const OtherInfo = require('./api/models/user/other_info');
 
 const socketPort = process.env.SOCKETPORT;
+
+connectToDb();
 
 const io = require('socket.io')(socketPort, {
   cors: {
