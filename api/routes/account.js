@@ -36,6 +36,7 @@ router.delete('/:id/unreact_comment', authenticateToken, AccountController.accou
 
 //Comment
 router.post('/comment_post', authenticateToken, AccountController.accounts_comment_post);
+router.post('/reply_comment_post', authenticateToken, AccountController.accounts_reply_comment_post);
 router.patch('/update_comment_post', authenticateToken, AccountController.accounts_update_comment_post);
 router.delete('/:id/delete_comment_post', authenticateToken, AccountController.accounts_delete_comment_post);
 

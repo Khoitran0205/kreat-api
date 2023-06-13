@@ -170,67 +170,112 @@ exports.accounts_get_all_friends = async (req, res, next) => {
   if (!token) return res.sendStatus(401);
 
   var decodedToken = jwt_decode(token);
-  await OtherInfo.findOne({ id_account: decodedToken.id_account }, { listFriend: 1 })
-    .then(async (myInfo) => {
-      await OtherInfo.findOne({ id_account: req.params.id }, { listFriend: 1 })
-        .then(async (result) => {
-          let listFriend = [];
-          for ([index, value] of result.listFriend.entries()) {
-            let friendInfo = {};
-            let mutualFriends = [];
-            await PersonalInfo.findOne({ id_account: value }, { avatar: 1, fullName: 1, aboutMe: 1 })
-              .then(async (personalInfo) => {
-                if (value == decodedToken.id_account) {
-                  friendInfo = {
-                    id_account: value,
-                    avatar: personalInfo.avatar,
-                    fullName: personalInfo.fullName,
-                    aboutMe: personalInfo.aboutMe,
-                    friendAmount: myInfo.listFriend.length,
-                  };
-                } else {
-                  await OtherInfo.findOne({ id_account: value }, { listFriend: 1 })
-                    .then(async (otherInfo) => {
-                      mutualFriends = await otherInfo.listFriend.filter((value1) => myInfo.listFriend.includes(value1));
-                      friendInfo = {
-                        id_account: value,
-                        avatar: personalInfo.avatar,
-                        fullName: personalInfo.fullName,
-                        aboutMe: personalInfo.aboutMe,
-                        friendAmount: otherInfo.listFriend.length,
-                        mutualFriends: mutualFriends.length,
-                      };
-                    })
-                    .catch((err) => {
-                      res.status(500).json({
-                        error: err,
-                      });
-                    });
-                }
-              })
-              .catch((err) => {
-                res.status(500).json({
-                  error: err,
-                });
-              });
-            listFriend.push(friendInfo);
-          }
-          res.status(200).json({
-            message: 'get all friends successfully',
-            listFriend,
-          });
-        })
-        .catch((err) => {
-          res.status(500).json({
-            error: err,
-          });
-        });
-    })
-    .catch((err) => {
-      res.status(500).json({
-        error: err,
-      });
+  // await OtherInfo.findOne({ id_account: decodedToken.id_account }, { listFriend: 1 })
+  //   .then(async (myInfo) => {
+  //     await OtherInfo.findOne({ id_account: req.params.id }, { listFriend: 1 })
+  //       .then(async (result) => {
+  //         let listFriend = [];
+  //         for ([index, value] of result.listFriend.entries()) {
+  //           let friendInfo = {};
+  //           let mutualFriends = [];
+  //           await PersonalInfo.findOne({ id_account: value }, { avatar: 1, fullName: 1, aboutMe: 1 })
+  //             .then(async (personalInfo) => {
+  //               if (value == decodedToken.id_account) {
+  //                 friendInfo = {
+  //                   id_account: value,
+  //                   avatar: personalInfo.avatar,
+  //                   fullName: personalInfo.fullName,
+  //                   aboutMe: personalInfo.aboutMe,
+  //                   friendAmount: myInfo.listFriend.length,
+  //                 };
+  //               } else {
+  //                 await OtherInfo.findOne({ id_account: value }, { listFriend: 1 })
+  //                   .then(async (otherInfo) => {
+  //                     mutualFriends = await otherInfo.listFriend.filter((value1) => myInfo.listFriend.includes(value1));
+  //                     friendInfo = {
+  //                       id_account: value,
+  //                       avatar: personalInfo.avatar,
+  //                       fullName: personalInfo.fullName,
+  //                       aboutMe: personalInfo.aboutMe,
+  //                       friendAmount: otherInfo.listFriend.length,
+  //                       mutualFriends: mutualFriends.length,
+  //                     };
+  //                   })
+  //                   .catch((err) => {
+  //                     res.status(500).json({
+  //                       error: err,
+  //                     });
+  //                   });
+  //               }
+  //             })
+  //             .catch((err) => {
+  //               res.status(500).json({
+  //                 error: err,
+  //               });
+  //             });
+  //           listFriend.push(friendInfo);
+  //         }
+  //         res.status(200).json({
+  //           message: 'get all friends successfully',
+  //           listFriend,
+  //         });
+  //       })
+  //       .catch((err) => {
+  //         res.status(500).json({
+  //           error: err,
+  //         });
+  //       });
+  //   })
+  //   .catch((err) => {
+  //     res.status(500).json({
+  //       error: err,
+  //     });
+  //   });
+  try {
+    const myInfo = await OtherInfo.findOne({ id_account: decodedToken.id_account }, { listFriend: 1 });
+    const result = await OtherInfo.findOne({ id_account: req.params.id }, { listFriend: 1 });
+
+    const listFriend = [];
+    for (const [index, value] of result.listFriend.entries()) {
+      let friendInfo = {};
+      let mutualFriends = [];
+
+      const personalInfo = await PersonalInfo.findOne({ id_account: value }, { avatar: 1, fullName: 1, aboutMe: 1 });
+
+      if (value == decodedToken.id_account) {
+        friendInfo = {
+          id_account: value,
+          avatar: personalInfo.avatar,
+          fullName: personalInfo.fullName,
+          aboutMe: personalInfo.aboutMe,
+          friendAmount: myInfo.listFriend.length,
+        };
+      } else {
+        const otherInfo = await OtherInfo.findOne({ id_account: value }, { listFriend: 1 });
+        mutualFriends = otherInfo.listFriend.filter((value1) => myInfo.listFriend.includes(value1));
+
+        friendInfo = {
+          id_account: value,
+          avatar: personalInfo.avatar,
+          fullName: personalInfo.fullName,
+          aboutMe: personalInfo.aboutMe,
+          friendAmount: otherInfo.listFriend.length,
+          mutualFriends: mutualFriends.length,
+        };
+      }
+
+      listFriend.push(friendInfo);
+    }
+
+    res.status(200).json({
+      message: 'get all friends successfully',
+      listFriend,
     });
+  } catch (err) {
+    res.status(500).json({
+      error: err,
+    });
+  }
 };
 
 // [GET] /accounts/:id/visual_media
@@ -504,62 +549,105 @@ exports.accounts_get_all_friend_requests = async (req, res, next) => {
   if (!token) return res.sendStatus(401);
 
   var decodedToken = jwt_decode(token);
-  await FriendRequest.find({ id_receiver: decodedToken.id_account }, { id_sender: 1 })
-    .then(async (senders) => {
-      await OtherInfo.findOne({ id_account: decodedToken.id_account }, { listFriend: 1 })
-        .then(async (result) => {
-          let listRequest = [];
-          for ([index, value] of senders.entries()) {
-            let friendRequestInfo = {};
-            let mutualFriends = [];
-            await PersonalInfo.findOne({ id_account: value.id_sender }, { fullName: 1, avatar: 1, aboutMe: 1 })
-              .then(async (personalInfo) => {
-                await OtherInfo.findOne({ id_account: value.id_sender }, { listFriend: 1 })
-                  .then(async (otherInfo) => {
-                    mutualFriends = await otherInfo.listFriend.filter((value1) => {
-                      for (value2 of result.listFriend) {
-                        return value1 == value2;
-                      }
-                    });
-                    friendRequestInfo = {
-                      id_friendRequest: value._id,
-                      id_account: value.id_sender,
-                      avatar: personalInfo.avatar,
-                      fullName: personalInfo.fullName,
-                      aboutMe: personalInfo.aboutMe,
-                      friendAmount: otherInfo.listFriend.length,
-                      mutualFriends: mutualFriends.length,
-                    };
-                  })
-                  .catch((err) => {
-                    res.status(500).json({
-                      error: err,
-                    });
-                  });
-              })
-              .catch((err) => {
-                res.status(500).json({
-                  error: err,
-                });
-              });
-            listRequest.push(friendRequestInfo);
-          }
-          res.status(200).json({
-            message: 'get all friend requests successfully',
-            listRequest,
-          });
-        })
-        .catch((err) => {
-          res.status(500).json({
-            error: err,
-          });
-        });
-    })
-    .catch((err) => {
-      res.status(500).json({
-        error: err,
+  // await FriendRequest.find({ id_receiver: decodedToken.id_account }, { id_sender: 1 })
+  //   .then(async (senders) => {
+  //     await OtherInfo.findOne({ id_account: decodedToken.id_account }, { listFriend: 1 })
+  //       .then(async (result) => {
+  //         let listRequest = [];
+  //         for ([index, value] of senders.entries()) {
+  //           let friendRequestInfo = {};
+  //           let mutualFriends = [];
+  //           await PersonalInfo.findOne({ id_account: value.id_sender }, { fullName: 1, avatar: 1, aboutMe: 1 })
+  //             .then(async (personalInfo) => {
+  //               await OtherInfo.findOne({ id_account: value.id_sender }, { listFriend: 1 })
+  //                 .then(async (otherInfo) => {
+  //                   mutualFriends = await otherInfo.listFriend.filter((value1) => {
+  //                     for (value2 of result.listFriend) {
+  //                       return value1 == value2;
+  //                     }
+  //                   });
+  //                   friendRequestInfo = {
+  //                     id_friendRequest: value._id,
+  //                     id_account: value.id_sender,
+  //                     avatar: personalInfo.avatar,
+  //                     fullName: personalInfo.fullName,
+  //                     aboutMe: personalInfo.aboutMe,
+  //                     friendAmount: otherInfo.listFriend.length,
+  //                     mutualFriends: mutualFriends.length,
+  //                   };
+  //                 })
+  //                 .catch((err) => {
+  //                   res.status(500).json({
+  //                     error: err,
+  //                   });
+  //                 });
+  //             })
+  //             .catch((err) => {
+  //               res.status(500).json({
+  //                 error: err,
+  //               });
+  //             });
+  //           listRequest.push(friendRequestInfo);
+  //         }
+  //         res.status(200).json({
+  //           message: 'get all friend requests successfully',
+  //           listRequest,
+  //         });
+  //       })
+  //       .catch((err) => {
+  //         res.status(500).json({
+  //           error: err,
+  //         });
+  //       });
+  //   })
+  //   .catch((err) => {
+  //     res.status(500).json({
+  //       error: err,
+  //     });
+  //   });
+  try {
+    const senders = await FriendRequest.find({ id_receiver: decodedToken.id_account }, { id_sender: 1 });
+    const result = await OtherInfo.findOne({ id_account: decodedToken.id_account }, { listFriend: 1 });
+
+    const listRequest = [];
+    for (const [index, value] of senders.entries()) {
+      let friendRequestInfo = {};
+      let mutualFriends = [];
+
+      const personalInfo = await PersonalInfo.findOne(
+        { id_account: value.id_sender },
+        { fullName: 1, avatar: 1, aboutMe: 1 },
+      );
+      const otherInfo = await OtherInfo.findOne({ id_account: value.id_sender }, { listFriend: 1 });
+
+      mutualFriends = otherInfo.listFriend.filter((value1) => {
+        for (const value2 of result.listFriend) {
+          return value1 == value2;
+        }
       });
+
+      friendRequestInfo = {
+        id_friendRequest: value._id,
+        id_account: value.id_sender,
+        avatar: personalInfo.avatar,
+        fullName: personalInfo.fullName,
+        aboutMe: personalInfo.aboutMe,
+        friendAmount: otherInfo.listFriend.length,
+        mutualFriends: mutualFriends.length,
+      };
+
+      listRequest.push(friendRequestInfo);
+    }
+
+    res.status(200).json({
+      message: 'get all friend requests successfully',
+      listRequest,
     });
+  } catch (err) {
+    res.status(500).json({
+      error: err,
+    });
+  }
 };
 
 // [POST] /accounts/send_friend_request
@@ -1003,6 +1091,34 @@ exports.accounts_comment_post = async (req, res, next) => {
         error: err,
       });
     });
+};
+
+// [POST] /accounts/reply_comment_post
+exports.accounts_reply_comment_post = async (req, res, next) => {
+  const authHeader = req.header('Authorization');
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) return res.sendStatus(401);
+
+  var decodedToken = jwt_decode(token);
+  const comment = await new Comment({
+    id_account: decodedToken.id_account,
+    isReply: true,
+    id_repliedComment: req.body.id_repliedComment,
+    ...req.body,
+  });
+  try {
+    await comment.save().then((result) => {
+      res.status(201).json({
+        message: 'reply comment successfully',
+        result,
+      });
+    });
+  } catch (error) {
+    res.status(500).json({
+      error,
+    });
+  }
 };
 
 // [PATCH] /accounts/update_comment_post
