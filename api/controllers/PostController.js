@@ -100,73 +100,119 @@ exports.posts_share_post = async (req, res, next) => {
   if (!token) return res.sendStatus(401);
 
   var decodedToken = jwt_decode(token);
-  await Account.findOne({ _id: decodedToken.id_account })
-    .then(async (account) => {
-      if (!account) {
-        return res.status(404).json({
-          message: 'Account not found!',
-        });
-      } else {
-        await PersonalInfo.findOne({ id_account: account._id })
-          .then(async (personalInfo) => {
-            let shareContent = {};
-            await Post.findOne({ _id: req.body.shareId })
-              .then(async (sharedPost) => {
-                await PersonalInfo.findOne(
-                  { id_account: sharedPost.id_account },
-                  { _id: 0, id_account: 1, avatar: 1, fullName: 1 },
-                )
-                  .then(async (sharedPersonalInfo) => {
-                    shareContent = {
-                      shared_id_account: sharedPersonalInfo.id_account,
-                      shared_id_visualMedia: sharedPost.id_visualMedia,
-                      shared_postContent: sharedPost.postContent,
-                      shared_postFeeling: sharedPost.postFeeling,
-                      shared_postPrivacy: sharedPost.postPrivacy,
-                      shared_createdAt: sharedPost.createdAt,
-                      shared_id_friendTag: sharedPost.id_friendTag,
-                      shared_location: sharedPost.location,
-                    };
-                  })
-                  .catch((err) => {
-                    res.status(500).json({
-                      error: err,
-                    });
-                  });
-              })
-              .catch((err) => {
-                res.status(500).json({
-                  error: err,
-                });
-              });
-            const post = await new Post({
-              id_account: account._id,
-              avatar: personalInfo.avatar,
-              fullName: personalInfo.fullName,
-              isShared: true,
-              shareId: req.body.shareId,
-              shareContent,
-              ...req.body,
-            });
-            await post.save().then((result) => {
-              res.status(201).json({
-                message: 'shared post created!',
-                post: result,
-              });
-            });
-          })
-          .catch((err) => {
-            res.status(500).json({
-              error: err,
-            });
-          });
-      }
-    })
-    .catch((err) => {
-      res.status(500).json({
-        error: err,
+  // await Account.findOne({ _id: decodedToken.id_account })
+  //   .then(async (account) => {
+  //     if (!account) {
+  //       return res.status(404).json({
+  //         message: 'Account not found!',
+  //       });
+  //     } else {
+  //       await PersonalInfo.findOne({ id_account: account._id })
+  //         .then(async (personalInfo) => {
+  //           let shareContent = {};
+  //           await Post.findOne({ _id: req.body.shareId })
+  //             .then(async (sharedPost) => {
+  //               await PersonalInfo.findOne(
+  //                 { id_account: sharedPost.id_account },
+  //                 { _id: 0, id_account: 1, avatar: 1, fullName: 1 },
+  //               )
+  //                 .then(async (sharedPersonalInfo) => {
+  //                   shareContent = {
+  //                     shared_id_account: sharedPersonalInfo.id_account,
+  //                     shared_id_visualMedia: sharedPost.id_visualMedia,
+  //                     shared_postContent: sharedPost.postContent,
+  //                     shared_postFeeling: sharedPost.postFeeling,
+  //                     shared_postPrivacy: sharedPost.postPrivacy,
+  //                     shared_createdAt: sharedPost.createdAt,
+  //                     shared_id_friendTag: sharedPost.id_friendTag,
+  //                     shared_location: sharedPost.location,
+  //                   };
+  //                 })
+  //                 .catch((err) => {
+  //                   res.status(500).json({
+  //                     error: err,
+  //                   });
+  //                 });
+  //             })
+  //             .catch((err) => {
+  //               res.status(500).json({
+  //                 error: err,
+  //               });
+  //             });
+  //           const post = await new Post({
+  //             id_account: account._id,
+  //             avatar: personalInfo.avatar,
+  //             fullName: personalInfo.fullName,
+  //             isShared: true,
+  //             shareId: req.body.shareId,
+  //             shareContent,
+  //             ...req.body,
+  //           });
+  //           await post.save().then((result) => {
+  //             res.status(201).json({
+  //               message: 'shared post created!',
+  //               post: result,
+  //             });
+  //           });
+  //         })
+  //         .catch((err) => {
+  //           res.status(500).json({
+  //             error: err,
+  //           });
+  //         });
+  //     }
+  //   })
+  //   .catch((err) => {
+  //     res.status(500).json({
+  //       error: err,
+  //     });
+  //   });
+  try {
+    const personalInfo = await PersonalInfo.findOne({ id_account: decodedToken.id_account });
+
+    const sharedPost = await Post.findOne({ _id: req.body.shareId });
+    if (!sharedPost) {
+      return res.status(404).json({
+        message: 'Shared post not found!',
       });
+    }
+
+    const sharedPersonalInfo = await PersonalInfo.findOne(
+      { id_account: sharedPost.id_account },
+      { _id: 0, id_account: 1, avatar: 1, fullName: 1 },
+    );
+
+    const shareContent = {
+      shared_id_account: sharedPersonalInfo.id_account,
+      shared_id_visualMedia: sharedPost.id_visualMedia,
+      shared_postContent: sharedPost.postContent,
+      shared_postFeeling: sharedPost.postFeeling,
+      shared_postPrivacy: sharedPost.postPrivacy,
+      shared_createdAt: sharedPost.createdAt,
+      shared_id_friendTag: sharedPost.id_friendTag,
+      shared_location: sharedPost.location,
+    };
+
+    const post = new Post({
+      id_account: decodedToken.id_account,
+      avatar: personalInfo.avatar,
+      fullName: personalInfo.fullName,
+      isShared: true,
+      shareId: req.body.shareId,
+      shareContent,
+      ...req.body,
     });
+
+    const result = await post.save();
+    res.status(201).json({
+      message: 'shared post created!',
+      post: result,
+    });
+  } catch (err) {
+    res.status(500).json({
+      error: err,
+    });
+  }
 };
 
 // [PATCH] /posts/update_post
@@ -323,6 +369,7 @@ exports.posts_get_all_post = async (req, res, next) => {
           { id_account: value.shareContent.shared_id_account },
           { _id: 0, avatar: 1, fullName: 1 },
         );
+
         shareContent = {
           shared_id_account: value.shareContent.shared_id_account,
           shared_avatar: sharedPersonalInfo.avatar,
@@ -338,6 +385,7 @@ exports.posts_get_all_post = async (req, res, next) => {
       }
 
       postInfo = {
+        _id: value._id,
         id_account: value.id_account,
         avatar: personalInfo.avatar,
         fullName: personalInfo.fullName,

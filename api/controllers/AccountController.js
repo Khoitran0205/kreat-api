@@ -89,6 +89,7 @@ exports.accounts_get_timeline_info = async (req, res, next) => {
       }
 
       postInfo = {
+        _id: value._id,
         id_account: value.id_account,
         avatar: personalInfo.avatar,
         fullName: personalInfo.fullName,
@@ -608,93 +609,6 @@ exports.accounts_accept_friend_request = async (req, res, next) => {
   if (!token) return res.sendStatus(401);
 
   var decodedToken = jwt_decode(token);
-
-  // await FriendRequest.findOne({ _id: req.params.id })
-  //   .then(async (friendRequest) => {
-  //     if (decodedToken.id_account != friendRequest.id_receiver) {
-  //       res.sendStatus(401);
-  //     } else {
-  //       const infoSender = await OtherInfo.findOne({ id_account: friendRequest.id_sender });
-  //       try {
-  //         const updatedListFriend = [...infoSender.listFriend, friendRequest.id_receiver];
-  //         infoSender.listFriend = updatedListFriend;
-  //         await infoSender.save();
-  //       } catch (error) {
-  //         res.status(500).json({
-  //           error,
-  //         });
-  //       }
-  //       const infoReceiver = await OtherInfo.findOne({ id_account: friendRequest.id_receiver });
-  //       try {
-  //         const updatedListFriend = [...infoReceiver.listFriend, friendRequest.id_sender];
-  //         infoReceiver.listFriend = updatedListFriend;
-  //         await infoReceiver.save();
-  //       } catch (error) {
-  //         res.status(500).json({
-  //           error,
-  //         });
-  //       }
-  //       await FriendRequest.findOneAndDelete({ _id: req.params.id })
-  //         .then(async (result) => {
-  //           await Conversation.find({ members: { $in: [decodedToken.id_account] }, status: false })
-  //             .then(async (conversations) => {
-  //               let flag = 0;
-  //               for ([index, value] of conversations.entries()) {
-  //                 const contact = await value.members.filter((member) => member != decodedToken.id_account);
-  //                 if (contact[0] == friendRequest.id_sender) {
-  //                   flag = 1;
-  //                   await Conversation.findOneAndUpdate({ _id: value._id }, { status: true })
-  //                     .then(async (conv) => {
-  //                       return await res.status(200).json({
-  //                         message: 'friend request accepted',
-  //                         friendRequest: result,
-  //                       });
-  //                     })
-  //                     .catch((err) => {
-  //                       res.status(500).json({
-  //                         error: err,
-  //                       });
-  //                     });
-  //                 }
-  //               }
-  //               if (flag == 0) {
-  //                 const newConversation = await Conversation({
-  //                   members: [decodedToken.id_account, friendRequest.id_sender.toString()],
-  //                   status: true,
-  //                 });
-  //                 await newConversation
-  //                   .save()
-  //                   .then((conversation) => {
-  //                     res.status(200).json({
-  //                       message: 'friend request accepted',
-  //                       friendRequest: result,
-  //                     });
-  //                   })
-  //                   .catch((err) => {
-  //                     res.status(500).json({
-  //                       error: err,
-  //                     });
-  //                   });
-  //               }
-  //             })
-  //             .catch((err) => {
-  //               res.status(500).json({
-  //                 error: err,
-  //               });
-  //             });
-  //         })
-  //         .catch((err) => {
-  //           res.status(500).json({
-  //             error: err,
-  //           });
-  //         });
-  //     }
-  //   })
-  //   .catch((err) => {
-  //     res.status(500).json({
-  //       error: err,
-  //     });
-  //   });
   try {
     const friendRequest = await FriendRequest.findOne({ _id: req.params.id });
     if (friendRequest.id_receiver != decodedToken.id_account) {
