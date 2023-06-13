@@ -13,7 +13,6 @@ const Conversation = require('../models/chat/conversation');
 const { cloudinary } = require('../../utils/cloudinary');
 
 const jwt_decode = require('jwt-decode');
-const mongoose = require('mongoose');
 
 // [GET] /accounts/:id/timeline
 exports.accounts_get_timeline_info = async (req, res, next) => {
