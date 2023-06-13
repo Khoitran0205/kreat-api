@@ -23,101 +23,171 @@ exports.accounts_get_timeline_info = async (req, res, next) => {
   if (!token) return res.sendStatus(401);
 
   var decodedToken = jwt_decode(token);
-  await OtherInfo.findOne({ id_account: decodedToken.id_account }, { _id: 0, listFriend: 1 })
-    .then(async (myFriends) => {
-      let friendStatus = '';
-      let id_friendRequest = '';
-      const isFriend = await myFriends.listFriend.includes(req.params.id);
-      if (isFriend) {
-        friendStatus = 'friend';
-      } else {
-        await FriendRequest.findOne({ id_sender: decodedToken.id_account, id_receiver: req.params.id })
-          .then(async (sentRequest) => {
-            if (sentRequest) {
-              friendStatus = 'friend request sent';
-              id_friendRequest = sentRequest._id.toString();
-            } else {
-              await FriendRequest.findOne({ id_receiver: decodedToken.id_account, id_sender: req.params.id })
-                .then((receivedRequest) => {
-                  if (receivedRequest) {
-                    friendStatus = 'friend request received';
-                    id_friendRequest = receivedRequest._id.toString();
-                  } else {
-                    friendStatus = 'not friend';
-                  }
-                })
-                .catch((err) => {
-                  res.status(500).json({
-                    error: err,
-                  });
-                });
-            }
-          })
-          .catch((err) => {
-            res.status(500).json({
-              error: err,
-            });
-          });
-      }
-      await PersonalInfo.findOne({ id_account: req.params.id }, { id_account: 1, avatar: 1, fullName: 1 })
-        .then(async (personalInfo) => {
-          await Post.find({ id_account: personalInfo.id_account })
-            .sort({ createdAt: -1 })
-            .then(async (listPost) => {
-              let list = listPost;
-              for ([index, value] of list.entries()) {
-                await React.find({ id_post: value._id }, { reactType: 1, id_account: 1 }).then(async (results) => {
-                  let listReaction = [];
-                  for (result of results) {
-                    await PersonalInfo.findOne(
-                      { id_account: result.id_account },
-                      { fullName: 1, avatar: 1, reactType: result.reactType },
-                    ).then((personal_info) => {
-                      listReaction.push(personal_info);
-                    });
-                  }
-                  let post = list[index];
-                  list[index] = {
-                    post,
-                    listReaction,
-                  };
-                });
-                await Comment.find({ id_post: value._id }).then(async (results) => {
-                  list[index] = {
-                    ...list[index],
-                    amountComment: results.length,
-                  };
-                });
-              }
-              return await list;
-            })
-            .then((listPost) => {
-              res.status(200).json({
-                message: 'get timeline info successfully',
-                avatar: personalInfo.avatar,
-                fullName: personalInfo.fullName,
-                friendStatus,
-                id_friendRequest,
-                timeline: listPost,
-              });
-            })
-            .catch((err) => {
-              res.status(500).json({
-                error: err,
-              });
-            });
-        })
-        .catch((err) => {
-          res.status(500).json({
-            error: err,
-          });
-        });
-    })
-    .catch((err) => {
-      res.status(500).json({
-        error: err,
+  // await OtherInfo.findOne({ id_account: decodedToken.id_account }, { _id: 0, listFriend: 1 })
+  //   .then(async (myFriends) => {
+  //     let friendStatus = '';
+  //     let id_friendRequest = '';
+  //     const isFriend = await myFriends.listFriend.includes(req.params.id);
+  //     if (isFriend) {
+  //       friendStatus = 'friend';
+  //     } else {
+  //       await FriendRequest.findOne({ id_sender: decodedToken.id_account, id_receiver: req.params.id })
+  //         .then(async (sentRequest) => {
+  //           if (sentRequest) {
+  //             friendStatus = 'friend request sent';
+  //             id_friendRequest = sentRequest._id.toString();
+  //           } else {
+  //             await FriendRequest.findOne({ id_receiver: decodedToken.id_account, id_sender: req.params.id })
+  //               .then((receivedRequest) => {
+  //                 if (receivedRequest) {
+  //                   friendStatus = 'friend request received';
+  //                   id_friendRequest = receivedRequest._id.toString();
+  //                 } else {
+  //                   friendStatus = 'not friend';
+  //                 }
+  //               })
+  //               .catch((err) => {
+  //                 res.status(500).json({
+  //                   error: err,
+  //                 });
+  //               });
+  //           }
+  //         })
+  //         .catch((err) => {
+  //           res.status(500).json({
+  //             error: err,
+  //           });
+  //         });
+  //     }
+  //     await PersonalInfo.findOne({ id_account: req.params.id }, { id_account: 1, avatar: 1, fullName: 1 })
+  //       .then(async (personalInfo) => {
+  //         await Post.find({ id_account: personalInfo.id_account })
+  //           .sort({ createdAt: -1 })
+  //           .then(async (listPost) => {
+  //             let list = listPost;
+  //             for ([index, value] of list.entries()) {
+  //               await React.find({ id_post: value._id }, { reactType: 1, id_account: 1 }).then(async (results) => {
+  //                 let listReaction = [];
+  //                 for (result of results) {
+  //                   await PersonalInfo.findOne(
+  //                     { id_account: result.id_account },
+  //                     { fullName: 1, avatar: 1, reactType: result.reactType },
+  //                   ).then((personal_info) => {
+  //                     listReaction.push(personal_info);
+  //                   });
+  //                 }
+  //                 let post = list[index];
+  //                 list[index] = {
+  //                   post,
+  //                   listReaction,
+  //                 };
+  //               });
+  //               await Comment.find({ id_post: value._id }).then(async (results) => {
+  //                 list[index] = {
+  //                   ...list[index],
+  //                   amountComment: results.length,
+  //                 };
+  //               });
+  //             }
+  //             return await list;
+  //           })
+  //           .then((listPost) => {
+  //             res.status(200).json({
+  //               message: 'get timeline info successfully',
+  //               avatar: personalInfo.avatar,
+  //               fullName: personalInfo.fullName,
+  //               friendStatus,
+  //               id_friendRequest,
+  //               timeline: listPost,
+  //             });
+  //           })
+  //           .catch((err) => {
+  //             res.status(500).json({
+  //               error: err,
+  //             });
+  //           });
+  //       })
+  //       .catch((err) => {
+  //         res.status(500).json({
+  //           error: err,
+  //         });
+  //       });
+  //   })
+  //   .catch((err) => {
+  //     res.status(500).json({
+  //       error: err,
+  //     });
+  //   });
+  try {
+    const myFriends = await OtherInfo.findOne({ id_account: decodedToken.id_account }, { _id: 0, listFriend: 1 });
+    let friendStatus = '';
+    let id_friendRequest = '';
+    const isFriend = myFriends.listFriend.includes(req.params.id);
+    if (isFriend) {
+      friendStatus = 'friend';
+    } else {
+      const sentRequest = await FriendRequest.findOne({
+        id_sender: decodedToken.id_account,
+        id_receiver: req.params.id,
       });
+      if (sentRequest) {
+        friendStatus = 'friend request sent';
+        id_friendRequest = sentRequest._id.toString();
+      } else {
+        const receivedRequest = await FriendRequest.findOne({
+          id_receiver: decodedToken.id_account,
+          id_sender: req.params.id,
+        });
+        if (receivedRequest) {
+          friendStatus = 'friend request received';
+          id_friendRequest = receivedRequest._id.toString();
+        } else {
+          friendStatus = 'not friend';
+        }
+      }
+    }
+    const personalInfo = await PersonalInfo.findOne(
+      { id_account: req.params.id },
+      { id_account: 1, avatar: 1, fullName: 1 },
+    );
+    const listPost = await Post.find({ id_account: personalInfo.id_account }).sort({ createdAt: -1 });
+    const timeline = [];
+
+    for (const [index, value] of listPost.entries()) {
+      const results = await React.find({ id_post: value._id }, { reactType: 1, id_account: 1 });
+      const listReaction = [];
+
+      for (const result of results) {
+        const personal_info = await PersonalInfo.findOne(
+          { id_account: result.id_account },
+          { fullName: 1, avatar: 1, reactType: result.reactType },
+        );
+        listReaction.push(personal_info);
+      }
+
+      const comments = await Comment.find({ id_post: value._id });
+      const amountComment = comments.length;
+
+      timeline.push({
+        post: value,
+        listReaction,
+        amountComment,
+      });
+    }
+
+    res.status(200).json({
+      message: 'get timeline info successfully',
+      avatar: personalInfo.avatar,
+      fullName: personalInfo.fullName,
+      friendStatus,
+      id_friendRequest,
+      timeline,
     });
+  } catch (err) {
+    res.status(500).json({
+      error: err,
+    });
+  }
 };
 
 // [GET] /accounts/:id/about
