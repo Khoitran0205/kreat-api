@@ -100,73 +100,6 @@ exports.posts_share_post = async (req, res, next) => {
   if (!token) return res.sendStatus(401);
 
   var decodedToken = jwt_decode(token);
-  // await Account.findOne({ _id: decodedToken.id_account })
-  //   .then(async (account) => {
-  //     if (!account) {
-  //       return res.status(404).json({
-  //         message: 'Account not found!',
-  //       });
-  //     } else {
-  //       await PersonalInfo.findOne({ id_account: account._id })
-  //         .then(async (personalInfo) => {
-  //           let shareContent = {};
-  //           await Post.findOne({ _id: req.body.shareId })
-  //             .then(async (sharedPost) => {
-  //               await PersonalInfo.findOne(
-  //                 { id_account: sharedPost.id_account },
-  //                 { _id: 0, id_account: 1, avatar: 1, fullName: 1 },
-  //               )
-  //                 .then(async (sharedPersonalInfo) => {
-  //                   shareContent = {
-  //                     shared_id_account: sharedPersonalInfo.id_account,
-  //                     shared_id_visualMedia: sharedPost.id_visualMedia,
-  //                     shared_postContent: sharedPost.postContent,
-  //                     shared_postFeeling: sharedPost.postFeeling,
-  //                     shared_postPrivacy: sharedPost.postPrivacy,
-  //                     shared_createdAt: sharedPost.createdAt,
-  //                     shared_id_friendTag: sharedPost.id_friendTag,
-  //                     shared_location: sharedPost.location,
-  //                   };
-  //                 })
-  //                 .catch((err) => {
-  //                   res.status(500).json({
-  //                     error: err,
-  //                   });
-  //                 });
-  //             })
-  //             .catch((err) => {
-  //               res.status(500).json({
-  //                 error: err,
-  //               });
-  //             });
-  //           const post = await new Post({
-  //             id_account: account._id,
-  //             avatar: personalInfo.avatar,
-  //             fullName: personalInfo.fullName,
-  //             isShared: true,
-  //             shareId: req.body.shareId,
-  //             shareContent,
-  //             ...req.body,
-  //           });
-  //           await post.save().then((result) => {
-  //             res.status(201).json({
-  //               message: 'shared post created!',
-  //               post: result,
-  //             });
-  //           });
-  //         })
-  //         .catch((err) => {
-  //           res.status(500).json({
-  //             error: err,
-  //           });
-  //         });
-  //     }
-  //   })
-  //   .catch((err) => {
-  //     res.status(500).json({
-  //       error: err,
-  //     });
-  //   });
   try {
     const personalInfo = await PersonalInfo.findOne({ id_account: decodedToken.id_account });
 
@@ -350,8 +283,21 @@ exports.posts_delete_post = async (req, res, next) => {
 
 // [GET] /posts/get_all_post
 exports.posts_get_all_post = async (req, res, next) => {
+  const authHeader = req.header('Authorization');
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) return res.sendStatus(401);
+
+  var decodedToken = jwt_decode(token);
   try {
-    const posts = await Post.find({}).sort({ createdAt: -1 });
+    const myListFriend = await OtherInfo.findOne({ id_account: decodedToken.id_account }, { _id: 0, listFriend: 1 });
+    const posts = await Post.find({
+      $or: [
+        { postPrivacy: 'public' },
+        { $and: [{ postPrivacy: 'friend' }, { id_account: { $in: myListFriend.listFriend } }] },
+        { $and: [{ postPrivacy: 'private' }, { id_account: decodedToken.id_account }] },
+      ],
+    }).sort({ createdAt: -1 });
 
     let listPost = [];
     for (const [index, value] of posts.entries()) {

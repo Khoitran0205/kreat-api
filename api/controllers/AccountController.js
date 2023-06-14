@@ -55,7 +55,19 @@ exports.accounts_get_timeline_info = async (req, res, next) => {
       { id_account: req.params.id },
       { _id: 0, id_account: 1, avatar: 1, fullName: 1 },
     );
-    const posts = await Post.find({ id_account: personalInfo.id_account }).sort({ createdAt: -1 });
+    const posts = await Post.find({
+      $or: [
+        { $and: [{ postPrivacy: 'public' }, { id_account: req.params.id }] },
+        {
+          $and: [
+            { postPrivacy: 'friend' },
+            { id_account: req.params.id },
+            { id_account: { $in: myFriends.listFriend } },
+          ],
+        },
+        { $and: [{ postPrivacy: 'private' }, { id_account: decodedToken.id_account }] },
+      ],
+    }).sort({ createdAt: -1 });
     const listPost = [];
 
     for (const [index, value] of posts.entries()) {
