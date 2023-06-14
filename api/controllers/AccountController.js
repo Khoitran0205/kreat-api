@@ -626,12 +626,12 @@ exports.accounts_accept_friend_request = async (req, res, next) => {
       res.sendStatus(401);
     } else {
       const infoSender = await OtherInfo.findOne({ id_account: friendRequest.id_sender });
-      const updatedListFriend1 = [...infoSender.listFriend, friendRequest.id_receiver];
+      const updatedListFriend1 = [...infoSender.listFriend, friendRequest.id_receiver.toString()];
       infoSender.listFriend = updatedListFriend1;
       await infoSender.save();
 
       const infoReceiver = await OtherInfo.findOne({ id_account: friendRequest.id_receiver });
-      const updatedListFriend2 = [...infoReceiver.listFriend, friendRequest.id_sender];
+      const updatedListFriend2 = [...infoReceiver.listFriend, friendRequest.id_sender.toString()];
       infoReceiver.listFriend = updatedListFriend2;
       await infoReceiver.save();
 
