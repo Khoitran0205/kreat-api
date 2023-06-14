@@ -62,7 +62,7 @@ exports.accounts_get_timeline_info = async (req, res, next) => {
           $and: [
             { postPrivacy: 'friend' },
             { id_account: req.params.id },
-            { id_account: { $in: myFriends.listFriend } },
+            { $or: [{ id_account: req.params.id }, { id_account: decodedToken.id_account }] },
           ],
         },
         { $and: [{ postPrivacy: 'private' }, { id_account: decodedToken.id_account }] },
