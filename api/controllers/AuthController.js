@@ -61,57 +61,6 @@ exports.auth_sign_up = async (req, res, next) => {
 
 // [POST] auth/login
 exports.auth_log_in = async (req, res, next) => {
-  // await Account.findOne({ email: req.body.email })
-  //   .then(async (account) => {
-  //     if (!account)
-  //       return res.status(401).json({
-  //         message: 'Login information is incorrect',
-  //       });
-  //     try {
-  //       if (await bcrypt.compare(req.body.password, account.password)) {
-  //         const user = { email: account.email, id_account: account._id };
-  //         const accessToken = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '100m' });
-  //         const refreshToken = jwt.sign(user, process.env.REFRESH_TOKEN_SECRET);
-
-  //         await Account.findOneAndUpdate({ email: account.email }, { refreshToken: refreshToken })
-  //           .then((result) => {})
-  //           .catch((err) => {
-  //             res.status(500).json({
-  //               error: err,
-  //             });
-  //           });
-  //         await PersonalInfo.findOne({ id_account: account._id }, { id_account: 1, avatar: 1, fullName: 1 })
-  //           .then((user) => {
-  //             res.status(200).json({
-  //               message: 'Log in successfully',
-  //               accessToken,
-  //               refreshToken,
-  //               id_account: user.id_account,
-  //               fullName: user.fullName,
-  //               avatar: user.avatar,
-  //             });
-  //           })
-  //           .catch((err) => {
-  //             res.status(500).json({
-  //               error: err,
-  //             });
-  //           });
-  //       } else {
-  //         res.status(401).json({
-  //           message: 'Login information is incorrect',
-  //         });
-  //       }
-  //     } catch (error) {
-  //       res.status(502).json({
-  //         error,
-  //       });
-  //     }
-  //   })
-  //   .catch((err) => {
-  //     res.status(500).json({
-  //       error: err,
-  //     });
-  //   });
   try {
     const account = await Account.findOne({ email: req.body.email });
 

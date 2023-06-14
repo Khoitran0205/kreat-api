@@ -281,7 +281,7 @@ exports.posts_delete_post = async (req, res, next) => {
     });
 };
 
-// [GET] /posts/get_all_post
+// [GET] /posts/get_all_post/:page
 exports.posts_get_all_post = async (req, res, next) => {
   const authHeader = req.header('Authorization');
   const token = authHeader && authHeader.split(' ')[1];
@@ -297,7 +297,10 @@ exports.posts_get_all_post = async (req, res, next) => {
         { $and: [{ postPrivacy: 'friend' }, { id_account: { $in: myListFriend.listFriend } }] },
         { $and: [{ postPrivacy: 'private' }, { id_account: decodedToken.id_account }] },
       ],
-    }).sort({ createdAt: -1 });
+    })
+      .sort({ createdAt: -1 })
+      .limit(10)
+      .skip(10 * req.params.page);
 
     let listPost = [];
     for (const [index, value] of posts.entries()) {

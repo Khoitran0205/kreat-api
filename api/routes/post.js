@@ -12,7 +12,7 @@ router.patch('/update_post', authenticateToken, PostController.posts_update_post
 router.delete('/:id/delete_post', authenticateToken, PostController.posts_delete_post);
 
 //Get all posts
-router.get('/get_all_post', authenticateToken, PostController.posts_get_all_post);
+router.get('/get_all_post/:page', authenticateToken, PostController.posts_get_all_post);
 
 //Get all reactions of a post
 router.get('/:id/get_all_reaction', authenticateToken, PostController.posts_get_all_reaction);
