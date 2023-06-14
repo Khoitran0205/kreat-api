@@ -362,7 +362,7 @@ exports.posts_get_all_post = async (req, res, next) => {
   }
 };
 
-// [GET] /:id/posts/get_all_reaction
+// [GET] /posts/:id/get_all_reaction
 exports.posts_get_all_reaction = async (req, res, next) => {
   const authHeader = req.header('Authorization');
   const token = authHeader && authHeader.split(' ')[1];
@@ -370,50 +370,36 @@ exports.posts_get_all_reaction = async (req, res, next) => {
   if (!token) return res.sendStatus(401);
 
   var decodedToken = jwt_decode(token);
-  await React.find({ id_post: req.params.id }, { id_account: 1, reactType: 1 })
-    .then(async (listReaction) => {
-      let list = [];
-      for ([index, value] of listReaction.entries()) {
-        let mutualFriends = [];
-        await OtherInfo.findOne({ id_account: value.id_account }, { listFriend: 1 })
-          .then(async (otherInfo) => {
-            await OtherInfo.findOne({ id_account: decodedToken.id_account }, { listFriend: 1 }).then(async (result) => {
-              mutualFriends = await result.listFriend.filter(async (value1) => {
-                for (value2 of otherInfo.listFriend) {
-                  return value1 == value2;
-                }
-              });
-            });
-          })
-          .catch((err) => {
-            res.status(500).json({
-              error: err,
-            });
-          });
-        await PersonalInfo.findOne(
-          { id_account: value.id_account },
-          { id_account: 1, avatar: 1, fullName: 1, reactType: value.reactType },
-        ).then(async (personal_info) => {
-          if (value.id_account != req.body.id_account) {
-            const a = personal_info;
-            personal_info = {
-              reaction: a,
-              mutualFriends: mutualFriends.length,
-            };
-          }
-          list.push(personal_info);
-        });
-      }
-      res.status(200).json({
-        message: 'get all reactions successfully',
-        listReaction: list,
-      });
-    })
-    .catch((err) => {
-      res.status(500).json({
-        error: err,
-      });
+  try {
+    const myListFriend = await OtherInfo.findOne({ id_account: decodedToken.id_account }, { _id: 0, listFriend: 1 });
+    const reactions = await React.find({ id_post: req.params.id }).sort({ createdAt: -1 });
+    let listReaction = [];
+    for (const [index, react] of reactions.entries()) {
+      let mutualFriends = [];
+      const personalInfo = await PersonalInfo.findOne(
+        { id_account: react.id_account },
+        { _id: 0, avatar: 1, fullName: 1 },
+      );
+      const otherListFriend = await OtherInfo.findOne({ id_account: react.id_account }, { _id: 0, listFriend: 1 });
+      mutualFriends = await myListFriend.listFriend.filter((friend) => otherListFriend.listFriend.includes(friend));
+      let reactionInfo = {
+        id_account: react.id_account,
+        avatar: personalInfo.avatar,
+        fullName: personalInfo.fullName,
+        reactType: react.reactType,
+        mutualFriends: mutualFriends.length,
+      };
+      listReaction.push(reactionInfo);
+    }
+    res.status(200).json({
+      message: 'get all reactions successfully',
+      listReaction,
     });
+  } catch (error) {
+    res.status(500).json({
+      error,
+    });
+  }
 };
 
 // [GET] /:id/posts/get_all_comment
