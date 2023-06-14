@@ -294,7 +294,12 @@ exports.posts_get_all_post = async (req, res, next) => {
     const posts = await Post.find({
       $or: [
         { postPrivacy: 'public' },
-        { $and: [{ postPrivacy: 'friend' }, { id_account: { $in: myListFriend.listFriend } }] },
+        {
+          $and: [
+            { postPrivacy: 'friend' },
+            { $or: [{ id_account: { $in: myListFriend.listFriend } }, { id_account: decodedToken.id_account }] },
+          ],
+        },
         { $and: [{ postPrivacy: 'private' }, { id_account: decodedToken.id_account }] },
       ],
     })
