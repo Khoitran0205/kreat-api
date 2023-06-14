@@ -30,7 +30,9 @@ io.on('connection', (socket) => {
     const myListFriend = await OtherInfo.findOne({ id_account: id_account }, { _id: 0, listFriend: 1 });
     let onlineFriends = onlineUsers.filter((value) => myListFriend.listFriend.includes(value.id_account));
     for (const [index, friend] of onlineFriends.entries()) {
-      io.to(friend.socketId).emit('getUser', onlineUsers);
+      const otherListFriend = await OtherInfo.findOne({ id_account: friend }, { _id: 0, listFriend: 1 });
+      const otherOnlineFriends = onlineUsers.filter((value) => otherListFriend.listFriend.includes(value.id_account));
+      io.to(friend.socketId).emit('getUser', otherOnlineFriends);
     }
     io.to(socket.id).emit('getUser', onlineUsers);
   });
