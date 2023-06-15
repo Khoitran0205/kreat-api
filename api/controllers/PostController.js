@@ -410,7 +410,7 @@ exports.posts_get_all_reaction = async (req, res, next) => {
   }
 };
 
-// [GET] /:id/posts/get_all_comment
+// [GET] /:id/get_all_comment
 exports.posts_get_all_comment = async (req, res, next) => {
   await Comment.find({ id_post: req.params.id })
     .then(async (listComment) => {
@@ -447,7 +447,7 @@ exports.posts_get_all_comment = async (req, res, next) => {
     });
 };
 
-// [GET] /:id/posts/get_all_tagged_friend
+// [GET] /:id/get_all_tagged_friend
 exports.posts_get_all_tagged_friend = async (req, res, next) => {
   const authHeader = req.header('Authorization');
   const token = authHeader && authHeader.split(' ')[1];
