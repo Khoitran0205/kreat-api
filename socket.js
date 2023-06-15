@@ -34,7 +34,7 @@ io.on('connection', (socket) => {
   socket.on('addUser', async (id_account) => {
     addOnlineUser(id_account, socket.id);
     const myListFriend = await OtherInfo.findOne({ id_account: id_account }, { _id: 0, listFriend: 1 });
-    let onlineFriends = myListFriend.listFriend.filter((value) => onlineUsers.includes(value.toString()));
+    const onlineFriends = onlineUsers.filter((value) => myListFriend.listFriend.includes(value.id_account));
     for (const [index, friend] of onlineFriends.entries()) {
       io.to(friend.socketId).emit('getUser', onlineUsers);
     }
@@ -57,12 +57,12 @@ io.on('connection', (socket) => {
   // when a user disconnects
   socket.on('disconnect', async () => {
     const disconnectedUser = await onlineUsers.find((user) => user.socketId === socket.id);
-    removeOnlineUser(socket.id);
     const myListFriend = await OtherInfo.findOne(
       { id_account: disconnectedUser.id_account },
       { _id: 0, listFriend: 1 },
     );
-    let onlineFriends = myListFriend.listFriend.filter((value) => onlineUsers.includes(value.toString()));
+    let onlineFriends = onlineUsers.filter((value) => myListFriend.listFriend.includes(value.id_account));
+    removeOnlineUser(socket.id);
     for (const [index, friend] of onlineFriends.entries()) {
       io.to(friend.socketId).emit('getUser', onlineUsers);
     }
