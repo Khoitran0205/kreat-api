@@ -34,11 +34,13 @@ io.on('connection', (socket) => {
   socket.on('addUser', async (id_account) => {
     addOnlineUser(id_account, socket.id);
     const myListFriend = await OtherInfo.findOne({ id_account: id_account }, { _id: 0, listFriend: 1 });
-    const onlineFriends = onlineUsers.filter((value) => myListFriend.listFriend.includes(value.id_account));
-    for (const [index, friend] of onlineFriends.entries()) {
-      io.to(friend.socketId).emit('getUser', onlineUsers);
+    const myOnlineFriends = onlineUsers.filter((value) => myListFriend.listFriend.includes(value.id_account));
+    for (const [index, friend] of myOnlineFriends.entries()) {
+      const otherListFriend = await OtherInfo.findOne({ id_account: friend.id_account }, { _id: 0, listFriend: 1 });
+      const otherOnlineFriends = onlineUsers.filter((value) => otherListFriend.listFriend.includes(value.id_account));
+      io.to(friend.socketId).emit('getUser', otherOnlineFriends);
     }
-    io.to(socket.id).emit('getUser', onlineUsers);
+    io.to(socket.id).emit('getUser', myOnlineFriends);
   });
 
   // send and get message
@@ -64,8 +66,9 @@ io.on('connection', (socket) => {
     let onlineFriends = onlineUsers.filter((value) => myListFriend.listFriend.includes(value.id_account));
     removeOnlineUser(socket.id);
     for (const [index, friend] of onlineFriends.entries()) {
-      io.to(friend.socketId).emit('getUser', onlineUsers);
+      const otherListFriend = await OtherInfo.findOne({ id_account: friend.id_account }, { _id: 0, listFriend: 1 });
+      const otherOnlineFriends = onlineUsers.filter((value) => otherListFriend.listFriend.includes(value.id_account));
+      io.to(friend.socketId).emit('getUser', otherOnlineFriends);
     }
-    // io.emit('getUser', onlineUsers);
   });
 });
