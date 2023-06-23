@@ -59,16 +59,18 @@ io.on('connection', (socket) => {
   // when a user disconnects
   socket.on('disconnect', async () => {
     const disconnectedUser = await onlineUsers.find((user) => user.socketId === socket.id);
-    const myListFriend = await OtherInfo.findOne(
-      { id_account: disconnectedUser.id_account },
-      { _id: 0, listFriend: 1 },
-    );
-    let onlineFriends = onlineUsers.filter((value) => myListFriend.listFriend.includes(value.id_account));
-    removeOnlineUser(socket.id);
-    for (const [index, friend] of onlineFriends.entries()) {
-      const otherListFriend = await OtherInfo.findOne({ id_account: friend.id_account }, { _id: 0, listFriend: 1 });
-      const otherOnlineFriends = onlineUsers.filter((value) => otherListFriend.listFriend.includes(value.id_account));
-      io.to(friend.socketId).emit('getUser', otherOnlineFriends);
+    if (disconnectedUser) {
+      const myListFriend = await OtherInfo.findOne(
+        { id_account: disconnectedUser.id_account },
+        { _id: 0, listFriend: 1 },
+      );
+      let onlineFriends = onlineUsers.filter((value) => myListFriend.listFriend.includes(value.id_account));
+      removeOnlineUser(socket.id);
+      for (const [index, friend] of onlineFriends.entries()) {
+        const otherListFriend = await OtherInfo.findOne({ id_account: friend.id_account }, { _id: 0, listFriend: 1 });
+        const otherOnlineFriends = onlineUsers.filter((value) => otherListFriend.listFriend.includes(value.id_account));
+        io.to(friend.socketId).emit('getUser', otherOnlineFriends);
+      }
     }
   });
 });
