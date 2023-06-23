@@ -25,6 +25,10 @@ const removeOnlineUser = (socketId) => {
   onlineUsers = onlineUsers.filter((onlineUser) => onlineUser.socketId !== socketId);
 };
 
+const removeLogoutUser = (id_account) => {
+  onlineUsers = onlineUsers.filter((onlineUser) => onlineUser.id_account !== id_account);
+};
+
 const getOnlineUser = (id_account) => {
   return onlineUsers.find((user) => user.id_account === id_account);
 };
@@ -62,7 +66,7 @@ io.on('connection', (socket) => {
     if (logoutUser) {
       const myListFriend = await OtherInfo.findOne({ id_account: logoutUser.id_account }, { _id: 0, listFriend: 1 });
       let onlineFriends = onlineUsers.filter((value) => myListFriend.listFriend.includes(value.id_account));
-      removeOnlineUser(socket.id);
+      removeLogoutUser(id_account);
       for (const [index, friend] of onlineFriends.entries()) {
         const otherListFriend = await OtherInfo.findOne({ id_account: friend.id_account }, { _id: 0, listFriend: 1 });
         const otherOnlineFriends = onlineUsers.filter((value) => otherListFriend.listFriend.includes(value.id_account));
