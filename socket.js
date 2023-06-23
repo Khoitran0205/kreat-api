@@ -57,8 +57,8 @@ io.on('connection', (socket) => {
   });
 
   // when a user logouts
-  socket.on('logout', async () => {
-    const logoutUser = await onlineUsers.find((user) => user.socketId === socket.id);
+  socket.on('logout', async (id_account) => {
+    const logoutUser = getOnlineUser(id_account);
     if (logoutUser) {
       const myListFriend = await OtherInfo.findOne({ id_account: logoutUser.id_account }, { _id: 0, listFriend: 1 });
       let onlineFriends = onlineUsers.filter((value) => myListFriend.listFriend.includes(value.id_account));
