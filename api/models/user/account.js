@@ -11,6 +11,7 @@ const accountSchema = mongoose.Schema(
     },
     password: { type: String, required: true },
     refreshToken: { type: String, default: '' },
+    isVerified: { type: Boolean, default: false },
   },
   {
     timestamps: {

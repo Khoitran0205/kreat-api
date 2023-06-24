@@ -16,14 +16,13 @@ const jwt_decode = require('jwt-decode');
 
 // [GET] /accounts/:id/timeline
 exports.accounts_get_timeline_info = async (req, res, next) => {
-  const authHeader = req.header('Authorization');
-  const token = authHeader && authHeader.split(' ')[1];
-
-  if (!token) return res.sendStatus(401);
-
-  var decodedToken = jwt_decode(token);
-
   try {
+    const authHeader = req.header('Authorization');
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (!token) return res.sendStatus(401);
+
+    var decodedToken = jwt_decode(token);
     const myFriends = await OtherInfo.findOne({ id_account: decodedToken.id_account }, { _id: 0, listFriend: 1 });
     let friendStatus = '';
     let id_friendRequest = '';
@@ -180,14 +179,13 @@ exports.accounts_get_about_info = async (req, res, next) => {
 
 // [GET] /accounts/:id/friends
 exports.accounts_get_all_friends = async (req, res, next) => {
-  const authHeader = req.header('Authorization');
-  const token = authHeader && authHeader.split(' ')[1];
-
-  if (!token) return res.sendStatus(401);
-
-  var decodedToken = jwt_decode(token);
-
   try {
+    const authHeader = req.header('Authorization');
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (!token) return res.sendStatus(401);
+
+    var decodedToken = jwt_decode(token);
     const myInfo = await OtherInfo.findOne({ id_account: decodedToken.id_account }, { listFriend: 1 });
     const result = await OtherInfo.findOne({ id_account: req.params.id }, { listFriend: 1 });
 
@@ -499,14 +497,13 @@ exports.accounts_search_friends = async (req, res, next) => {
 
 // [GET] /accounts/friend_requests
 exports.accounts_get_all_friend_requests = async (req, res, next) => {
-  const authHeader = req.header('Authorization');
-  const token = authHeader && authHeader.split(' ')[1];
-
-  if (!token) return res.sendStatus(401);
-
-  var decodedToken = jwt_decode(token);
-
   try {
+    const authHeader = req.header('Authorization');
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (!token) return res.sendStatus(401);
+
+    var decodedToken = jwt_decode(token);
     const senders = await FriendRequest.find({ id_receiver: decodedToken.id_account }, { id_sender: 1 });
     const result = await OtherInfo.findOne({ id_account: decodedToken.id_account }, { listFriend: 1 });
 
@@ -553,19 +550,18 @@ exports.accounts_get_all_friend_requests = async (req, res, next) => {
 
 // [POST] /accounts/send_friend_request
 exports.accounts_send_friend_request = async (req, res, next) => {
-  const authHeader = req.header('Authorization');
-  const token = authHeader && authHeader.split(' ')[1];
-
-  if (!token) return res.sendStatus(401);
-
-  var decodedToken = jwt_decode(token);
-
-  const friendRequest = await new FriendRequest({
-    id_sender: decodedToken.id_account,
-    id_receiver: req.body.id_receiver,
-  });
-
   try {
+    const authHeader = req.header('Authorization');
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (!token) return res.sendStatus(401);
+
+    var decodedToken = jwt_decode(token);
+
+    const friendRequest = await new FriendRequest({
+      id_sender: decodedToken.id_account,
+      id_receiver: req.body.id_receiver,
+    });
     await friendRequest.save();
     res.status(201).json({
       message: 'friend request sended successfully',
@@ -614,13 +610,13 @@ exports.accounts_cancel_friend_request = async (req, res, next) => {
 
 // [DELETE] /accounts/:id/accept_friend_request
 exports.accounts_accept_friend_request = async (req, res, next) => {
-  const authHeader = req.header('Authorization');
-  const token = authHeader && authHeader.split(' ')[1];
-
-  if (!token) return res.sendStatus(401);
-
-  var decodedToken = jwt_decode(token);
   try {
+    const authHeader = req.header('Authorization');
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (!token) return res.sendStatus(401);
+
+    var decodedToken = jwt_decode(token);
     const friendRequest = await FriendRequest.findOne({ _id: req.params.id });
     if (friendRequest.id_receiver != decodedToken.id_account) {
       res.sendStatus(401);
@@ -698,13 +694,13 @@ exports.accounts_decline_friend_request = async (req, res, next) => {
 
 // [DELETE] /accounts/:id/unfriend
 exports.accounts_unfriend = async (req, res, next) => {
-  const authHeader = req.header('Authorization');
-  const token = authHeader && authHeader.split(' ')[1];
-
-  if (!token) return res.sendStatus(401);
-
-  var decodedToken = jwt_decode(token);
   try {
+    const authHeader = req.header('Authorization');
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (!token) return res.sendStatus(401);
+
+    var decodedToken = jwt_decode(token);
     const myListFriend = await OtherInfo.findOne({ id_account: decodedToken.id_account }, { _id: 0, listFriend: 1 });
     const friendRemovedList1 = await myListFriend.listFriend.filter((friend) => friend != req.params.id);
     await OtherInfo.findOneAndUpdate({ id_account: decodedToken.id_account }, { listFriend: friendRemovedList1 });
@@ -909,19 +905,19 @@ exports.accounts_comment_post = async (req, res, next) => {
 
 // [POST] /accounts/reply_comment_post
 exports.accounts_reply_comment_post = async (req, res, next) => {
-  const authHeader = req.header('Authorization');
-  const token = authHeader && authHeader.split(' ')[1];
-
-  if (!token) return res.sendStatus(401);
-
-  var decodedToken = jwt_decode(token);
-  const comment = await new Comment({
-    id_account: decodedToken.id_account,
-    isReply: true,
-    id_repliedComment: req.body.id_repliedComment,
-    ...req.body,
-  });
   try {
+    const authHeader = req.header('Authorization');
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (!token) return res.sendStatus(401);
+
+    var decodedToken = jwt_decode(token);
+    const comment = await new Comment({
+      id_account: decodedToken.id_account,
+      isReply: true,
+      id_repliedComment: req.body.id_repliedComment,
+      ...req.body,
+    });
     await comment.save().then((result) => {
       res.status(201).json({
         message: 'reply comment successfully',
@@ -1100,7 +1096,7 @@ exports.accounts_get_all_contacts = async (req, res, next) => {
   await Conversation.find({ members: { $in: [decodedToken.id_account] }, status: true })
     .then(async (conversations) => {
       let listContact = [];
-      for ([index, value] of conversations.entries()) {
+      for (const [index, value] of conversations.entries()) {
         let contactInfo = {};
         const contact = await value.members.filter((member) => member != decodedToken.id_account);
         await PersonalInfo.findOne({ id_account: contact[0] }, { _id: 0, id_account: 1, avatar: 1, fullName: 1 })

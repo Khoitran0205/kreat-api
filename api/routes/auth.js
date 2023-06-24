@@ -17,4 +17,10 @@ router.post('/logout', authenticateToken, AuthController.auth_log_out);
 //Refresh token
 router.post('/token', AuthController.auth_refresh_token);
 
+//Send verification mail
+router.post('/send_verification_mail', AuthController.send_verification_mail);
+
+// Verify account
+router.get('/verify/:id', AuthController.verify_account);
+
 module.exports = router;

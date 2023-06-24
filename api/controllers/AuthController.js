@@ -2,6 +2,7 @@ const jwt = require('jsonwebtoken');
 const env = require('dotenv');
 const bcrypt = require('bcrypt');
 const jwt_decode = require('jwt-decode');
+const sendVerificationMail = require('../../utils/nodemailer');
 
 const Account = require('../models/user/account');
 const PersonalInfo = require('../models/user/personal_info');
@@ -42,6 +43,7 @@ exports.auth_sign_up = async (req, res, next) => {
           id_account: account._id,
         });
         await other_info.save();
+        sendVerificationMail(req.body.email, req.body.fullName, account._id);
         res.status(201).json({
           message: 'account created',
           account: result,
@@ -69,32 +71,38 @@ exports.auth_log_in = async (req, res, next) => {
         message: 'Login information is incorrect',
       });
     } else {
-      const passwordMatch = await bcrypt.compare(req.body.password, account.password);
-
-      if (passwordMatch) {
-        const user = { email: account.email, id_account: account._id };
-        const accessToken = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '100m' });
-        const refreshToken = jwt.sign(user, process.env.REFRESH_TOKEN_SECRET);
-
-        await Account.findOneAndUpdate({ email: account.email }, { refreshToken: refreshToken });
-
-        const userInfo = await PersonalInfo.findOne(
-          { id_account: account._id },
-          { id_account: 1, avatar: 1, fullName: 1 },
-        );
-
-        res.status(200).json({
-          message: 'Log in successfully',
-          accessToken,
-          refreshToken,
-          id_account: userInfo.id_account,
-          fullName: userInfo.fullName,
-          avatar: userInfo.avatar,
+      if (!account.isVerified) {
+        return res.status(400).json({
+          message: 'Your email has not been verified yet!',
         });
       } else {
-        res.status(401).json({
-          message: 'Login information is incorrect',
-        });
+        const passwordMatch = await bcrypt.compare(req.body.password, account.password);
+
+        if (passwordMatch) {
+          const user = { email: account.email, id_account: account._id };
+          const accessToken = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '100m' });
+          const refreshToken = jwt.sign(user, process.env.REFRESH_TOKEN_SECRET);
+
+          await Account.findOneAndUpdate({ email: account.email }, { refreshToken: refreshToken });
+
+          const userInfo = await PersonalInfo.findOne(
+            { id_account: account._id },
+            { id_account: 1, avatar: 1, fullName: 1 },
+          );
+
+          res.status(200).json({
+            message: 'Log in successfully',
+            accessToken,
+            refreshToken,
+            id_account: userInfo.id_account,
+            fullName: userInfo.fullName,
+            avatar: userInfo.avatar,
+          });
+        } else {
+          res.status(401).json({
+            message: 'Login information is incorrect',
+          });
+        }
       }
     }
   } catch (error) {
@@ -161,4 +169,30 @@ exports.auth_refresh_token = async (req, res, next) => {
         error: err,
       });
     });
+};
+
+// [POST] auth/send_verification_mail
+exports.send_verification_mail = async (req, res, next) => {
+  try {
+    await sendVerificationMail(req.body.email, req.body.fullName).then(() => {
+      res.status(201).json({
+        message: 'mail sent successfully',
+      });
+    });
+  } catch (error) {
+    res.status(500).json({
+      error,
+    });
+  }
+};
+
+// [GET] auth/verify/:id
+exports.verify_account = async (req, res, next) => {
+  try {
+    const account = await Account.findOneAndUpdate({ _id: req.params.id }, { isVerified: true });
+  } catch (error) {
+    res.status(500).json({
+      error,
+    });
+  }
 };

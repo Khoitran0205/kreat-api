@@ -94,13 +94,13 @@ exports.posts_create_post = async (req, res, next) => {
 
 // [POST] /posts/share_post
 exports.posts_share_post = async (req, res, next) => {
-  const authHeader = req.header('Authorization');
-  const token = authHeader && authHeader.split(' ')[1];
-
-  if (!token) return res.sendStatus(401);
-
-  var decodedToken = jwt_decode(token);
   try {
+    const authHeader = req.header('Authorization');
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (!token) return res.sendStatus(401);
+
+    var decodedToken = jwt_decode(token);
     const personalInfo = await PersonalInfo.findOne({ id_account: decodedToken.id_account });
 
     const sharedPost = await Post.findOne({ _id: req.body.shareId });
@@ -283,13 +283,13 @@ exports.posts_delete_post = async (req, res, next) => {
 
 // [GET] /posts/get_all_post/:page
 exports.posts_get_all_post = async (req, res, next) => {
-  const authHeader = req.header('Authorization');
-  const token = authHeader && authHeader.split(' ')[1];
-
-  if (!token) return res.sendStatus(401);
-
-  var decodedToken = jwt_decode(token);
   try {
+    const authHeader = req.header('Authorization');
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (!token) return res.sendStatus(401);
+
+    var decodedToken = jwt_decode(token);
     const myListFriend = await OtherInfo.findOne({ id_account: decodedToken.id_account }, { _id: 0, listFriend: 1 });
     const posts = await Post.find({
       $or: [
@@ -372,13 +372,13 @@ exports.posts_get_all_post = async (req, res, next) => {
 
 // [GET] /posts/:id/get_all_reaction
 exports.posts_get_all_reaction = async (req, res, next) => {
-  const authHeader = req.header('Authorization');
-  const token = authHeader && authHeader.split(' ')[1];
-
-  if (!token) return res.sendStatus(401);
-
-  var decodedToken = jwt_decode(token);
   try {
+    const authHeader = req.header('Authorization');
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (!token) return res.sendStatus(401);
+
+    var decodedToken = jwt_decode(token);
     const myListFriend = await OtherInfo.findOne({ id_account: decodedToken.id_account }, { _id: 0, listFriend: 1 });
     const reactions = await React.find({ id_post: req.params.id }).sort({ createdAt: -1 });
     let listReaction = [];
@@ -410,7 +410,7 @@ exports.posts_get_all_reaction = async (req, res, next) => {
   }
 };
 
-// [GET] /:id/get_all_comment
+// [GET] /posts/:id/get_all_comment
 exports.posts_get_all_comment = async (req, res, next) => {
   await Comment.find({ id_post: req.params.id })
     .then(async (listComment) => {
@@ -447,7 +447,7 @@ exports.posts_get_all_comment = async (req, res, next) => {
     });
 };
 
-// [GET] /:id/get_all_tagged_friend
+// [GET] /posts/:id/get_all_tagged_friend
 exports.posts_get_all_tagged_friend = async (req, res, next) => {
   const authHeader = req.header('Authorization');
   const token = authHeader && authHeader.split(' ')[1];
@@ -506,4 +506,34 @@ exports.posts_get_all_tagged_friend = async (req, res, next) => {
         error: err,
       });
     });
+};
+
+// [GET] /posts/:id/get_all_friend_to_tag
+exports.posts_get_all_friend_to_tag = async (req, res, next) => {
+  try {
+    const authHeader = req.header('Authorization');
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (!token) return res.sendStatus(401);
+
+    var decodedToken = jwt_decode(token);
+    const myListFriend = await OtherInfo.findOne({ id_account: req.params.id }, { _id: 0, listFriend: 1 });
+    let listFriend = [];
+    for (const [index, friend] of myListFriend.listFriend.entries()) {
+      let friendInfo = {};
+      const personalInfo = await PersonalInfo.findOne({ id_account: friend }, { _id: 0, avatar: 1, fullName: 1 });
+      friendInfo = {
+        id_account: friend,
+        avatar: personalInfo.avatar,
+        fullName: personalInfo.fullName,
+      };
+      listFriend.push(friendInfo);
+    }
+    res.status(200).json({
+      message: 'get all friends to tag successfully',
+      listFriend,
+    });
+  } catch (error) {
+    res.status(500).json(error);
+  }
 };
