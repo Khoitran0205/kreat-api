@@ -314,7 +314,7 @@ exports.accounts_get_visual_media_info = async (req, res, next) => {
       }
     }
 
-    const listURL = await VisualMedia.find({ id_account: req.params.id }, { url: 1 });
+    const listURL = await VisualMedia.find({ id_account: req.params.id }, { url: 1 }).sort({ createdAt: -1 });
 
     res.status(200).json({
       message: 'get all images and videos successfully',

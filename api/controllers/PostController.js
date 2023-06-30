@@ -419,7 +419,7 @@ exports.posts_get_all_comment = async (req, res, next) => {
     if (!token) return res.sendStatus(401);
 
     var decodedToken = jwt_decode(token);
-    const comments = await Comment.find({ id_post: req.params.id });
+    const comments = await Comment.find({ id_post: req.params.id }).sort({ createdAt: -1 });
     let listComment = [];
     for (const [index, value] of comments.entries()) {
       let commentInfo = {};
