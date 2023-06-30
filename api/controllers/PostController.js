@@ -432,6 +432,7 @@ exports.posts_get_all_comment = async (req, res, next) => {
         _id: value._id,
         avatar: personalInfo.avatar,
         fullName: personalInfo.fullName,
+        commentContent: value.commentContent,
         listReaction,
       };
       listComment.push(commentInfo);
