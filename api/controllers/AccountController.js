@@ -137,44 +137,60 @@ exports.accounts_get_timeline_info = async (req, res, next) => {
 
 // [GET] /accounts/:id/about
 exports.accounts_get_about_info = async (req, res, next) => {
-  await PersonalInfo.findOne({ id_account: req.params.id })
-    .then(async (personalInfo) => {
-      if (!personalInfo) {
-        res.status(404).json({
-          message: 'account not found',
-        });
-      } else {
-        await FavoriteInfo.findOne({ id_account: req.params.id })
-          .then(async (favoriteInfo) => {
-            await EducationInfo.findOne({ id_account: req.params.id })
-              .then((educationInfo) => {
-                res.status(200).json({
-                  message: 'get about info successfully',
-                  about: {
-                    personalInfo,
-                    favoriteInfo,
-                    educationInfo,
-                  },
-                });
-              })
-              .catch((err) => {
-                res.status(500).json({
-                  error: err,
-                });
-              });
-          })
-          .catch((err) => {
-            res.status(500).json({
-              error: err,
-            });
-          });
-      }
-    })
-    .catch((err) => {
-      res.status(500).json({
-        error: err,
+  try {
+    const authHeader = req.header('Authorization');
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (!token) return res.sendStatus(401);
+
+    var decodedToken = jwt_decode(token);
+    const myFriends = await OtherInfo.findOne({ id_account: decodedToken.id_account }, { _id: 0, listFriend: 1 });
+    let friendStatus = '';
+    let id_friendRequest = '';
+    const isFriend = myFriends.listFriend.includes(req.params.id);
+    if (isFriend) {
+      friendStatus = 'friend';
+    } else {
+      const sentRequest = await FriendRequest.findOne({
+        id_sender: decodedToken.id_account,
+        id_receiver: req.params.id,
       });
+      if (sentRequest) {
+        friendStatus = 'friend request sent';
+        id_friendRequest = sentRequest._id.toString();
+      } else {
+        const receivedRequest = await FriendRequest.findOne({
+          id_receiver: decodedToken.id_account,
+          id_sender: req.params.id,
+        });
+        if (receivedRequest) {
+          friendStatus = 'friend request received';
+          id_friendRequest = receivedRequest._id.toString();
+        } else {
+          friendStatus = 'not friend';
+        }
+      }
+    }
+
+    const personalInfo = await PersonalInfo.findOne({ id_account: req.params.id });
+    const favoriteInfo = await FavoriteInfo.findOne({ id_account: req.params.id });
+    const educationInfo = await EducationInfo.findOne({ id_account: req.params.id });
+
+    res.status(200).json({
+      message: 'get about info successfully',
+      about: {
+        personalInfo,
+        favoriteInfo,
+        educationInfo,
+        friendStatus,
+        id_friendRequest,
+      },
     });
+  } catch (error) {
+    res.status(500).json({
+      error,
+    });
+  }
 };
 
 // [GET] /accounts/:id/friends
@@ -186,6 +202,33 @@ exports.accounts_get_all_friends = async (req, res, next) => {
     if (!token) return res.sendStatus(401);
 
     var decodedToken = jwt_decode(token);
+    const myFriends = await OtherInfo.findOne({ id_account: decodedToken.id_account }, { _id: 0, listFriend: 1 });
+    let friendStatus = '';
+    let id_friendRequest = '';
+    const isFriend = myFriends.listFriend.includes(req.params.id);
+    if (isFriend) {
+      friendStatus = 'friend';
+    } else {
+      const sentRequest = await FriendRequest.findOne({
+        id_sender: decodedToken.id_account,
+        id_receiver: req.params.id,
+      });
+      if (sentRequest) {
+        friendStatus = 'friend request sent';
+        id_friendRequest = sentRequest._id.toString();
+      } else {
+        const receivedRequest = await FriendRequest.findOne({
+          id_receiver: decodedToken.id_account,
+          id_sender: req.params.id,
+        });
+        if (receivedRequest) {
+          friendStatus = 'friend request received';
+          id_friendRequest = receivedRequest._id.toString();
+        } else {
+          friendStatus = 'not friend';
+        }
+      }
+    }
     const myInfo = await OtherInfo.findOne({ id_account: decodedToken.id_account }, { listFriend: 1 });
     const result = await OtherInfo.findOne({ id_account: req.params.id }, { listFriend: 1 });
 
@@ -224,6 +267,8 @@ exports.accounts_get_all_friends = async (req, res, next) => {
     res.status(200).json({
       message: 'get all friends successfully',
       listFriend,
+      friendStatus,
+      id_friendRequest,
     });
   } catch (err) {
     res.status(500).json({
@@ -234,18 +279,54 @@ exports.accounts_get_all_friends = async (req, res, next) => {
 
 // [GET] /accounts/:id/visual_media
 exports.accounts_get_visual_media_info = async (req, res, next) => {
-  await VisualMedia.find({ id_account: req.params.id }, { url: 1 })
-    .then((listURL) => {
-      res.status(200).json({
-        message: 'get all images and videos successfully',
-        listURL,
+  try {
+    const authHeader = req.header('Authorization');
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (!token) return res.sendStatus(401);
+
+    var decodedToken = jwt_decode(token);
+    const myFriends = await OtherInfo.findOne({ id_account: decodedToken.id_account }, { _id: 0, listFriend: 1 });
+    let friendStatus = '';
+    let id_friendRequest = '';
+    const isFriend = myFriends.listFriend.includes(req.params.id);
+    if (isFriend) {
+      friendStatus = 'friend';
+    } else {
+      const sentRequest = await FriendRequest.findOne({
+        id_sender: decodedToken.id_account,
+        id_receiver: req.params.id,
       });
-    })
-    .catch((err) => {
-      res.status(500).json({
-        error: err,
-      });
+      if (sentRequest) {
+        friendStatus = 'friend request sent';
+        id_friendRequest = sentRequest._id.toString();
+      } else {
+        const receivedRequest = await FriendRequest.findOne({
+          id_receiver: decodedToken.id_account,
+          id_sender: req.params.id,
+        });
+        if (receivedRequest) {
+          friendStatus = 'friend request received';
+          id_friendRequest = receivedRequest._id.toString();
+        } else {
+          friendStatus = 'not friend';
+        }
+      }
+    }
+
+    const listURL = await VisualMedia.find({ id_account: req.params.id }, { url: 1 });
+
+    res.status(200).json({
+      message: 'get all images and videos successfully',
+      listURL,
+      friendStatus,
+      id_friendRequest,
     });
+  } catch (error) {
+    res.status(500).json({
+      error,
+    });
+  }
 };
 
 // [PATCH] /accounts/update_personal_info
