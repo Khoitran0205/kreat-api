@@ -962,6 +962,7 @@ exports.accounts_comment_post = async (req, res, next) => {
       avatar: personalInfo.avatar,
       fullName: personalInfo.fullName,
       commentContent: comment.commentContent,
+      listReaction: [],
     };
     res.status(201).json({
       message: 'comment on post successfully',
