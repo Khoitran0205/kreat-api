@@ -953,9 +953,19 @@ exports.accounts_comment_post = async (req, res, next) => {
       ...req.body,
     });
     await comment.save();
+    const personalInfo = await PersonalInfo.findOne(
+      { id_account: decodedToken.id_account },
+      { _id: 0, avatar: 1, fullName: 1 },
+    );
+    const newComment = {
+      _id: comment._id,
+      avatar: personalInfo.avatar,
+      fullName: personalInfo.fullName,
+      commentContent: comment.commentContent,
+    };
     res.status(201).json({
       message: 'comment on post successfully',
-      comment,
+      newComment,
     });
   } catch (error) {
     res.status(500).json({
