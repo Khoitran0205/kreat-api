@@ -331,40 +331,33 @@ exports.accounts_get_visual_media_info = async (req, res, next) => {
 
 // [PATCH] /accounts/update_personal_info
 exports.accounts_update_personal_info = async (req, res, next) => {
-  const authHeader = req.header('Authorization');
-  const token = authHeader && authHeader.split(' ')[1];
+  try {
+    const authHeader = req.header('Authorization');
+    const token = authHeader && authHeader.split(' ')[1];
 
-  if (!token) return res.sendStatus(401);
+    if (!token) return res.sendStatus(401);
 
-  var decodedToken = jwt_decode(token);
-  await PersonalInfo.findOneAndUpdate({ id_account: decodedToken.id_account }, req.body, { new: true })
-    .then(async (result) => {
-      if (req.body.avatarData) {
-        const fileStr = req.body.avatarData;
-        let uploadedResponse = await cloudinary.uploader.upload(fileStr, {
-          resource_type: 'image',
-          upload_preset: 'avatar_setups',
-        });
-        await PersonalInfo.findOneAndUpdate(
-          { id_account: decodedToken.id_account },
-          { avatar: uploadedResponse.public_id },
-        )
-          .then((result2) => {})
-          .catch((err) => {
-            res.status(500).json({
-              error: err,
-            });
-          });
-      }
-      res.status(200).json({
-        message: 'update successfully',
+    var decodedToken = jwt_decode(token);
+    await PersonalInfo.findOneAndUpdate({ id_account: decodedToken.id_account }, req.body, { new: true });
+    if (req.body.avatarData) {
+      const fileStr = req.body.avatarData;
+      let uploadedResponse = await cloudinary.uploader.upload(fileStr, {
+        resource_type: 'image',
+        upload_preset: 'avatar_setups',
       });
-    })
-    .catch((err) => {
-      res.status(500).json({
-        error: err,
-      });
+      await PersonalInfo.findOneAndUpdate(
+        { id_account: decodedToken.id_account },
+        { avatar: uploadedResponse.public_id },
+      );
+    }
+    res.status(200).json({
+      message: 'update successfully',
     });
+  } catch (error) {
+    res.status(500).json({
+      error,
+    });
+  }
 };
 
 // [PATCH] /accounts/update_favorite_info
