@@ -412,39 +412,39 @@ exports.posts_get_all_reaction = async (req, res, next) => {
 
 // [GET] /posts/:id/get_all_comment
 exports.posts_get_all_comment = async (req, res, next) => {
-  await Comment.find({ id_post: req.params.id })
-    .then(async (listComment) => {
-      let list = [];
-      for ([index, value] of listComment.entries()) {
-        await PersonalInfo.findOne(
-          { id_account: value.id_account },
-          { id_account: 1, fullName: 1, avatar: 1, commentContent: value.commentContent },
-        ).then(async (result) => {
-          await React.find({ id_comment: value._id }, { _id: 1, id_account: 1, reactType: 1 })
-            .then(async (listReaction) => {
-              result = {
-                comment: result,
-                listReaction,
-              };
-            })
-            .catch((err) => {
-              res.status(500).json({
-                error: err,
-              });
-            });
-          list.push(result);
-        });
-      }
-      res.status(200).json({
-        message: 'get all comments successfully',
-        listComment: list,
-      });
-    })
-    .catch((err) => {
-      res.status(500).json({
-        error: err,
-      });
+  try {
+    const authHeader = req.header('Authorization');
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (!token) return res.sendStatus(401);
+
+    var decodedToken = jwt_decode(token);
+    const comments = await Comment.find({ id_post: req.params.id });
+    let listComment = [];
+    for (const [index, value] of comments.entries()) {
+      let commentInfo = {};
+      const personalInfo = await PersonalInfo.findOne(
+        { id_account: value.id_account },
+        { _id: 0, avatar: 1, fullName: 1 },
+      );
+      const listReaction = await React.find({ id_comment: value._id }, { id_account: 1, reactType: 1 });
+      commentInfo = {
+        _id: value._id,
+        avatar: personalInfo.avatar,
+        fullName: personalInfo.fullName,
+        listReaction,
+      };
+      listComment.push(commentInfo);
+    }
+    res.status(200).json({
+      message: 'get all comments successfully',
+      listComment,
     });
+  } catch (error) {
+    res.status(500).json({
+      error,
+    });
+  }
 };
 
 // [GET] /posts/:id/get_all_tagged_friend
