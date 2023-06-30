@@ -941,40 +941,27 @@ exports.accounts_unreact_comment = async (req, res, next) => {
 
 // [POST] /accounts/comment_post
 exports.accounts_comment_post = async (req, res, next) => {
-  const authHeader = req.header('Authorization');
-  const token = authHeader && authHeader.split(' ')[1];
+  try {
+    const authHeader = req.header('Authorization');
+    const token = authHeader && authHeader.split(' ')[1];
 
-  if (!token) return res.sendStatus(401);
+    if (!token) return res.sendStatus(401);
 
-  var decodedToken = jwt_decode(token);
-  const comment = await new Comment({
-    id_account: decodedToken.id_account,
-    ...req.body,
-  });
-  await Post.findOne({ _id: req.body.id_post })
-    .then(async (post) => {
-      if (!post) res.status(404).json({ message: 'post not found' });
-      else {
-        await comment
-          .save()
-          .then((result) => {
-            res.status(201).json({
-              message: 'comment stored',
-              comment: result,
-            });
-          })
-          .catch((err) => {
-            res.status(500).json({
-              error: err,
-            });
-          });
-      }
-    })
-    .catch((err) => {
-      res.status(500).json({
-        error: err,
-      });
+    var decodedToken = jwt_decode(token);
+    const comment = await new Comment({
+      id_account: decodedToken.id_account,
+      ...req.body,
     });
+    await comment.save();
+    res.status(201).json({
+      message: 'comment on post successfully',
+      comment,
+    });
+  } catch (error) {
+    res.status(500).json({
+      error,
+    });
+  }
 };
 
 // [POST] /accounts/reply_comment_post
