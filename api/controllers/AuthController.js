@@ -71,14 +71,14 @@ exports.auth_log_in = async (req, res, next) => {
         message: 'Login information is incorrect',
       });
     } else {
-      if (!account.isVerified) {
-        return res.status(400).json({
-          message: 'Your email has not been verified yet!',
-        });
-      } else {
-        const passwordMatch = await bcrypt.compare(req.body.password, account.password);
+      const passwordMatch = await bcrypt.compare(req.body.password, account.password);
 
-        if (passwordMatch) {
+      if (passwordMatch) {
+        if (!account.isVerified) {
+          return res.status(400).json({
+            message: 'Your email has not been verified yet!',
+          });
+        } else {
           const user = { email: account.email, id_account: account._id };
           const accessToken = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '100m' });
           const refreshToken = jwt.sign(user, process.env.REFRESH_TOKEN_SECRET);
@@ -98,11 +98,11 @@ exports.auth_log_in = async (req, res, next) => {
             fullName: userInfo.fullName,
             avatar: userInfo.avatar,
           });
-        } else {
-          res.status(401).json({
-            message: 'Login information is incorrect',
-          });
         }
+      } else {
+        res.status(401).json({
+          message: 'Login information is incorrect',
+        });
       }
     }
   } catch (error) {
