@@ -2,7 +2,7 @@ const nodemailer = require('nodemailer');
 const Mailgen = require('mailgen');
 require('dotenv').config();
 
-const sendingMail = async (targetEmail, fullName, id_account) => {
+const sendVerificationMail = async (targetEmail, fullName, id_account) => {
   try {
     const transporter = nodemailer.createTransport({
       service: 'gmail',
@@ -15,7 +15,7 @@ const sendingMail = async (targetEmail, fullName, id_account) => {
     let mailGenerator = new Mailgen({
       theme: 'default',
       product: {
-        name: 'The KreaT Team (Khôi hehe)',
+        name: 'The KreaT Team',
         link: 'https://mailgen.js/',
         logo: 'https://res.cloudinary.com/dzuzcewvj/image/upload/v1687577905/avatars/wcqkxwj8xw2vjfkdrmok.png',
         logoHeight: '200px',
@@ -32,7 +32,7 @@ const sendingMail = async (targetEmail, fullName, id_account) => {
           button: {
             color: '#0093FF',
             text: 'Verify your email',
-            link: `http://localhost:3000/auth/verify/${id_account}`,
+            link: `http://localhost:3000/auth/verify/64748aa0f6501b98ef1c9123`,
           },
         },
         signature: 'Sincerely',
@@ -53,4 +53,4 @@ const sendingMail = async (targetEmail, fullName, id_account) => {
   }
 };
 
-module.exports = sendingMail;
+module.exports = sendVerificationMail;

@@ -174,7 +174,7 @@ exports.auth_refresh_token = async (req, res, next) => {
 // [POST] auth/send_verification_mail
 exports.send_verification_mail = async (req, res, next) => {
   try {
-    await sendVerificationMail(req.body.email, req.body.fullName).then(() => {
+    await sendVerificationMail(req.body.email, req.body.fullName, req.body.id_account).then(() => {
       res.status(201).json({
         message: 'mail sent successfully',
       });
@@ -190,6 +190,7 @@ exports.send_verification_mail = async (req, res, next) => {
 exports.verify_account = async (req, res, next) => {
   try {
     const account = await Account.findOneAndUpdate({ _id: req.params.id }, { isVerified: true });
+    res.redirect('http://localhost:3001/authentication');
   } catch (error) {
     res.status(500).json({
       error,
