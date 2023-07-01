@@ -9,6 +9,7 @@ const Post = require('../models/post/post');
 const FriendRequest = require('../models/request/friend_request');
 const VisualMedia = require('../models/post/visual_media');
 const Conversation = require('../models/chat/conversation');
+const Notification = require('../models/notification');
 
 const { cloudinary } = require('../../utils/cloudinary');
 
@@ -798,52 +799,113 @@ exports.accounts_unfriend = async (req, res, next) => {
 
 // [POST] /accounts/react
 exports.accounts_react = async (req, res, next) => {
-  const authHeader = req.header('Authorization');
-  const token = authHeader && authHeader.split(' ')[1];
+  try {
+    const authHeader = req.header('Authorization');
+    const token = authHeader && authHeader.split(' ')[1];
 
-  if (!token) return res.sendStatus(401);
+    if (!token) return res.sendStatus(401);
 
-  var decodedToken = jwt_decode(token);
-  const react = await new React({
-    id_account: decodedToken.id_account,
-    ...req.body,
-  });
-  await Post.findOne({ _id: req.body.id_post }).then(async (post) => {
+    var decodedToken = jwt_decode(token);
+    const personalInfo = await PersonalInfo.findOne(
+      { id_account: decodedToken.id_account },
+      { _id: 0, avatar: 1, fullName: 1 },
+    );
+
+    const react = new React({
+      id_account: decodedToken.id_account,
+      ...req.body,
+    });
+
+    const post = await Post.findOne({ _id: req.body.id_post });
     if (!post) {
-      await Comment.findOne({ _id: req.body.id_comment }).then(async (comment) => {
-        if (!comment) res.status(404).json({ message: 'post or comment not found' });
-        else {
-          await react
-            .save()
-            .then((result) => {
-              res.status(201).json({
-                message: 'reaction on comment stored',
-                reaction: result,
-              });
-            })
-            .catch((err) => {
-              res.status(500).json({
-                error: err,
-              });
-            });
-        }
+      const comment = await Comment.findOne({ _id: req.body.id_comment });
+      if (!comment) {
+        return res.status(404).json({ message: 'post or comment not found' });
+      }
+      const result = await react.save();
+      const notification = await Notification.find({
+        $and: [{ id_comment: result.id_comment }, { notificationType: 'react' }],
       });
-    } else {
-      await react
-        .save()
-        .then((result) => {
-          res.status(201).json({
-            message: 'reaction on post stored',
-            reaction: result,
-          });
-        })
-        .catch((err) => {
-          res.status(500).json({
-            error: err,
-          });
+      if (notification.length >= 1) {
+        const reactAmount = await notification[0].id_senders.length;
+        const updateNotification = {
+          id_senders: [...notification[0].id_senders, decodedToken.id_account],
+          id_receiver: notification[0].id_receiver,
+          id_post: notification[0].id_post,
+          id_comment: notification[0].id_comment,
+          notificationType: notification[0].notificationType,
+          notificationContent:
+            reactAmount == 1
+              ? `${personalInfo.fullName} and ${reactAmount} other person reacted to your comment.`
+              : `${personalInfo.fullName} and ${reactAmount} other people reacted to your comment.`,
+          isViewed: false,
+        };
+        await Notification.findOneAndUpdate(
+          { $and: [{ id_comment: result.id_comment }, { notificationType: 'react' }] },
+          updateNotification,
+        );
+      } else {
+        const newNotification = await new Notification({
+          id_senders: [decodedToken.id_account],
+          id_receiver: comment.id_account,
+          id_post: null,
+          id_comment: result.id_comment,
+          notificationType: 'react',
+          notificationContent: `${personalInfo.fullName} reacted to your comment.`,
+          isViewed: false,
         });
+        await newNotification.save();
+      }
+      return res.status(201).json({
+        message: 'reaction on comment stored',
+        reaction: result,
+      });
     }
-  });
+
+    const result = await react.save();
+    const notification = await Notification.find({
+      $and: [{ id_post: result.id_post }, { notificationType: 'react' }],
+    });
+    if (notification.length >= 1) {
+      const reactAmount = await notification[0].id_senders.length;
+      const updateNotification = {
+        id_senders: [...notification[0].id_senders, decodedToken.id_account],
+        id_receiver: notification[0].id_receiver,
+        id_post: notification[0].id_post,
+        id_comment: notification[0].id_comment,
+        notificationType: notification[0].notificationType,
+        notificationContent:
+          reactAmount == 1
+            ? `${personalInfo.fullName} and ${reactAmount} other person reacted to your post.`
+            : `${personalInfo.fullName} and ${reactAmount} other people reacted to your post.`,
+        isViewed: false,
+      };
+      await Notification.findOneAndUpdate(
+        { $and: [{ id_post: result.id_post }, { notificationType: 'react' }] },
+        updateNotification,
+      );
+    } else {
+      const newNotification = await new Notification({
+        id_senders: [decodedToken.id_account],
+        id_receiver: post.id_account,
+        id_post: result.id_post,
+        id_comment: null,
+        notificationType: 'react',
+        notificationContent: `${personalInfo.fullName} reacted to your post.`,
+        isViewed: false,
+      });
+      await newNotification.save();
+    }
+    res.status(201).json({
+      message: 'reaction on post stored',
+      reaction: result,
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      error,
+    });
+  }
 };
 
 // [PATCH] /accounts/update_react
@@ -885,58 +947,80 @@ exports.accounts_update_react = async (req, res, next) => {
 
 // [DELETE] /accounts/:id/unreact_post
 exports.accounts_unreact_post = async (req, res, next) => {
-  const authHeader = req.header('Authorization');
-  const token = authHeader && authHeader.split(' ')[1];
+  try {
+    const authHeader = req.header('Authorization');
+    const token = authHeader && authHeader.split(' ')[1];
 
-  if (!token) return res.sendStatus(401);
+    if (!token) return res.sendStatus(401);
 
-  var decodedToken = jwt_decode(token);
-  await React.findOneAndRemove({
-    id_post: req.params.id,
-    id_account: decodedToken.id_account,
-  })
-    .then(async (result) => {
-      if (!result) await res.sendStatus(401);
-      else {
-        await res.status(200).json({
-          message: 'reaction on post removed',
-          reaction: result,
-        });
-      }
-    })
-    .catch((err) => {
-      res.status(500).json({
-        error: err,
-      });
+    var decodedToken = jwt_decode(token);
+    const result = await React.findOneAndRemove({
+      id_post: req.params.id,
+      id_account: decodedToken.id_account,
     });
+
+    if (!result) {
+      res.sendStatus(401);
+    } else {
+      const notification = await Notification.findOne({
+        $and: [{ id_post: req.params.id }, { notificationType: 'react' }],
+      });
+      const removeSenderList = await notification.id_senders.filter((sender) => sender != decodedToken.id_account);
+      await Notification.findOneAndUpdate(
+        {
+          $and: [{ id_post: req.params.id }, { notificationType: 'react' }],
+        },
+        { id_senders: removeSenderList },
+      );
+      res.status(200).json({
+        message: 'reaction on post removed',
+        reaction: result,
+      });
+    }
+  } catch (error) {
+    res.status(500).json({
+      error,
+    });
+  }
 };
 
 // [DELETE] /accounts/:id/unreact_comment
 exports.accounts_unreact_comment = async (req, res, next) => {
-  const authHeader = req.header('Authorization');
-  const token = authHeader && authHeader.split(' ')[1];
+  try {
+    const authHeader = req.header('Authorization');
+    const token = authHeader && authHeader.split(' ')[1];
 
-  if (!token) return res.sendStatus(401);
+    if (!token) return res.sendStatus(401);
 
-  var decodedToken = jwt_decode(token);
-  await React.findOneAndRemove({
-    id_comment: req.params.id,
-    id_account: decodedToken.id_account,
-  })
-    .then(async (result) => {
-      if (!result) await res.sendStatus(401);
-      else {
-        await res.status(200).json({
-          message: 'reaction on comment removed',
-          reaction: result,
-        });
-      }
-    })
-    .catch((err) => {
-      res.status(500).json({
-        error: err,
-      });
+    var decodedToken = jwt_decode(token);
+    const result = await React.findOneAndRemove({
+      id_comment: req.params.id,
+      id_account: decodedToken.id_account,
     });
+
+    if (!result) {
+      res.sendStatus(401);
+    } else {
+      const notification = await Notification.findOne({
+        $and: [{ id_comment: req.params.id }, { notificationType: 'react' }],
+      });
+      const removeSenderList = await notification.id_senders.filter((sender) => sender != decodedToken.id_account);
+      await Notification.findOneAndUpdate(
+        {
+          $and: [{ id_comment: req.params.id }, { notificationType: 'react' }],
+        },
+        { id_senders: removeSenderList },
+      );
+      res.status(200).json({
+        message: 'reaction on comment removed',
+        reaction: result,
+      });
+    }
+  } catch (err) {
+    return res.status(500).json({
+      error: err,
+    });
+  }
 };
 
 // [POST] /accounts/comment_post
@@ -957,6 +1041,7 @@ exports.accounts_comment_post = async (req, res, next) => {
       { id_account: decodedToken.id_account },
       { _id: 0, avatar: 1, fullName: 1 },
     );
+    const id_receiver = await Post.findOne({ _id: req.body.id_post }, { id_account: 1 });
     const newComment = {
       _id: comment._id,
       avatar: personalInfo.avatar,
@@ -964,6 +1049,67 @@ exports.accounts_comment_post = async (req, res, next) => {
       commentContent: comment.commentContent,
       listReaction: [],
     };
+
+    const notification = await Notification.find({
+      $and: [{ id_post: req.body.id_post }, { notificationType: 'comment' }],
+    });
+    if (notification.length >= 1) {
+      const accountCommentAmount = await notification[0].id_senders.length;
+      let updateNotification = {};
+      if (notification[0].id_senders.includes(decodedToken.id_account)) {
+        const checkOtherComment = await notification[0].id_senders.filter(
+          (account) => account != decodedToken.id_account,
+        );
+        if (checkOtherComment.length == 0) {
+          updateNotification = {
+            isViewed: false,
+          };
+        } else {
+          updateNotification = {
+            id_senders: notification[0].id_senders,
+            id_receiver: notification[0].id_receiver,
+            id_post: notification[0].id_post,
+            id_comment: notification[0].id_comment,
+            notificationType: notification[0].notificationType,
+            notificationContent:
+              accountCommentAmount == 2
+                ? `${personalInfo.fullName} and ${accountCommentAmount - 1} other person commented on your post.`
+                : `${personalInfo.fullName} and ${accountCommentAmount - 1} other people commented on your post.`,
+            isViewed: false,
+          };
+        }
+      } else {
+        updateNotification = {
+          id_senders: [...notification[0].id_senders, decodedToken.id_account],
+          id_receiver: notification[0].id_receiver,
+          id_post: notification[0].id_post,
+          id_comment: notification[0].id_comment,
+          notificationType: notification[0].notificationType,
+          notificationContent:
+            accountCommentAmount == 1
+              ? `${personalInfo.fullName} and ${accountCommentAmount} other person commented on your post.`
+              : `${personalInfo.fullName} and ${accountCommentAmount} other people commented on your post.`,
+          isViewed: false,
+        };
+      }
+
+      await Notification.findOneAndUpdate(
+        { $and: [{ id_post: result.id_post }, { notificationType: 'react' }] },
+        updateNotification,
+      );
+    } else {
+      const newNotification = await new Notification({
+        id_senders: [decodedToken.id_account],
+        id_receiver: id_receiver.id_account,
+        id_post: req.body.id_post,
+        id_comment: null,
+        notificationType: 'comment',
+        notificationContent: `${personalInfo.fullName} commented on your post.`,
+        isViewed: false,
+      });
+      await newNotification.save();
+    }
+
     res.status(201).json({
       message: 'comment on post successfully',
       newComment,
@@ -1036,30 +1182,31 @@ exports.accounts_update_comment_post = async (req, res, next) => {
 
 // [DELETE] /accounts/:id/delete_comment_post
 exports.accounts_delete_comment_post = async (req, res, next) => {
-  const authHeader = req.header('Authorization');
-  const token = authHeader && authHeader.split(' ')[1];
+  try {
+    const authHeader = req.header('Authorization');
+    const token = authHeader && authHeader.split(' ')[1];
 
-  if (!token) return res.sendStatus(401);
+    if (!token) return res.sendStatus(401);
 
-  var decodedToken = jwt_decode(token);
-  await Comment.findOneAndRemove({
-    _id: req.params.id,
-    id_account: decodedToken.id_account,
-  })
-    .then((result) => {
-      if (!result) res.sendStatus(401);
-      else {
-        res.status(200).json({
-          message: 'comment removed',
-          comment: result,
-        });
-      }
-    })
-    .catch((err) => {
-      res.status(500).json({
-        error: err,
-      });
+    var decodedToken = jwt_decode(token);
+    const result = await Comment.findOneAndRemove({
+      _id: req.params.id,
+      id_account: decodedToken.id_account,
     });
+
+    if (!result) {
+      res.sendStatus(401);
+    } else {
+      res.status(200).json({
+        message: 'comment removed',
+        comment: result,
+      });
+    }
+  } catch (error) {
+    res.status(500).json({
+      error,
+    });
+  }
 };
 
 // [GET] /accounts/friend_suggestion
@@ -1197,4 +1344,44 @@ exports.accounts_get_all_contacts = async (req, res, next) => {
         error: err,
       });
     });
+};
+
+// [GET] /accounts/notification
+exports.accounts_get_all_notifications = async (req, res, next) => {
+  try {
+    const authHeader = req.header('Authorization');
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (!token) return res.sendStatus(401);
+
+    var decodedToken = jwt_decode(token);
+    const notifications = await Notification.find({ id_receiver: decodedToken.id_account }).sort({ updatedAt: -1 });
+    let listNotification = [];
+    for (const [index, value] of notifications.entries()) {
+      let notificationInfo = {};
+      const id_account = await value.id_senders[value.id_senders.length - 1];
+      const personalInfo = await PersonalInfo.findOne({ id_account: id_account }, { _id: 0, avatar: 1 });
+      notificationInfo = {
+        _id: value._id,
+        id_senders: value.id_senders,
+        id_receiver: value.id_receiver,
+        id_post: value.id_post,
+        id_comment: value.id_comment,
+        notificationType: value.notificationType,
+        notificationContent: value.notificationContent,
+        isViewed: value.isViewed,
+        updatedAt: value.updatedAt,
+        avatar: personalInfo.avatar,
+      };
+      listNotification.push(notificationInfo);
+    }
+    res.status(200).json({
+      message: 'get all notifications successfully',
+      listNotification,
+    });
+  } catch (error) {
+    res.status(500).json({
+      error,
+    });
+  }
 };

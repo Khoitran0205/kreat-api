@@ -24,6 +24,6 @@ router.get('/:id/get_all_comment', authenticateToken, PostController.posts_get_a
 router.get('/:id/get_all_tagged_friend', authenticateToken, PostController.posts_get_all_tagged_friend);
 
 //Get all friends to tag
-router.get('/:id/get_all_friend_to_tag', authenticateToken, PostController.posts_get_all_friend_to_tag);
+router.get('/get_all_friend_to_tag', authenticateToken, PostController.posts_get_all_friend_to_tag);
 
 module.exports = router;

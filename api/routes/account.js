@@ -46,4 +46,7 @@ router.get('/friend_suggestion', authenticateToken, AccountController.accounts_g
 //Contacts
 router.get('/contact', authenticateToken, AccountController.accounts_get_all_contacts);
 
+// Notifications
+router.get('/notification', authenticateToken, AccountController.accounts_get_all_notifications);
+
 module.exports = router;

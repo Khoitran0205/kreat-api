@@ -5,10 +5,12 @@ const OtherInfo = require('../models/user/other_info');
 const React = require('../models/post/react');
 const Comment = require('../models/post/comment');
 const VisualMedia = require('../models/post/visual_media');
+const Notification = require('../models/notification');
 
 const { cloudinary } = require('../../utils/cloudinary');
 
 const jwt_decode = require('jwt-decode');
+const account = require('../models/user/account');
 
 // [POST] /posts/create_post
 exports.posts_create_post = async (req, res, next) => {
@@ -137,6 +139,67 @@ exports.posts_share_post = async (req, res, next) => {
     });
 
     const result = await post.save();
+
+    const notification = await Notification.find({
+      $and: [{ id_post: req.body.shareId }, { notificationType: 'share' }],
+    });
+    if (notification.length >= 1) {
+      const shareAmmount = await notification[0].id_senders.length;
+      let updateNotification = {};
+      if (notification[0].id_senders.includes(decodedToken.id_account)) {
+        const checkOtherShare = await notification[0].id_senders.filter(
+          (account) => account != decodedToken.id_account,
+        );
+        if (checkOtherShare.length == 0) {
+          updateNotification = {
+            isViewed: false,
+          };
+        } else {
+          updateNotification = {
+            id_senders: notification[0].id_senders,
+            id_receiver: notification[0].id_receiver,
+            id_post: notification[0].id_post,
+            id_comment: notification[0].id_comment,
+            notificationType: notification[0].notificationType,
+            notificationContent:
+              shareAmmount == 2
+                ? `${personalInfo.fullName} and ${shareAmmount - 1} other person shared your post.`
+                : `${personalInfo.fullName} and ${shareAmmount - 1} other people shared your post.`,
+            isViewed: false,
+          };
+        }
+      } else {
+        updateNotification = {
+          id_senders: [...notification[0].id_senders, decodedToken.id_account],
+          id_receiver: notification[0].id_receiver,
+          id_post: notification[0].id_post,
+          id_comment: notification[0].id_comment,
+          notificationType: notification[0].notificationType,
+          notificationContent:
+            accountCommentAmount == 1
+              ? `${personalInfo.fullName} and ${shareAmmount} other person shared your post.`
+              : `${personalInfo.fullName} and ${shareAmmount} other people shared your post.`,
+          isViewed: false,
+        };
+      }
+
+      await Notification.findOneAndUpdate(
+        { $and: [{ id_post: req.body.shareId }, { notificationType: 'share' }] },
+        updateNotification,
+      );
+    } else {
+      const newNotification = await new Notification({
+        id_senders: [decodedToken.id_account],
+        id_receiver: sharedPost.id_account,
+        id_post: req.body.shareId,
+        id_comment: null,
+        notificationType: 'share',
+        notificationContent: `${personalInfo.fullName} shared your post.`,
+        isViewed: false,
+      });
+      await newNotification.save();
+    }
+
     res.status(201).json({
       message: 'shared post created!',
       post: result,
@@ -509,7 +572,7 @@ exports.posts_get_all_tagged_friend = async (req, res, next) => {
     });
 };
 
-// [GET] /posts/:id/get_all_friend_to_tag
+// [GET] /posts/get_all_friend_to_tag
 exports.posts_get_all_friend_to_tag = async (req, res, next) => {
   try {
     const authHeader = req.header('Authorization');
@@ -518,7 +581,7 @@ exports.posts_get_all_friend_to_tag = async (req, res, next) => {
     if (!token) return res.sendStatus(401);
 
     var decodedToken = jwt_decode(token);
-    const myListFriend = await OtherInfo.findOne({ id_account: req.params.id }, { _id: 0, listFriend: 1 });
+    const myListFriend = await OtherInfo.findOne({ id_account: decodedToken.id_account }, { _id: 0, listFriend: 1 });
     let listFriend = [];
     for (const [index, friend] of myListFriend.listFriend.entries()) {
       let friendInfo = {};
