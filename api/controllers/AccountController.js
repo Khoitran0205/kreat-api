@@ -1357,8 +1357,12 @@ exports.accounts_get_all_notifications = async (req, res, next) => {
     var decodedToken = jwt_decode(token);
     const notifications = await Notification.find({ id_receiver: decodedToken.id_account }).sort({ updatedAt: -1 });
     let listNotification = [];
+    let unViewdAmount = 0;
     for (const [index, value] of notifications.entries()) {
       let notificationInfo = {};
+      if (!value.isViewed) {
+        unViewdAmount++;
+      }
       const id_account = await value.id_senders[value.id_senders.length - 1];
       const personalInfo = await PersonalInfo.findOne({ id_account: id_account }, { _id: 0, avatar: 1 });
       notificationInfo = {
@@ -1377,6 +1381,7 @@ exports.accounts_get_all_notifications = async (req, res, next) => {
     }
     res.status(200).json({
       message: 'get all notifications successfully',
+      unViewdAmount,
       listNotification,
     });
   } catch (error) {
