@@ -1094,7 +1094,7 @@ exports.accounts_comment_post = async (req, res, next) => {
       }
 
       await Notification.findOneAndUpdate(
-        { $and: [{ id_post: result.id_post }, { notificationType: 'react' }] },
+        { $and: [{ id_post: req.body.id_post }, { notificationType: 'comment' }] },
         updateNotification,
       );
     } else {
