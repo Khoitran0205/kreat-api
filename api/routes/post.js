@@ -14,6 +14,9 @@ router.delete('/:id/delete_post', authenticateToken, PostController.posts_delete
 //Get all posts
 router.get('/get_all_post/:page', authenticateToken, PostController.posts_get_all_post);
 
+//Get post by id
+router.get('/:id', authenticateToken, PostController.posts_get_post_by_id);
+
 //Get all reactions of a post
 router.get('/:id/get_all_reaction', authenticateToken, PostController.posts_get_all_reaction);
 

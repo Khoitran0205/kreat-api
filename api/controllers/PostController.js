@@ -433,6 +433,74 @@ exports.posts_get_all_post = async (req, res, next) => {
   }
 };
 
+// [GET] /posts/:id
+exports.posts_get_post_by_id = async (req, res, next) => {
+  try {
+    const authHeader = req.header('Authorization');
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (!token) return res.sendStatus(401);
+
+    var decodedToken = jwt_decode(token);
+    const post = await Post.findOne({ _id: req.params.id });
+
+    const personalInfo = await PersonalInfo.findOne(
+      { id_account: post.id_account },
+      { _id: 0, avatar: 1, fullName: 1 },
+    );
+    const listReaction = await React.find({ id_post: post._id, id_comment: null }, { id_account: 1, reactType: 1 });
+    const comments = await Comment.find({ id_post: post._id });
+
+    let shareContent = {};
+    if (post.isShared) {
+      const sharedPersonalInfo = await PersonalInfo.findOne(
+        { id_account: post.shareContent.shared_id_account },
+        { _id: 0, avatar: 1, fullName: 1 },
+      );
+
+      shareContent = {
+        shared_id_account: post.shareContent.shared_id_account,
+        shared_avatar: sharedPersonalInfo.avatar,
+        shared_fullName: sharedPersonalInfo.fullName,
+        shared_id_visualMedia: post.shareContent.shared_id_visualMedia,
+        shared_postContent: post.shareContent.shared_postContent,
+        shared_postFeeling: post.shareContent.shared_postFeeling,
+        shared_postPrivacy: post.shareContent.shared_postPrivacy,
+        shared_createdAt: post.shareContent.shared_createdAt,
+        shared_id_friendTag: post.shareContent.shared_id_friendTag,
+        shared_location: post.shareContent.shared_location,
+      };
+    }
+
+    let postInfo = {
+      _id: post._id,
+      id_account: post.id_account,
+      avatar: personalInfo.avatar,
+      fullName: personalInfo.fullName,
+      id_visualMedia: post.id_visualMedia,
+      postContent: post.postContent,
+      postFeeling: post.postFeeling,
+      postPrivacy: post.postPrivacy,
+      id_friendTag: post.id_friendTag,
+      location: post.location,
+      isShared: post.isShared,
+      shareId: post.shareId,
+      shareContent,
+      createdAt: post.createdAt,
+      listReaction,
+      commentAmount: comments.length,
+    };
+    res.status(200).json({
+      message: 'get post by id successfully',
+      postInfo,
+    });
+  } catch (error) {
+    res.status(500).json({
+      error,
+    });
+  }
+};
+
 // [GET] /posts/:id/get_all_reaction
 exports.posts_get_all_reaction = async (req, res, next) => {
   try {
