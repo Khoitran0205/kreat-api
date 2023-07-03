@@ -1376,6 +1376,7 @@ exports.accounts_get_all_notifications = async (req, res, next) => {
         avatar: personalInfo.avatar,
       };
       listNotification.push(notificationInfo);
+      await Notification.findOneAndUpdate({ _id: value._id }, { isViewed: true });
     }
     res.status(200).json({
       message: 'get all notifications successfully',
