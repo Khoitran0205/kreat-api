@@ -850,7 +850,7 @@ exports.accounts_react = async (req, res, next) => {
         const newNotification = await new Notification({
           id_senders: [decodedToken.id_account],
           id_receiver: comment.id_account,
-          id_post: null,
+          id_post: comment.id_post,
           id_comment: result.id_comment,
           notificationType: 'react',
           notificationContent: `${personalInfo.fullName} reacted to your comment.`,
