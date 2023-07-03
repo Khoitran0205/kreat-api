@@ -605,6 +605,7 @@ exports.accounts_send_friend_request = async (req, res, next) => {
       id_comment: null,
       notificationType: 'friend request',
       notificationContent: `${personalInfo.fullName} sent you a friend request.`,
+      notificationTime: new Date(),
       isViewed: false,
     });
     await newNotification.save();
@@ -709,7 +710,11 @@ exports.accounts_accept_friend_request = async (req, res, next) => {
             { notificationType: 'friend request' },
           ],
         },
-        { notificationContent: `You and ${personalInfo2.fullName} are friends now.`, isViewed: false },
+        {
+          notificationContent: `You and ${personalInfo2.fullName} are friends now.`,
+          notificationTime: new Date(),
+          isViewed: false,
+        },
       );
 
       const newNotification = await new Notification({
@@ -719,6 +724,7 @@ exports.accounts_accept_friend_request = async (req, res, next) => {
         id_comment: null,
         notificationType: 'friend request',
         notificationContent: `${personalInfo.fullName} accepted your friend request.`,
+        notificationTime: new Date(),
         isViewed: false,
       });
       await newNotification.save();
@@ -840,6 +846,7 @@ exports.accounts_react = async (req, res, next) => {
             reactAmount == 1
               ? `${personalInfo.fullName} and ${reactAmount} other person reacted to your comment.`
               : `${personalInfo.fullName} and ${reactAmount} other people reacted to your comment.`,
+          notificationTime: new Date(),
           isViewed: false,
         };
         await Notification.findOneAndUpdate(
@@ -854,6 +861,7 @@ exports.accounts_react = async (req, res, next) => {
           id_comment: result.id_comment,
           notificationType: 'react',
           notificationContent: `${personalInfo.fullName} reacted to your comment.`,
+          notificationTime: new Date(),
           isViewed: false,
         });
         await newNotification.save();
@@ -880,6 +888,7 @@ exports.accounts_react = async (req, res, next) => {
           reactAmount == 1
             ? `${personalInfo.fullName} and ${reactAmount} other person reacted to your post.`
             : `${personalInfo.fullName} and ${reactAmount} other people reacted to your post.`,
+        notificationTime: new Date(),
         isViewed: false,
       };
       await Notification.findOneAndUpdate(
@@ -894,6 +903,7 @@ exports.accounts_react = async (req, res, next) => {
         id_comment: null,
         notificationType: 'react',
         notificationContent: `${personalInfo.fullName} reacted to your post.`,
+        notificationTime: new Date(),
         isViewed: false,
       });
       await newNotification.save();
@@ -1077,6 +1087,7 @@ exports.accounts_comment_post = async (req, res, next) => {
               accountCommentAmount == 2
                 ? `${personalInfo.fullName} and ${accountCommentAmount - 1} other person commented on your post.`
                 : `${personalInfo.fullName} and ${accountCommentAmount - 1} other people commented on your post.`,
+            notificationTime: new Date(),
             isViewed: false,
           };
         }
@@ -1091,6 +1102,7 @@ exports.accounts_comment_post = async (req, res, next) => {
             accountCommentAmount == 1
               ? `${personalInfo.fullName} and ${accountCommentAmount} other person commented on your post.`
               : `${personalInfo.fullName} and ${accountCommentAmount} other people commented on your post.`,
+          notificationTime: new Date(),
           isViewed: false,
         };
       }
@@ -1107,6 +1119,7 @@ exports.accounts_comment_post = async (req, res, next) => {
         id_comment: null,
         notificationType: 'comment',
         notificationContent: `${personalInfo.fullName} commented on your post.`,
+        notificationTime: new Date(),
         isViewed: false,
       });
       await newNotification.save();
@@ -1357,7 +1370,9 @@ exports.accounts_get_all_notifications = async (req, res, next) => {
     if (!token) return res.sendStatus(401);
 
     var decodedToken = jwt_decode(token);
-    const notifications = await Notification.find({ id_receiver: decodedToken.id_account }).sort({ updatedAt: -1 });
+    const notifications = await Notification.find({ id_receiver: decodedToken.id_account }).sort({
+      notificationTime: -1,
+    });
     let listNotification = [];
     for (const [index, value] of notifications.entries()) {
       let notificationInfo = {};
@@ -1371,8 +1386,8 @@ exports.accounts_get_all_notifications = async (req, res, next) => {
         id_comment: value.id_comment,
         notificationType: value.notificationType,
         notificationContent: value.notificationContent,
+        notificationTime: value.notificationTime,
         isViewed: value.isViewed,
-        updatedAt: value.updatedAt,
         avatar: personalInfo.avatar,
       };
       listNotification.push(notificationInfo);

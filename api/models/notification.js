@@ -8,6 +8,7 @@ const notificationSchema = mongoose.Schema(
     id_comment: { type: mongoose.Types.ObjectId, default: null },
     notificationType: { type: String, default: '' },
     notificationContent: { type: String, default: '' },
+    notificationTime: { type: Date, default: null },
     isViewed: { type: Boolean, default: false },
   },
   {
