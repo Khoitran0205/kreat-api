@@ -53,68 +53,65 @@ exports.chat_get_all_conversation = async (req, res, next) => {
 
 // [POST] /chat/send_message
 exports.chat_send_message = async (req, res, next) => {
-  const authHeader = req.header('Authorization');
-  const token = authHeader && authHeader.split(' ')[1];
+  try {
+    const authHeader = req.header('Authorization');
+    const token = authHeader && authHeader.split(' ')[1];
 
-  if (!token) return res.sendStatus(401);
+    if (!token) return res.sendStatus(401);
 
-  var decodedToken = jwt_decode(token);
-  const newMessage = await Message({
-    id_sender: decodedToken.id_account,
-    id_conversation: req.body.id_conversation,
-    messageContent: req.body.messageContent,
-  });
-  if (!req.body.id_conversation || !req.body.messageContent) {
-    res.sendStatus(500);
-  } else {
-    await Conversation.findOne({ _id: req.body.id_conversation })
-      .then(async (conversation) => {
-        if (!conversation.status) {
-          res.status(403).json({
-            message: 'you are not friends right now',
-          });
-        } else {
-          await newMessage
-            .save()
-            .then((result) => {
-              res.status(201).json({
-                message: 'message sent successfully',
-                newMessage: result,
-              });
-            })
-            .catch((err) => {
-              res.status(500).json({
-                error: err,
-              });
-            });
-        }
-      })
-      .catch((err) => {
-        res.status(500).json({
-          error: err,
-        });
+    var decodedToken = jwt_decode(token);
+    if (!req.body.id_conversation || !req.body.messageContent) {
+      res.sendStatus(500);
+      return;
+    }
+
+    const conversation = await Conversation.findOne({ _id: req.body.id_conversation });
+    if (!conversation.status) {
+      res.status(403).json({
+        message: 'you are not friends right now',
       });
+      return;
+    }
+
+    const newMessage = new Message({
+      id_sender: decodedToken.id_account,
+      id_conversation: req.body.id_conversation,
+      messageContent: req.body.messageContent,
+    });
+
+    const result = await newMessage.save();
+    await Conversation.findOneAndUpdate({ _id: req.body.id_conversation }, { isViewed: false });
+    res.status(201).json({
+      message: 'message sent successfully',
+      newMessage: result,
+    });
+  } catch (error) {
+    res.status(500).json({
+      error,
+    });
   }
 };
 
 // [GET] /chat/:id/messages
 exports.chat_get_all_message = async (req, res, next) => {
-  const authHeader = req.header('Authorization');
-  const token = authHeader && authHeader.split(' ')[1];
+  try {
+    const authHeader = req.header('Authorization');
+    const token = authHeader && authHeader.split(' ')[1];
 
-  if (!token) return res.sendStatus(401);
+    if (!token) return res.sendStatus(401);
 
-  var decodedToken = jwt_decode(token);
-  await Message.find({ id_conversation: req.params.id })
-    .then((messages) => {
-      res.status(200).json({
-        message: 'get all messages successfully',
-        messages,
-      });
-    })
-    .catch((err) => {
-      res.status(500).json({
-        error: err,
-      });
+    var decodedToken = jwt_decode(token);
+    const messages = await Message.find({ id_conversation: req.params.id });
+    if (messages[messages.length - 1].id_sender != decodedToken.id_account) {
+      await Conversation.findOneAndUpdate({ _id: req.params.id }, { isViewed: true });
+    }
+    res.status(200).json({
+      message: 'get all messages successfully',
+      messages,
     });
+  } catch (error) {
+    res.status(500).json({
+      error,
+    });
+  }
 };

@@ -10,6 +10,7 @@ router.get('/:id/timeline', authenticateToken, AccountController.accounts_get_ti
 router.get('/:id/about', authenticateToken, AccountController.accounts_get_about_info);
 router.get('/:id/friends', authenticateToken, AccountController.accounts_get_all_friends);
 router.get('/:id/visual_media', authenticateToken, AccountController.accounts_get_visual_media_info);
+router.get('/:id/avatar', authenticateToken, AccountController.accounts_get_all_avatars);
 
 router.patch('/update_personal_info', authenticateToken, AccountController.accounts_update_personal_info);
 router.patch('/update_favorite_info', authenticateToken, AccountController.accounts_update_favorite_info);
@@ -48,5 +49,11 @@ router.get('/contact', authenticateToken, AccountController.accounts_get_all_con
 
 // Notifications
 router.get('/notification', authenticateToken, AccountController.accounts_get_all_notifications);
+
+router.get(
+  '/unviewed_notification_and_message',
+  authenticateToken,
+  AccountController.accounts_get_unviewed_notifications_and_messages,
+);
 
 module.exports = router;

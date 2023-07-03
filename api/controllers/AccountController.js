@@ -145,33 +145,6 @@ exports.accounts_get_about_info = async (req, res, next) => {
     if (!token) return res.sendStatus(401);
 
     var decodedToken = jwt_decode(token);
-    const myFriends = await OtherInfo.findOne({ id_account: decodedToken.id_account }, { _id: 0, listFriend: 1 });
-    let friendStatus = '';
-    let id_friendRequest = '';
-    const isFriend = myFriends.listFriend.includes(req.params.id);
-    if (isFriend) {
-      friendStatus = 'friend';
-    } else {
-      const sentRequest = await FriendRequest.findOne({
-        id_sender: decodedToken.id_account,
-        id_receiver: req.params.id,
-      });
-      if (sentRequest) {
-        friendStatus = 'friend request sent';
-        id_friendRequest = sentRequest._id.toString();
-      } else {
-        const receivedRequest = await FriendRequest.findOne({
-          id_receiver: decodedToken.id_account,
-          id_sender: req.params.id,
-        });
-        if (receivedRequest) {
-          friendStatus = 'friend request received';
-          id_friendRequest = receivedRequest._id.toString();
-        } else {
-          friendStatus = 'not friend';
-        }
-      }
-    }
 
     const personalInfo = await PersonalInfo.findOne({ id_account: req.params.id });
     const favoriteInfo = await FavoriteInfo.findOne({ id_account: req.params.id });
@@ -183,8 +156,6 @@ exports.accounts_get_about_info = async (req, res, next) => {
         personalInfo,
         favoriteInfo,
         educationInfo,
-        friendStatus,
-        id_friendRequest,
       },
     });
   } catch (error) {
@@ -203,33 +174,7 @@ exports.accounts_get_all_friends = async (req, res, next) => {
     if (!token) return res.sendStatus(401);
 
     var decodedToken = jwt_decode(token);
-    const myFriends = await OtherInfo.findOne({ id_account: decodedToken.id_account }, { _id: 0, listFriend: 1 });
-    let friendStatus = '';
-    let id_friendRequest = '';
-    const isFriend = myFriends.listFriend.includes(req.params.id);
-    if (isFriend) {
-      friendStatus = 'friend';
-    } else {
-      const sentRequest = await FriendRequest.findOne({
-        id_sender: decodedToken.id_account,
-        id_receiver: req.params.id,
-      });
-      if (sentRequest) {
-        friendStatus = 'friend request sent';
-        id_friendRequest = sentRequest._id.toString();
-      } else {
-        const receivedRequest = await FriendRequest.findOne({
-          id_receiver: decodedToken.id_account,
-          id_sender: req.params.id,
-        });
-        if (receivedRequest) {
-          friendStatus = 'friend request received';
-          id_friendRequest = receivedRequest._id.toString();
-        } else {
-          friendStatus = 'not friend';
-        }
-      }
-    }
+
     const myInfo = await OtherInfo.findOne({ id_account: decodedToken.id_account }, { listFriend: 1 });
     const result = await OtherInfo.findOne({ id_account: req.params.id }, { listFriend: 1 });
 
@@ -268,8 +213,6 @@ exports.accounts_get_all_friends = async (req, res, next) => {
     res.status(200).json({
       message: 'get all friends successfully',
       listFriend,
-      friendStatus,
-      id_friendRequest,
     });
   } catch (err) {
     res.status(500).json({
@@ -287,41 +230,41 @@ exports.accounts_get_visual_media_info = async (req, res, next) => {
     if (!token) return res.sendStatus(401);
 
     var decodedToken = jwt_decode(token);
-    const myFriends = await OtherInfo.findOne({ id_account: decodedToken.id_account }, { _id: 0, listFriend: 1 });
-    let friendStatus = '';
-    let id_friendRequest = '';
-    const isFriend = myFriends.listFriend.includes(req.params.id);
-    if (isFriend) {
-      friendStatus = 'friend';
-    } else {
-      const sentRequest = await FriendRequest.findOne({
-        id_sender: decodedToken.id_account,
-        id_receiver: req.params.id,
-      });
-      if (sentRequest) {
-        friendStatus = 'friend request sent';
-        id_friendRequest = sentRequest._id.toString();
-      } else {
-        const receivedRequest = await FriendRequest.findOne({
-          id_receiver: decodedToken.id_account,
-          id_sender: req.params.id,
-        });
-        if (receivedRequest) {
-          friendStatus = 'friend request received';
-          id_friendRequest = receivedRequest._id.toString();
-        } else {
-          friendStatus = 'not friend';
-        }
-      }
-    }
 
-    const listURL = await VisualMedia.find({ id_account: req.params.id }, { url: 1 }).sort({ createdAt: -1 });
+    const listURL = await VisualMedia.find(
+      { $and: [{ id_account: req.params.id }, { id_post: { $ne: null } }] },
+      { url: 1 },
+    ).sort({ createdAt: -1 });
 
     res.status(200).json({
       message: 'get all images and videos successfully',
       listURL,
-      friendStatus,
-      id_friendRequest,
+    });
+  } catch (error) {
+    res.status(500).json({
+      error,
+    });
+  }
+};
+
+// [GET] /accounts/:id/avatar
+exports.accounts_get_all_avatars = async (req, res, next) => {
+  try {
+    const authHeader = req.header('Authorization');
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (!token) return res.sendStatus(401);
+
+    var decodedToken = jwt_decode(token);
+
+    const listURL = await VisualMedia.find(
+      { $and: [{ id_account: req.params.id }, { id_post: null }] },
+      { url: 1 },
+    ).sort({ createdAt: -1 });
+
+    res.status(200).json({
+      message: 'get all avatars successfully',
+      listURL,
     });
   } catch (error) {
     res.status(500).json({
@@ -350,10 +293,24 @@ exports.accounts_update_personal_info = async (req, res, next) => {
         { id_account: decodedToken.id_account },
         { avatar: uploadedResponse.public_id },
       );
+      const avatar = await new VisualMedia({
+        id_post: null,
+        id_account: decodedToken.id_account,
+        url: {
+          visualType: 'avatar',
+          visualUrl: uploadedResponse.public_id,
+        },
+      });
+      await avatar.save();
+      res.status(200).json({
+        message: 'update successfully',
+        url: uploadedResponse.public_id,
+      });
+    } else {
+      res.status(200).json({
+        message: 'update successfully',
+      });
     }
-    res.status(200).json({
-      message: 'update successfully',
-    });
   } catch (error) {
     res.status(500).json({
       error,
@@ -638,6 +595,20 @@ exports.accounts_send_friend_request = async (req, res, next) => {
       id_receiver: req.body.id_receiver,
     });
     await friendRequest.save();
+
+    const personalInfo = await PersonalInfo.findOne({ id_account: decodedToken.id_account }, { _id: 0, fullName: 1 });
+
+    const newNotification = await new Notification({
+      id_senders: [decodedToken.id_account],
+      id_receiver: req.body.id_receiver,
+      id_post: null,
+      id_comment: null,
+      notificationType: 'friend request',
+      notificationContent: `${personalInfo.fullName} sent you a friend request.`,
+      isViewed: false,
+    });
+    await newNotification.save();
+
     res.status(201).json({
       message: 'friend request sended successfully',
       friendRequest,
@@ -651,36 +622,38 @@ exports.accounts_send_friend_request = async (req, res, next) => {
 
 // [DELETE] /accounts/:id/cancel_friend_request
 exports.accounts_cancel_friend_request = async (req, res, next) => {
-  const authHeader = req.header('Authorization');
-  const token = authHeader && authHeader.split(' ')[1];
+  try {
+    const authHeader = req.header('Authorization');
+    const token = authHeader && authHeader.split(' ')[1];
 
-  if (!token) return res.sendStatus(401);
+    if (!token) return res.sendStatus(401);
 
-  var decodedToken = jwt_decode(token);
-  await FriendRequest.findOne({ id_sender: decodedToken.id_account, id_receiver: req.params.id })
-    .then(async (friendRequest) => {
-      if (decodedToken.id_account != friendRequest.id_sender) {
-        res.sendStatus(401);
-      } else {
-        await FriendRequest.findOneAndDelete({ _id: friendRequest._id })
-          .then((result) => {
-            res.status(200).json({
-              message: 'friend request canceled',
-              friendRequest: result,
-            });
-          })
-          .catch((err) => {
-            res.status(500).json({
-              error: err,
-            });
-          });
-      }
-    })
-    .catch((err) => {
-      res.status(500).json({
-        error: err,
-      });
+    var decodedToken = jwt_decode(token);
+    const friendRequest = await FriendRequest.findOneAndDelete({
+      $and: [{ id_sender: decodedToken.id_account }, { id_receiver: req.params.id }],
     });
+
+    if (!friendRequest) {
+      res.sendStatus(401);
+    } else {
+      await Notification.findOneAndDelete({
+        $and: [
+          { id_senders: [decodedToken.id_account] },
+          { id_receiver: req.params.id },
+          { notificationType: 'friend request' },
+        ],
+      });
+    }
+
+    res.status(200).json({
+      message: 'friend request canceled',
+      friendRequest: friendRequest,
+    });
+  } catch (error) {
+    res.status(500).json({
+      error,
+    });
+  }
 };
 
 // [DELETE] /accounts/:id/accept_friend_request
@@ -721,6 +694,35 @@ exports.accounts_accept_friend_request = async (req, res, next) => {
       }
 
       await FriendRequest.findOneAndDelete({ _id: req.params.id });
+
+      const personalInfo = await PersonalInfo.findOne({ id_account: decodedToken.id_account }, { _id: 0, fullName: 1 });
+      const personalInfo2 = await PersonalInfo.findOne(
+        { id_account: friendRequest.id_sender },
+        { _id: 0, fullName: 1 },
+      );
+
+      await Notification.findOneAndUpdate(
+        {
+          $and: [
+            { id_senders: [friendRequest.id_sender.toString()] },
+            { id_receiver: decodedToken.id_account },
+            { notificationType: 'friend request' },
+          ],
+        },
+        { notificationContent: `You and ${personalInfo2.fullName} are friends now.`, isViewed: false },
+      );
+
+      const newNotification = await new Notification({
+        id_senders: [decodedToken.id_account],
+        id_receiver: friendRequest.id_sender,
+        id_post: null,
+        id_comment: null,
+        notificationType: 'friend request',
+        notificationContent: `${personalInfo.fullName} accepted your friend request.`,
+        isViewed: false,
+      });
+      await newNotification.save();
+
       res.status(200).json({
         message: 'friend request accepted',
       });
@@ -1357,12 +1359,8 @@ exports.accounts_get_all_notifications = async (req, res, next) => {
     var decodedToken = jwt_decode(token);
     const notifications = await Notification.find({ id_receiver: decodedToken.id_account }).sort({ updatedAt: -1 });
     let listNotification = [];
-    let unViewdAmount = 0;
     for (const [index, value] of notifications.entries()) {
       let notificationInfo = {};
-      if (!value.isViewed) {
-        unViewdAmount++;
-      }
       const id_account = await value.id_senders[value.id_senders.length - 1];
       const personalInfo = await PersonalInfo.findOne({ id_account: id_account }, { _id: 0, avatar: 1 });
       notificationInfo = {
@@ -1381,8 +1379,41 @@ exports.accounts_get_all_notifications = async (req, res, next) => {
     }
     res.status(200).json({
       message: 'get all notifications successfully',
-      unViewdAmount,
       listNotification,
+    });
+  } catch (error) {
+    res.status(500).json({
+      error,
+    });
+  }
+};
+
+// [GET] /accounts/unviewed_notification_and_message
+exports.accounts_get_unviewed_notifications_and_messages = async (req, res, next) => {
+  try {
+    const authHeader = req.header('Authorization');
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (!token) return res.sendStatus(401);
+
+    var decodedToken = jwt_decode(token);
+    const notifications = await Notification.find({
+      $and: [{ id_receiver: decodedToken.id_account }, { isViewed: false }],
+    });
+    const conversations = await Conversation.find({
+      $and: [{ members: { $in: [decodedToken.id_account] } }, { isViewed: false }],
+    });
+    let unviewedMessageAmount = 0;
+    for (const [index, value] of conversations.entries()) {
+      const message = await find({ id_conversation: value._id }).sort({ createdAt: -1 }).limit(1);
+      if (message[0].id_sender != decodedToken.id_account) {
+        unviewedMessageAmount++;
+      }
+    }
+    res.status(200).json({
+      message: 'get unviewed notifications and messages successfully',
+      unviewedNotificationAmount: notifications.length,
+      unviewedMessageAmount,
     });
   } catch (error) {
     res.status(500).json({
