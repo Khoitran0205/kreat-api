@@ -978,12 +978,17 @@ exports.accounts_unreact_post = async (req, res, next) => {
         $and: [{ id_post: req.params.id }, { notificationType: 'react' }],
       });
       const removeSenderList = await notification.id_senders.filter((sender) => sender != decodedToken.id_account);
-      await Notification.findOneAndUpdate(
-        {
-          $and: [{ id_post: req.params.id }, { notificationType: 'react' }],
-        },
-        { id_senders: removeSenderList },
-      );
+      if (removeSenderList.length == 0) {
+        await Notification.findOneAndDelete({ $and: [{ id_post: req.params.id }, { notificationType: 'react' }] });
+      } else {
+        await Notification.findOneAndUpdate(
+          {
+            $and: [{ id_post: req.params.id }, { notificationType: 'react' }],
+          },
+          { id_senders: removeSenderList },
+        );
+      }
+
       res.status(200).json({
         message: 'reaction on post removed',
         reaction: result,
@@ -1398,6 +1403,7 @@ exports.accounts_get_all_notifications = async (req, res, next) => {
       listNotification,
     });
   } catch (error) {
+    console.log(error);
     res.status(500).json({
       error,
     });

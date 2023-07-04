@@ -17,10 +17,7 @@ exports.auth_sign_up = async (req, res, next) => {
   try {
     const salt = await bcrypt.genSalt();
     const hashedPassword = await bcrypt.hash(req.body.password, salt);
-    const account = await new Account({
-      email: req.body.email,
-      password: hashedPassword,
-    });
+    const account = await new Account({ email: req.body.email, password: hashedPassword });
     await account
       .save()
       .then(async (result) => {
