@@ -511,7 +511,9 @@ exports.posts_get_all_reaction = async (req, res, next) => {
 
     var decodedToken = jwt_decode(token);
     const myListFriend = await OtherInfo.findOne({ id_account: decodedToken.id_account }, { _id: 0, listFriend: 1 });
-    const reactions = await React.find({ id_post: req.params.id }).sort({ createdAt: -1 });
+    const reactions = await React.find({ $or: [{ id_post: req.params.id }, { id_comment: req.params.id }] }).sort({
+      createdAt: -1,
+    });
     let listReaction = [];
     for (const [index, react] of reactions.entries()) {
       let mutualFriends = [];
