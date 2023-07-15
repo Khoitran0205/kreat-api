@@ -612,6 +612,7 @@ exports.accounts_send_friend_request = async (req, res, next) => {
 
     res.status(201).json({
       message: 'friend request sended successfully',
+      id_receiver: req.body.id_receiver,
       friendRequest,
     });
   } catch (error) {
@@ -830,7 +831,6 @@ exports.accounts_react = async (req, res, next) => {
       if (!comment) {
         return res.status(404).json({ message: 'post or comment not found' });
       }
-      let id_notification = '';
       const result = await react.save();
       const notification = await Notification.find({
         $and: [{ id_comment: result.id_comment }, { notificationType: 'react' }],
@@ -869,6 +869,7 @@ exports.accounts_react = async (req, res, next) => {
       }
       return res.status(201).json({
         message: 'reaction on comment stored',
+        id_receiver: comment.id_account,
         reaction: result,
       });
     }
@@ -911,6 +912,7 @@ exports.accounts_react = async (req, res, next) => {
     }
     res.status(201).json({
       message: 'reaction on post stored',
+      id_receiver: post.id_account,
       reaction: result,
     });
   } catch (error) {
@@ -1133,6 +1135,7 @@ exports.accounts_comment_post = async (req, res, next) => {
 
     res.status(201).json({
       message: 'comment on post successfully',
+      id_receiver: id_receiver.id_account,
       newComment,
     });
   } catch (error) {

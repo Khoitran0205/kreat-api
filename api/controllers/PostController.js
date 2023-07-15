@@ -202,6 +202,7 @@ exports.posts_share_post = async (req, res, next) => {
 
     res.status(201).json({
       message: 'shared post created!',
+      id_receiver: sharedPost.id_account,
       post: result,
     });
   } catch (err) {
@@ -213,44 +214,38 @@ exports.posts_share_post = async (req, res, next) => {
 
 // [PATCH] /posts/update_post
 exports.posts_update_post = async (req, res, next) => {
-  const authHeader = req.header('Authorization');
-  const token = authHeader && authHeader.split(' ')[1];
+  try {
+    const authHeader = req.header('Authorization');
+    const token = authHeader && authHeader.split(' ')[1];
 
-  if (!token) return res.sendStatus(401);
+    if (!token) return res.sendStatus(401);
 
-  var decodedToken = jwt_decode(token);
-  await Account.findOne({ _id: decodedToken.id_account })
-    .then(async (account) => {
-      await Post.findOneAndUpdate(
-        {
-          id_account: account._id,
-          _id: req.body.id_post,
-        },
-        req.body,
-      )
-        .then((result) => {
-          if (!result) {
-            return res.status(404).json({
-              message: 'Post not found!',
-            });
-          } else {
-            res.status(200).json({
-              message: 'post updated',
-              post: result,
-            });
-          }
-        })
-        .catch((err) => {
-          res.status(500).json({
-            error: err,
-          });
-        });
-    })
-    .catch((err) => {
-      res.status(500).json({
-        error: err,
+    var decodedToken = jwt_decode(token);
+
+    const account = await Account.findOne({ _id: decodedToken.id_account });
+    const result = await Post.findOneAndUpdate(
+      {
+        id_account: account._id,
+        _id: req.body._id,
+      },
+      req.body,
+    );
+
+    if (!result) {
+      return res.status(404).json({
+        message: 'Post not found!',
       });
+    }
+
+    res.status(200).json({
+      message: 'post updated',
+      post: result,
     });
+  } catch (error) {
+    res.status(500).json({
+      error,
+    });
+  }
 };
 
 // [DELETE] /posts/:id/delete_post
