@@ -1068,6 +1068,7 @@ exports.accounts_comment_post = async (req, res, next) => {
       fullName: personalInfo.fullName,
       commentContent: comment.commentContent,
       listReaction: [],
+      createdAt: new Date(),
     };
 
     const notification = await Notification.find({

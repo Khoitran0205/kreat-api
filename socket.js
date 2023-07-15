@@ -62,8 +62,9 @@ io.on('connection', (socket) => {
   });
 
   // get and send notification
-  socket.on('sendNotification', async (id_sender, id_receiver, notificationContent) => {
+  socket.on('sendNotification', async (id_receiver) => {
     const user = getOnlineUser(id_receiver);
+    io.to(user.socketId).emit('getNotification');
   });
 
   // when a user logouts

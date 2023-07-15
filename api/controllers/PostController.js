@@ -10,88 +10,86 @@ const Notification = require('../models/notification');
 const { cloudinary } = require('../../utils/cloudinary');
 
 const jwt_decode = require('jwt-decode');
-const account = require('../models/user/account');
 
 // [POST] /posts/create_post
 exports.posts_create_post = async (req, res, next) => {
-  const authHeader = req.header('Authorization');
-  const token = authHeader && authHeader.split(' ')[1];
+  try {
+    const authHeader = req.header('Authorization');
+    const token = authHeader && authHeader.split(' ')[1];
 
-  if (!token) return res.sendStatus(401);
+    if (!token) return res.sendStatus(401);
 
-  var decodedToken = jwt_decode(token);
-  await Account.findOne({ _id: decodedToken.id_account })
-    .then(async (account) => {
-      if (!account) {
-        return res.status(404).json({
-          message: 'Account not found!',
-        });
-      } else {
-        let id_visualMedia = [];
-        if (req.body.visualData) {
-          const fileStr = req.body.visualData;
-          for ([index, url] of fileStr.entries()) {
-            if (url.type == 'image') {
-              let uploadedResponse = await cloudinary.uploader.upload(url.data, {
-                resource_type: 'image',
-                upload_preset: 'dev_setups',
-              });
-              id_visualMedia.push({
-                type: 'image',
-                url: uploadedResponse.public_id,
-              });
-            } else {
-              if (url.type == 'video') {
-                let uploadedResponse = await cloudinary.uploader.upload(url.data, {
-                  resource_type: 'video',
-                  upload_preset: 'dev_setups',
-                });
-                id_visualMedia.push({
-                  type: 'video',
-                  url: uploadedResponse.public_id,
-                });
-              }
-            }
-          }
-        }
-        const post = await new Post({
-          id_account: account._id,
-          id_visualMedia,
-          ...req.body,
-        });
-        await post
-          .save()
-          .then(async (result) => {
-            if (result.id_visualMedia) {
-              for ([index, value] of result.id_visualMedia.entries()) {
-                let visualMedia = await new VisualMedia({
-                  id_post: result._id,
-                  id_account: account._id,
-                  url: {
-                    visualType: value.type,
-                    visualUrl: value.url,
-                  },
-                });
-                await visualMedia.save();
-              }
-            }
-            await res.status(201).json({
-              message: 'post created!',
-              post: result,
-            });
-          })
-          .catch((err) => {
-            res.status(500).json({
-              error: err,
-            });
+    var decodedToken = jwt_decode(token);
+    let id_visualMedia = [];
+    if (req.body.visualData) {
+      const fileStr = req.body.visualData;
+      const promises = fileStr.map(async (url) => {
+        if (url.type == 'image') {
+          let uploadedResponse = await cloudinary.uploader.upload(url.data, {
+            resource_type: 'image',
+            upload_preset: 'dev_setups',
           });
-      }
-    })
-    .catch((err) => {
-      res.status(500).json({
-        error: err,
+          id_visualMedia.push({
+            type: 'image',
+            url: uploadedResponse.public_id,
+          });
+        } else if (url.type == 'video') {
+          let uploadedResponse = await cloudinary.uploader.upload(url.data, {
+            resource_type: 'video',
+            upload_preset: 'dev_setups',
+          });
+          id_visualMedia.push({
+            type: 'video',
+            url: uploadedResponse.public_id,
+          });
+        }
       });
+
+      await Promise.all(promises);
+    }
+
+    const post = new Post({
+      id_account: decodedToken.id_account,
+      id_visualMedia,
+      ...req.body,
     });
+    const result = await post.save();
+    if (result.id_visualMedia) {
+      const visualMediaArray = result.id_visualMedia.map((value) => ({
+        id_post: result._id,
+        id_account: decodedToken.id_account,
+        url: {
+          visualType: value.type,
+          visualUrl: value.url,
+        },
+      }));
+      await VisualMedia.insertMany(visualMediaArray);
+    }
+    if (result.id_friendTag.length !== 0) {
+      const personalInfo = await PersonalInfo.findOne({ id_account: decodedToken.id_account }, { _id: 0, fullName: 1 });
+      for (const [index, value] of result.id_friendTag.entries()) {
+        const newNotification = new Notification({
+          id_senders: [decodedToken.id_account],
+          id_receiver: value,
+          id_post: result._id,
+          id_comment: null,
+          notificationType: 'tag',
+          notificationContent: `${personalInfo.fullName} tagged you in a post`,
+          notificationTime: new Date(),
+          isViewed: false,
+        });
+        await newNotification.save();
+      }
+    }
+    return res.status(201).json({
+      message: 'post created!',
+      post: result,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      error,
+    });
+  }
 };
 
 // [POST] /posts/share_post
