@@ -654,6 +654,7 @@ exports.posts_get_all_friend_to_tag = async (req, res, next) => {
     var decodedToken = jwt_decode(token);
     const myListFriend = await OtherInfo.findOne({ id_account: decodedToken.id_account }, { _id: 0, listFriend: 1 });
     let listFriend = [];
+
     for (const [index, friend] of myListFriend.listFriend.entries()) {
       let friendInfo = {};
       const personalInfo = await PersonalInfo.findOne({ id_account: friend }, { _id: 0, avatar: 1, fullName: 1 });

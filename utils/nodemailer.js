@@ -32,7 +32,7 @@ const sendVerificationMail = async (targetEmail, fullName, id_account) => {
           button: {
             color: '#0093FF',
             text: 'Verify your email',
-            link: `http://localhost:3000/auth/verify/64748aa0f6501b98ef1c9123`,
+            link: `http://localhost:3000/auth/verify/${id_account}`,
           },
         },
         signature: 'Sincerely',

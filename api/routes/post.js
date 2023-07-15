@@ -14,6 +14,9 @@ router.delete('/:id/delete_post', authenticateToken, PostController.posts_delete
 //Get all posts
 router.get('/get_all_post/:page', authenticateToken, PostController.posts_get_all_post);
 
+//Get all friends to tag
+router.get('/get_all_friend_to_tag', authenticateToken, PostController.posts_get_all_friend_to_tag);
+
 //Get post by id
 router.get('/:id', authenticateToken, PostController.posts_get_post_by_id);
 
@@ -25,8 +28,5 @@ router.get('/:id/get_all_comment', authenticateToken, PostController.posts_get_a
 
 //Get all tagged friends
 router.get('/:id/get_all_tagged_friend', authenticateToken, PostController.posts_get_all_tagged_friend);
-
-//Get all friends to tag
-router.get('/get_all_friend_to_tag', authenticateToken, PostController.posts_get_all_friend_to_tag);
 
 module.exports = router;

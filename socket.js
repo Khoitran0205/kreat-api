@@ -2,6 +2,7 @@ require('dotenv').config();
 const connectToDb = require('./config/db/index');
 const PersonalInfo = require('./api/models/user/personal_info');
 const OtherInfo = require('./api/models/user/other_info');
+const notification = require('./api/models/notification');
 
 const socketPort = process.env.SOCKETPORT;
 
@@ -47,7 +48,7 @@ io.on('connection', (socket) => {
     io.to(socket.id).emit('getUser', myOnlineFriends);
   });
 
-  // send and get message
+  // get and send message
   socket.on('sendMessage', async ({ id_conversation, id_sender, id_receiver, messageContent }) => {
     const user = getOnlineUser(id_receiver);
     const senderInfo = await PersonalInfo.findOne({ id_account: id_sender }, { _id: 0, avatar: 1, fullName: 1 });
@@ -58,6 +59,11 @@ io.on('connection', (socket) => {
       fullName: senderInfo.fullName,
       messageContent,
     });
+  });
+
+  // get and send notification
+  socket.on('sendNotification', async (id_sender, id_receiver, notificationContent) => {
+    const user = getOnlineUser(id_receiver);
   });
 
   // when a user logouts

@@ -830,6 +830,7 @@ exports.accounts_react = async (req, res, next) => {
       if (!comment) {
         return res.status(404).json({ message: 'post or comment not found' });
       }
+      let id_notification = '';
       const result = await react.save();
       const notification = await Notification.find({
         $and: [{ id_comment: result.id_comment }, { notificationType: 'react' }],
