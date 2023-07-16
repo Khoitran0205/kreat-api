@@ -273,6 +273,62 @@ exports.accounts_get_all_avatars = async (req, res, next) => {
   }
 };
 
+// [GET] /accounts/tagged-in_post
+exports.accounts_get_tagged_in_posts = async (req, res, next) => {
+  try {
+    const authHeader = req.header('Authorization');
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (!token) return res.sendStatus(401);
+
+    var decodedToken = jwt_decode(token);
+
+    const posts = await Post.find({
+      id_friendTag: { $in: [decodedToken.id_account] },
+    }).sort({ createdAt: -1 });
+
+    const listPost = [];
+    for (const [index, value] of posts.entries()) {
+      let postInfo = {};
+      const personalInfo = await PersonalInfo.findOne(
+        { id_account: value.id_account },
+        { _id: 0, avatar: 1, fullName: 1 },
+      );
+      const listReaction = await React.find({ id_post: value._id, id_comment: null }, { id_account: 1, reactType: 1 });
+      const comments = await Comment.find({ id_post: value._id });
+
+      postInfo = {
+        _id: value._id,
+        id_account: value.id_account,
+        avatar: personalInfo.avatar,
+        fullName: personalInfo.fullName,
+        id_visualMedia: value.id_visualMedia,
+        postContent: value.postContent,
+        postFeeling: value.postFeeling,
+        postPrivacy: value.postPrivacy,
+        id_friendTag: value.id_friendTag,
+        location: value.location,
+        isShared: value.isShared,
+        shareId: value.shareId,
+        shareContent: {},
+        createdAt: value.createdAt,
+        listReaction,
+        commentAmount: comments.length,
+      };
+
+      listPost.push(postInfo);
+    }
+    res.status(200).json({
+      message: 'get tagged-in posts successfully',
+      listPost,
+    });
+  } catch (error) {
+    res.status(500).json({
+      error,
+    });
+  }
+};
+
 // [PATCH] /accounts/update_personal_info
 exports.accounts_update_personal_info = async (req, res, next) => {
   try {
@@ -612,7 +668,7 @@ exports.accounts_send_friend_request = async (req, res, next) => {
 
     res.status(201).json({
       message: 'friend request sended successfully',
-      id_receiver: req.body.id_receiver,
+      id_notification_receivers: [req.body.id_receiver],
       friendRequest,
     });
   } catch (error) {
@@ -732,6 +788,7 @@ exports.accounts_accept_friend_request = async (req, res, next) => {
 
       res.status(200).json({
         message: 'friend request accepted',
+        id_notification_receivers: [decodedToken.id_account, friendRequest.id_sender.toString()],
       });
     }
   } catch (error) {
@@ -869,7 +926,7 @@ exports.accounts_react = async (req, res, next) => {
       }
       return res.status(201).json({
         message: 'reaction on comment stored',
-        id_receiver: comment.id_account,
+        id_notification_receivers: [comment.id_account],
         reaction: result,
       });
     }
@@ -912,7 +969,7 @@ exports.accounts_react = async (req, res, next) => {
     }
     res.status(201).json({
       message: 'reaction on post stored',
-      id_receiver: post.id_account,
+      id_notification_receivers: [post.id_account],
       reaction: result,
     });
   } catch (error) {
@@ -1083,6 +1140,7 @@ exports.accounts_comment_post = async (req, res, next) => {
         );
         if (checkOtherComment.length == 0) {
           updateNotification = {
+            notificationTime: new Date(),
             isViewed: false,
           };
         } else {
@@ -1136,7 +1194,7 @@ exports.accounts_comment_post = async (req, res, next) => {
 
     res.status(201).json({
       message: 'comment on post successfully',
-      id_receiver: id_receiver.id_account,
+      id_notification_receivers: [id_receiver.id_account],
       newComment,
     });
   } catch (error) {

@@ -80,6 +80,11 @@ exports.posts_create_post = async (req, res, next) => {
         });
         await newNotification.save();
       }
+      return res.status(201).json({
+        message: 'post created!',
+        post: result,
+        id_notification_receivers: result.id_friendTag,
+      });
     }
     return res.status(201).json({
       message: 'post created!',
@@ -150,6 +155,7 @@ exports.posts_share_post = async (req, res, next) => {
         );
         if (checkOtherShare.length == 0) {
           updateNotification = {
+            notificationTime: new Date(),
             isViewed: false,
           };
         } else {
@@ -200,12 +206,12 @@ exports.posts_share_post = async (req, res, next) => {
 
     res.status(201).json({
       message: 'shared post created!',
-      id_receiver: sharedPost.id_account,
+      id_notification_receivers: [sharedPost.id_account],
       post: result,
     });
-  } catch (err) {
+  } catch (error) {
     res.status(500).json({
-      error: err,
+      error,
     });
   }
 };

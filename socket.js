@@ -39,10 +39,10 @@ io.on('connection', (socket) => {
   socket.on('addUser', async (id_account) => {
     addOnlineUser(id_account, socket.id);
     const myListFriend = await OtherInfo.findOne({ id_account: id_account }, { _id: 0, listFriend: 1 });
-    const myOnlineFriends = onlineUsers.filter((value) => myListFriend.listFriend.includes(value.id_account));
+    const myOnlineFriends = onlineUsers.filter((value) => myListFriend?.listFriend.includes(value.id_account));
     for (const [index, friend] of myOnlineFriends.entries()) {
       const otherListFriend = await OtherInfo.findOne({ id_account: friend.id_account }, { _id: 0, listFriend: 1 });
-      const otherOnlineFriends = onlineUsers.filter((value) => otherListFriend.listFriend.includes(value.id_account));
+      const otherOnlineFriends = onlineUsers.filter((value) => otherListFriend?.listFriend.includes(value.id_account));
       io.to(friend.socketId).emit('getUser', otherOnlineFriends);
     }
     io.to(socket.id).emit('getUser', myOnlineFriends);
@@ -62,9 +62,11 @@ io.on('connection', (socket) => {
   });
 
   // get and send notification
-  socket.on('sendNotification', async (id_receiver) => {
-    const user = getOnlineUser(id_receiver);
-    io.to(user.socketId).emit('getNotification');
+  socket.on('sendNotification', async (id_notification_receivers) => {
+    for (const [index, value] of id_notification_receivers.entries()) {
+      const user = getOnlineUser(value);
+      io.to(user.socketId).emit('getNotification');
+    }
   });
 
   // when a user logouts

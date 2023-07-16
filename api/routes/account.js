@@ -12,6 +12,8 @@ router.get('/:id/friends', authenticateToken, AccountController.accounts_get_all
 router.get('/:id/visual_media', authenticateToken, AccountController.accounts_get_visual_media_info);
 router.get('/:id/avatar', authenticateToken, AccountController.accounts_get_all_avatars);
 
+router.get('/tagged-in_post', authenticateToken, AccountController.accounts_get_tagged_in_posts);
+
 router.patch('/update_personal_info', authenticateToken, AccountController.accounts_update_personal_info);
 router.patch('/update_favorite_info', authenticateToken, AccountController.accounts_update_favorite_info);
 router.patch('/update_education_info', authenticateToken, AccountController.accounts_update_education_info);
