@@ -1,5 +1,6 @@
 const Conversation = require('../models/chat/conversation');
 const Message = require('../models/chat/message');
+const PersonalInfo = require('../models/user/personal_info');
 
 const jwt_decode = require('jwt-decode');
 
@@ -31,24 +32,52 @@ exports.chat_create_conversation = async (req, res, next) => {
 
 // [GET] /chat/conversations
 exports.chat_get_all_conversation = async (req, res, next) => {
-  const authHeader = req.header('Authorization');
-  const token = authHeader && authHeader.split(' ')[1];
+  try {
+    const authHeader = req.header('Authorization');
+    const token = authHeader && authHeader.split(' ')[1];
 
-  if (!token) return res.sendStatus(401);
+    if (!token) return res.sendStatus(401);
 
-  var decodedToken = jwt_decode(token);
-  await Conversation.find({ members: { $in: [decodedToken.id_account] } })
-    .then((conversations) => {
-      res.status(200).json({
-        message: 'get all conversations successfully',
-        conversations,
-      });
-    })
-    .catch((err) => {
-      res.status(500).json({
-        error: err,
-      });
+    var decodedToken = jwt_decode(token);
+    const conversations = await Conversation.find({
+      $and: [{ status: true }, { members: { $in: [decodedToken.id_account] } }],
+    }).sort({
+      updatedAt: -1,
     });
+    let listConversation = [];
+    for (const [index, conversation] of conversations.entries()) {
+      let conversationContent = {};
+      const [id_other_member] = conversation.members.filter((member) => member != decodedToken.id_account);
+      const personalInfo = await PersonalInfo.findOne(
+        { id_account: id_other_member },
+        { _id: 0, avatar: 1, fullName: 1 },
+      );
+      const latestMessage = await Message.find({ id_conversation: conversation._id })
+        .sort({
+          createdAt: -1,
+        })
+        .limit(1);
+
+      conversationContent = {
+        id_conversation: conversation._id,
+        avatar: personalInfo.avatar,
+        fullName: personalInfo.fullName,
+        latestMessage: latestMessage[0].messageContent,
+        latestMessageTime: latestMessage[0].createdAt,
+        isViewed: conversation.isViewed,
+      };
+
+      listConversation.push(conversationContent);
+    }
+    res.status(200).json({
+      message: 'get all conversations successfully',
+      listConversation,
+    });
+  } catch (error) {
+    res.status(500).json({
+      error,
+    });
+  }
 };
 
 // [POST] /chat/send_message
