@@ -58,15 +58,27 @@ exports.chat_get_all_conversation = async (req, res, next) => {
         })
         .limit(1);
 
-      conversationContent = {
-        id_conversation: conversation._id,
-        avatar: personalInfo.avatar,
-        fullName: personalInfo.fullName,
-        latestMessage: latestMessage[0].messageContent,
-        latestMessageTime: latestMessage[0].createdAt,
-        isYou: latestMessage[0].id_sender == decodedToken.id_account,
-        isViewed: latestMessage[0].id_sender == decodedToken.id_account ? true : conversation.isViewed,
-      };
+      if (latestMessage.length > 0) {
+        conversationContent = {
+          id_conversation: conversation._id,
+          avatar: personalInfo.avatar,
+          fullName: personalInfo.fullName,
+          latestMessage: latestMessage[0].messageContent,
+          latestMessageTime: latestMessage[0].createdAt,
+          isYou: latestMessage[0].id_sender == decodedToken.id_account,
+          isViewed: latestMessage[0].id_sender == decodedToken.id_account ? true : conversation.isViewed,
+        };
+      } else {
+        conversationContent = {
+          id_conversation: conversation._id,
+          avatar: personalInfo.avatar,
+          fullName: personalInfo.fullName,
+          latestMessage: '',
+          latestMessageTime: '',
+          isYou: false,
+          isViewed: true,
+        };
+      }
 
       listConversation.push(conversationContent);
     }
