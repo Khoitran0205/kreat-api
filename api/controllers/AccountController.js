@@ -9,6 +9,7 @@ const Post = require('../models/post/post');
 const FriendRequest = require('../models/request/friend_request');
 const VisualMedia = require('../models/post/visual_media');
 const Conversation = require('../models/chat/conversation');
+const Message = require('../models/chat/message');
 const Notification = require('../models/notification');
 
 const { cloudinary } = require('../../utils/cloudinary');
@@ -1490,11 +1491,13 @@ exports.accounts_get_unviewed_notifications_and_messages = async (req, res, next
     });
     let unviewedMessageAmount = 0;
     for (const [index, value] of conversations.entries()) {
-      const message = await find({ id_conversation: value._id }).sort({ createdAt: -1 }).limit(1);
+      const message = await Message.find({ id_conversation: value._id }).sort({ createdAt: -1 }).limit(1);
+
       if (message[0].id_sender != decodedToken.id_account) {
         unviewedMessageAmount++;
       }
     }
+
     res.status(200).json({
       message: 'get unviewed notifications and messages successfully',
       unviewedNotificationAmount: notifications.length,
