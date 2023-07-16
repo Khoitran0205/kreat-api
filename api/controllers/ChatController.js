@@ -68,9 +68,8 @@ exports.chat_get_all_conversation = async (req, res, next) => {
           isYou: latestMessage[0].id_sender == decodedToken.id_account,
           isViewed: latestMessage[0].id_sender == decodedToken.id_account ? true : conversation.isViewed,
         };
+        listConversation.push(conversationContent);
       }
-
-      listConversation.push(conversationContent);
     }
     res.status(200).json({
       message: 'get all conversations successfully',
