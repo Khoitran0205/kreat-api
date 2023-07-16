@@ -64,6 +64,7 @@ exports.chat_get_all_conversation = async (req, res, next) => {
         fullName: personalInfo.fullName,
         latestMessage: latestMessage[0].messageContent,
         latestMessageTime: latestMessage[0].createdAt,
+        isYou: latestMessage[0].id_sender == decodedToken.id_account,
         isViewed: latestMessage[0].id_sender == decodedToken.id_account ? true : conversation.isViewed,
       };
 
