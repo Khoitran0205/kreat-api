@@ -1243,7 +1243,7 @@ exports.accounts_update_comment_post = async (req, res, next) => {
   var decodedToken = jwt_decode(token);
   await Comment.findOneAndUpdate(
     {
-      _id: req.body.id_comment,
+      _id: req.body._id,
       id_account: decodedToken.id_account,
     },
     req.body,
