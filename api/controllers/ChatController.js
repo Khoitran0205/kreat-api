@@ -40,7 +40,7 @@ exports.chat_get_all_conversation = async (req, res, next) => {
 
     var decodedToken = jwt_decode(token);
     const conversations = await Conversation.find({
-      $and: [{ status: true }, { members: { $in: [decodedToken.id_account] } }],
+      members: { $in: [decodedToken.id_account] },
     }).sort({
       updatedAt: -1,
     });
