@@ -63,6 +63,7 @@ exports.chat_get_all_conversation = async (req, res, next) => {
           id_conversation: conversation._id,
           avatar: personalInfo.avatar,
           fullName: personalInfo.fullName,
+          status: conversation.status,
           latestMessage: latestMessage[0].messageContent,
           latestMessageTime: latestMessage[0].createdAt,
           isYou: latestMessage[0].id_sender == decodedToken.id_account,
