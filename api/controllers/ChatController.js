@@ -73,6 +73,9 @@ exports.chat_get_all_conversation = async (req, res, next) => {
         listConversation.push(conversationContent);
       }
     }
+    listConversation.sort(function (a, b) {
+      return b.latestMessageTime - a.latestMessageTime;
+    });
     res.status(200).json({
       message: 'get all conversations successfully',
       listConversation,
