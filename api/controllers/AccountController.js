@@ -1110,10 +1110,32 @@ exports.accounts_comment_post = async (req, res, next) => {
     if (!token) return res.sendStatus(401);
 
     var decodedToken = jwt_decode(token);
+
+    let uploadedResponse;
+    if (req.body.commentImage) {
+      const fileStr = req.body.commentImage;
+      uploadedResponse = await cloudinary.uploader.upload(fileStr, {
+        resource_type: 'image',
+        upload_preset: 'comment_setups',
+      });
+
+      const commentImg = await new VisualMedia({
+        id_post: req.body.id_post,
+        id_account: decodedToken.id_account,
+        url: {
+          visualType: 'comment',
+          visualUrl: uploadedResponse?.public_id,
+        },
+      });
+      await commentImg.save();
+    }
+
     const comment = await new Comment({
-      id_account: decodedToken.id_account,
       ...req.body,
+      id_account: decodedToken.id_account,
+      commentImage: uploadedResponse?.public_id,
     });
+
     await comment.save();
     const personalInfo = await PersonalInfo.findOne(
       { id_account: decodedToken.id_account },
@@ -1125,6 +1147,7 @@ exports.accounts_comment_post = async (req, res, next) => {
       avatar: personalInfo.avatar,
       fullName: personalInfo.fullName,
       commentContent: comment.commentContent,
+      commentImage: comment.commentImage,
       listReaction: [],
       createdAt: new Date(),
     };
@@ -1241,12 +1264,53 @@ exports.accounts_update_comment_post = async (req, res, next) => {
   if (!token) return res.sendStatus(401);
 
   var decodedToken = jwt_decode(token);
+
+  const existedComment = await Comment.findOne({
+    _id: req.body._id,
+    id_account: decodedToken.id_account,
+  });
+  if (!existedComment)
+    res.status(400).json({
+      error: 'Comment not existed',
+    });
+
+  let uploadedResponse;
+  if (req.body.commentImage) {
+    const fileStr = req.body.commentImage;
+    uploadedResponse = await cloudinary.uploader.upload(fileStr, {
+      resource_type: 'image',
+      upload_preset: 'comment_setups',
+    });
+
+    if (existedComment.commentImage) await cloudinary.uploader.destroy(existedComment.commentImage);
+
+    const commentImg = await new VisualMedia({
+      id_post: req.body.id_post,
+      id_account: decodedToken.id_account,
+      url: {
+        visualType: 'comment',
+        visualUrl: uploadedResponse?.public_id,
+      },
+    });
+    await commentImg.save();
+
+    await VisualMedia.findOneAndDelete({
+      url: {
+        visualType: 'comment',
+        visualUrl: existedComment.commentImage,
+      },
+    });
+  }
+
   await Comment.findOneAndUpdate(
     {
       _id: req.body._id,
       id_account: decodedToken.id_account,
     },
-    req.body,
+    {
+      ...req.body,
+      commentImage: uploadedResponse?.public_id,
+    },
   )
     .then((result) => {
       if (!result) res.sendStatus(401);
@@ -1273,6 +1337,16 @@ exports.accounts_delete_comment_post = async (req, res, next) => {
     if (!token) return res.sendStatus(401);
 
     var decodedToken = jwt_decode(token);
+
+    const existedComment = await Comment.findOne({
+      _id: req.params.id,
+      id_account: decodedToken.id_account,
+    });
+    if (!existedComment)
+      res.status(400).json({
+        error: 'Comment not existed',
+      });
+
     const result = await Comment.findOneAndRemove({
       _id: req.params.id,
       id_account: decodedToken.id_account,
@@ -1281,6 +1355,15 @@ exports.accounts_delete_comment_post = async (req, res, next) => {
     if (!result) {
       res.sendStatus(401);
     } else {
+      if (existedComment.commentImage) await cloudinary.uploader.destroy(existedComment.commentImage);
+
+      await VisualMedia.findOneAndDelete({
+        url: {
+          visualType: 'comment',
+          visualUrl: existedComment.commentImage,
+        },
+      });
+
       res.status(200).json({
         message: 'comment removed',
         comment: result,

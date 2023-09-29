@@ -5,6 +5,7 @@ const commentSchema = mongoose.Schema(
     id_post: { type: mongoose.Types.ObjectId, required: true },
     id_account: { type: mongoose.Types.ObjectId, required: true },
     commentContent: { type: String, default: '' },
+    commentImage: { type: String, default: null },
     isReply: { type: Boolean, default: false },
     id_repliedComment: { type: mongoose.Types.ObjectId, default: null },
   },
