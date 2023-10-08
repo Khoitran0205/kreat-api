@@ -65,8 +65,10 @@ exports.chat_get_all_conversation = async (req, res, next) => {
           avatar: conversation?.picture ? conversation?.picture : personalInfo.avatar,
           fullName: conversation?.name ? conversation?.name : personalInfo.fullName,
           status: conversation.status,
-          latestMessage: latestMessage[0]?.messageContent,
-          latestMessageTime: latestMessage[0]?.createdAt,
+          latestMessage: latestMessage[0]?.messageContent
+            ? latestMessage[0]?.messageContent
+            : `Welcome to group ${conversation?.name}`,
+          latestMessageTime: latestMessage[0]?.createdAt ? latestMessage[0]?.createdAt : conversation?.createdAt,
           isYou: latestMessage[0]?.id_sender == decodedToken.id_account,
           isViewed: latestMessage[0]?.id_sender == decodedToken.id_account ? true : conversation.isViewed,
         };
