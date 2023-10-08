@@ -16,6 +16,6 @@ router.get('/:id/messages', authenticateToken, ChatController.chat_get_all_messa
 // Group chat
 router.post('/create_group_chat', authenticateToken, ChatController.chat_create_group_chat);
 router.patch('/update_group_chat/:id', authenticateToken, ChatController.chat_update_group_chat);
-router.patch('/update_group_chat/:id', authenticateToken, ChatController.chat_update_group_chat);
+router.patch('/add_members_group_chat/:id', authenticateToken, ChatController.chat_add_members_group_chat);
 
 module.exports = router;

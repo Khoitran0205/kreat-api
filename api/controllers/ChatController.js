@@ -285,3 +285,29 @@ exports.chat_update_group_chat = async (req, res, next) => {
     });
   }
 };
+
+// [PATCH] /chat/add_members_group_chat/:id
+exports.chat_add_members_group_chat = async (req, res, next) => {
+  try {
+    const authHeader = req.header('Authorization');
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (!token) return res.sendStatus(401);
+
+    const decodedToken = jwt_decode(token);
+    const updatedConversation = await Conversation.findOneAndUpdate(
+      { _id: req.params.id },
+      {
+        ...req.body,
+      },
+    );
+    res.status(200).json({
+      message: 'update successfully',
+      updatedConversation,
+    });
+  } catch (error) {
+    res.status(500).json({
+      error,
+    });
+  }
+};
