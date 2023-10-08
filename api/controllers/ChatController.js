@@ -176,6 +176,7 @@ exports.chat_create_group_chat = async (req, res, next) => {
           ...req.body,
           members: [...req.body.members, decodedToken.id_account],
           leader: decodedToken.id_account,
+          picture: 'group-chats/group_chat_wefjid.jpg',
           status: true,
         });
         await newConversation.save();

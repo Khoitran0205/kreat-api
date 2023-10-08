@@ -1479,7 +1479,7 @@ exports.accounts_get_all_contacts = async (req, res, next) => {
   if (!token) return res.sendStatus(401);
 
   var decodedToken = jwt_decode(token);
-  await Conversation.find({ members: { $in: [decodedToken.id_account] }, status: true })
+  await Conversation.find({ members: { $in: [decodedToken.id_account] }, status: true, name: '' })
     .then(async (conversations) => {
       let listContact = [];
       for (const [index, value] of conversations.entries()) {
