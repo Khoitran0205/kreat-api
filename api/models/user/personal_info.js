@@ -4,7 +4,7 @@ const personalInfo = mongoose.Schema({
   id_account: { type: mongoose.Types.ObjectId, required: true },
   avatar: {
     type: String,
-    default: 'avatars/uvn95cpjesp8ez5jnbz2.jpg',
+    default: 'avatars/ava_hivhix.png',
   },
   fullName: { type: String, default: '' },
   gender: { type: String, default: '' },

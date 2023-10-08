@@ -58,17 +58,17 @@ exports.chat_get_all_conversation = async (req, res, next) => {
         })
         .limit(1);
 
-      if (latestMessage.length > 0) {
+      if (latestMessage.length > 0 || conversation?.name) {
         conversationContent = {
           id_conversation: conversation._id,
-          id_account: id_other_member,
-          avatar: personalInfo.avatar,
-          fullName: personalInfo.fullName,
+          id_account: conversation?.name ? null : id_other_member,
+          avatar: conversation?.picture ? conversation?.picture : personalInfo.avatar,
+          fullName: conversation?.name ? conversation?.name : personalInfo.fullName,
           status: conversation.status,
-          latestMessage: latestMessage[0].messageContent,
-          latestMessageTime: latestMessage[0].createdAt,
-          isYou: latestMessage[0].id_sender == decodedToken.id_account,
-          isViewed: latestMessage[0].id_sender == decodedToken.id_account ? true : conversation.isViewed,
+          latestMessage: latestMessage[0]?.messageContent,
+          latestMessageTime: latestMessage[0]?.createdAt,
+          isYou: latestMessage[0]?.id_sender == decodedToken.id_account,
+          isViewed: latestMessage[0]?.id_sender == decodedToken.id_account ? true : conversation.isViewed,
         };
         listConversation.push(conversationContent);
       }
@@ -145,6 +145,47 @@ exports.chat_get_all_message = async (req, res, next) => {
       message: 'get all messages successfully',
       messages,
     });
+  } catch (error) {
+    res.status(500).json({
+      error,
+    });
+  }
+};
+
+// [POST] /chat/create_group_chat
+exports.chat_create_group_chat = async (req, res, next) => {
+  try {
+    const authHeader = req.header('Authorization');
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (!token) return res.sendStatus(401);
+
+    var decodedToken = jwt_decode(token);
+
+    if (!req.body.name) {
+      res.status(400).json({
+        error: 'Name of the group chat cannot be empty',
+      });
+    } else {
+      if (req.body.members?.length <= 1) {
+        res.status(400).json({
+          error: 'The number of members is not enough to create a group chat',
+        });
+      } else {
+        const newConversation = await Conversation({
+          ...req.body,
+          members: [...req.body.members, decodedToken.id_account],
+          leader: decodedToken.id_account,
+          status: true,
+        });
+        await newConversation.save();
+
+        res.status(201).json({
+          message: 'group chat created successfully',
+          conversation: newConversation,
+        });
+      }
+    }
   } catch (error) {
     res.status(500).json({
       error,

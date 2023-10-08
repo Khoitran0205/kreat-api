@@ -13,4 +13,7 @@ router.get('/conversations', authenticateToken, ChatController.chat_get_all_conv
 router.post('/send_message', authenticateToken, ChatController.chat_send_message);
 router.get('/:id/messages', authenticateToken, ChatController.chat_get_all_message);
 
+// Group chat
+router.post('/create_group_chat', authenticateToken, ChatController.chat_create_group_chat);
+
 module.exports = router;
