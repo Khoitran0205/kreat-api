@@ -59,7 +59,7 @@ exports.chat_get_all_conversation = async (req, res, next) => {
           createdAt: -1,
         })
         .limit(1);
-      const senderName = await PersonalInfo.findOne({ _id: latestMessage[0]?.id_sender }, { fullName: 1 });
+      const senderName = await PersonalInfo.findOne({ id_account: latestMessage[0]?.id_sender }, { fullName: 1 });
 
       if (latestMessage.length > 0 || conversation?.name) {
         conversationContent = {
