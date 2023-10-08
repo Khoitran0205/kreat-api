@@ -60,6 +60,7 @@ exports.chat_get_all_conversation = async (req, res, next) => {
         })
         .limit(1);
       const senderName = await PersonalInfo.findOne({ id_account: latestMessage[0]?.id_sender }, { fullName: 1 });
+      const shortName = senderName?.fullName.slice(senderName?.fullName.lastIndexOf(' ') + 1);
 
       if (latestMessage.length > 0 || conversation?.name) {
         conversationContent = {
@@ -72,7 +73,7 @@ exports.chat_get_all_conversation = async (req, res, next) => {
             ? latestMessage[0]?.messageContent
             : `Welcome to group ${conversation?.name}`,
           latestMessageTime: latestMessage[0]?.createdAt ? latestMessage[0]?.createdAt : conversation?.createdAt,
-          senderName: latestMessage[0]?.id_sender == decodedToken.id_account ? 'You' : senderName?.fullName,
+          senderName: latestMessage[0]?.id_sender == decodedToken.id_account ? 'You' : shortName,
           isViewed: latestMessage[0]?.viewedBy.includes(decodedToken.id_account) ? true : false,
         };
         listConversation.push(conversationContent);
