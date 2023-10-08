@@ -72,7 +72,7 @@ exports.chat_get_all_conversation = async (req, res, next) => {
             : `Welcome to group ${conversation?.name}`,
           latestMessageTime: latestMessage[0]?.createdAt ? latestMessage[0]?.createdAt : conversation?.createdAt,
           isYou: latestMessage[0]?.id_sender == decodedToken.id_account,
-          isViewed: latestMessage[0]?.id_sender == decodedToken.id_account ? true : conversation.isViewed,
+          isViewed: latestMessage[0]?.viewedBy.includes(decodedToken.id_account) ? true : false,
         };
         listConversation.push(conversationContent);
       }
@@ -117,6 +117,7 @@ exports.chat_send_message = async (req, res, next) => {
       id_sender: decodedToken.id_account,
       id_conversation: req.body.id_conversation,
       messageContent: req.body.messageContent,
+      viewedBy: [decodedToken.id_account],
     });
 
     const result = await newMessage.save();
@@ -143,7 +144,16 @@ exports.chat_get_all_message = async (req, res, next) => {
     var decodedToken = jwt_decode(token);
     const messages = await Message.find({ id_conversation: req.params.id });
     if (messages[messages.length - 1].id_sender != decodedToken.id_account) {
-      await Conversation.findOneAndUpdate({ _id: req.params.id }, { isViewed: true });
+      if (!messages[messages.length - 1].viewedBy.includes(decodedToken.id_account)) {
+        await Message.findOneAndUpdate(
+          {
+            id: messages[messages.length - 1].id,
+          },
+          {
+            viewedBy: [...messages[messages.length - 1].viewedBy, decodedToken.id_account],
+          },
+        );
+      }
     }
     res.status(200).json({
       message: 'get all messages successfully',

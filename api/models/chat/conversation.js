@@ -7,7 +7,6 @@ const conversationSchema = mongoose.Schema(
     name: { type: String, default: '' },
     picture: { type: String, default: '' },
     status: { type: Boolean, default: false },
-    isViewed: { type: Boolean, default: true },
   },
   {
     timestamps: true,

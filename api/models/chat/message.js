@@ -5,6 +5,7 @@ const messageSchema = mongoose.Schema(
     id_conversation: { type: mongoose.Types.ObjectId, require: true },
     id_sender: { type: mongoose.Types.ObjectId, require: true },
     messageContent: { type: String, require: true },
+    viewedBy: { type: Array, default: [] },
   },
   {
     timestamps: true,
