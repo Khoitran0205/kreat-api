@@ -157,9 +157,31 @@ exports.chat_get_all_message = async (req, res, next) => {
         );
       }
     }
+
+    const listMessage = [];
+    for (const [index, message] of messages.entries()) {
+      const personalInfo = await PersonalInfo.findOne(
+        {
+          id_account: message.id_sender,
+        },
+        { avatar: 1, fullName: 1 },
+      );
+      listMessage.push({
+        id: message._id,
+        id_conversation: message.id_conversation,
+        id_sender: message.id_sender,
+        avatar: personalInfo.avatar,
+        fullName: personalInfo.fullName,
+        messageContent: message.messageContent,
+        viewedBy: message.viewedBy,
+        createdAt: message.createdAt,
+        updatedAt: message.updatedAt,
+      });
+    }
+
     res.status(200).json({
       message: 'get all messages successfully',
-      messages,
+      messages: listMessage,
     });
   } catch (error) {
     res.status(500).json({
