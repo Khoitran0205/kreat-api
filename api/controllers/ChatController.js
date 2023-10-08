@@ -2,6 +2,8 @@ const Conversation = require('../models/chat/conversation');
 const Message = require('../models/chat/message');
 const PersonalInfo = require('../models/user/personal_info');
 
+const { cloudinary } = require('../../utils/cloudinary');
+
 const jwt_decode = require('jwt-decode');
 
 // [POST] /chat/create_conversation
@@ -61,7 +63,7 @@ exports.chat_get_all_conversation = async (req, res, next) => {
       if (latestMessage.length > 0 || conversation?.name) {
         conversationContent = {
           id_conversation: conversation._id,
-          id_account: conversation?.name ? null : id_other_member,
+          id_account: conversation?.name ? '' : id_other_member,
           avatar: conversation?.picture ? conversation?.picture : personalInfo.avatar,
           fullName: conversation?.name ? conversation?.name : personalInfo.fullName,
           status: conversation.status,
@@ -174,11 +176,19 @@ exports.chat_create_group_chat = async (req, res, next) => {
           error: 'The number of members is not enough to create a group chat',
         });
       } else {
+        let groupChatPicture = 'group-chats/group_chat_wefjid.jpg';
+        if (req.body.picture) {
+          const fileStr = req.body.picture;
+          groupChatPicture = await cloudinary.uploader.upload(fileStr, {
+            resource_type: 'image',
+            upload_preset: 'groupChat_setups',
+          });
+        }
         const newConversation = await Conversation({
           ...req.body,
           members: [...req.body.members, decodedToken.id_account],
           leader: decodedToken.id_account,
-          picture: 'group-chats/group_chat_wefjid.jpg',
+          picture: groupChatPicture,
           status: true,
         });
         await newConversation.save();
