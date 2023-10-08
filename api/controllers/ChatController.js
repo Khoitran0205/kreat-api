@@ -147,7 +147,7 @@ exports.chat_get_all_message = async (req, res, next) => {
       if (!messages[messages.length - 1].viewedBy.includes(decodedToken.id_account)) {
         await Message.findOneAndUpdate(
           {
-            id: messages[messages.length - 1].id,
+            _id: messages[messages.length - 1]._id,
           },
           {
             viewedBy: [...messages[messages.length - 1].viewedBy, decodedToken.id_account],
