@@ -258,16 +258,16 @@ exports.chat_update_group_chat = async (req, res, next) => {
         error: 'Unauthorized',
       });
     } else {
-      let groupChatPicture;
+      let groupChatPicture = conversation?.picture;
       if (req.body.picture) {
         const fileStr = req.body.picture;
         groupChatPicture = await cloudinary.uploader.upload(fileStr, {
           resource_type: 'image',
           upload_preset: 'groupChat_setups',
         });
+        if (conversation.picture !== 'group-chats/group_chat_wefjid.jpg')
+          await cloudinary.uploader.destroy(conversation.picture);
       }
-      if (conversation.picture !== 'group-chats/group_chat_wefjid.jpg')
-        await cloudinary.uploader.destroy(conversation.picture);
 
       const updatedConversation = await Conversation.findOneAndUpdate(
         {
@@ -275,8 +275,24 @@ exports.chat_update_group_chat = async (req, res, next) => {
         },
         {
           ...req.body,
+          picture: req.body.picture ? groupChatPicture?.public_id : groupChatPicture,
         },
       );
+      if (req.body.members) {
+        const personalInfo = await PersonalInfo({ id_account: decodedToken.id_account }, { fullName: 1, avatar: 1 });
+        const deletedMembers = conversation?.members?.filter((member) => !req.body.members?.includes(member));
+        for (let i = 0; i < deletedMembers.length; i++) {
+          const deletedPersonalInfo = await PersonalInfo({ id_account: deletedMembers[i] }, { fullName: 1, avatar: 1 });
+          const newNotiMessage = await new Message({
+            id_conversation: req.params.id,
+            id_sender: decodedToken.id_account,
+            messageContent: `${deletedPersonalInfo?.fullName} has just been removed from the group chat by ${personalInfo.fullName}`,
+            viewedBy: [decodedToken.id_account],
+            type: 'notification',
+          });
+          await newNotiMessage.save();
+        }
+      }
       res.status(200).json({
         message: 'update successfully',
         updatedConversation,
@@ -298,12 +314,27 @@ exports.chat_add_members_group_chat = async (req, res, next) => {
     if (!token) return res.sendStatus(401);
 
     const decodedToken = jwt_decode(token);
+    const conversation = await Conversation.findOne({ _id: req.params.id });
     const updatedConversation = await Conversation.findOneAndUpdate(
       { _id: req.params.id },
       {
         ...req.body,
       },
     );
+    const personalInfo = await PersonalInfo({ id_account: decodedToken.id_account }, { fullName: 1, avatar: 1 });
+    const addedMembers = req.body.members?.filter((member) => !conversation?.members?.includes(member));
+    for (let i = 0; i < addedMembers.length; i++) {
+      const addedPersonalInfo = await PersonalInfo({ id_account: addedMembers[i] }, { fullName: 1, avatar: 1 });
+      const newNotiMessage = await new Message({
+        id_conversation: req.params.id,
+        id_sender: decodedToken.id_account,
+        messageContent: `${addedPersonalInfo?.fullName} has just been added to the group chat by ${personalInfo.fullName}`,
+        viewedBy: [decodedToken.id_account],
+        type: 'notification',
+      });
+      await newNotiMessage.save();
+    }
+
     res.status(200).json({
       message: 'update successfully',
       updatedConversation,
