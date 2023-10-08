@@ -145,6 +145,7 @@ exports.chat_get_all_message = async (req, res, next) => {
     if (!token) return res.sendStatus(401);
 
     const decodedToken = jwt_decode(token);
+    const conversation = await Conversation.findOne({ _id: req.params.id }, { leader: 1 });
     const messages = await Message.find({ id_conversation: req.params.id });
     if (messages[messages.length - 1].id_sender != decodedToken.id_account) {
       if (!messages[messages.length - 1].viewedBy.includes(decodedToken.id_account)) {
@@ -183,6 +184,7 @@ exports.chat_get_all_message = async (req, res, next) => {
     res.status(200).json({
       message: 'get all messages successfully',
       messages: listMessage,
+      leader: conversation?.leader,
     });
   } catch (error) {
     res.status(500).json({
