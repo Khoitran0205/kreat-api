@@ -19,7 +19,7 @@ exports.posts_create_post = async (req, res, next) => {
 
     if (!token) return res.sendStatus(401);
 
-    var decodedToken = jwt_decode(token);
+    const decodedToken = jwt_decode(token);
     let id_visualMedia = [];
     if (req.body.visualData) {
       const fileStr = req.body.visualData;
@@ -105,7 +105,7 @@ exports.posts_share_post = async (req, res, next) => {
 
     if (!token) return res.sendStatus(401);
 
-    var decodedToken = jwt_decode(token);
+    const decodedToken = jwt_decode(token);
     const personalInfo = await PersonalInfo.findOne({ id_account: decodedToken.id_account });
 
     const sharedPost = await Post.findOne({ _id: req.body.shareId });
@@ -224,7 +224,7 @@ exports.posts_update_post = async (req, res, next) => {
 
     if (!token) return res.sendStatus(401);
 
-    var decodedToken = jwt_decode(token);
+    const decodedToken = jwt_decode(token);
 
     const account = await Account.findOne({ _id: decodedToken.id_account });
     const result = await Post.findOneAndUpdate(
@@ -259,7 +259,7 @@ exports.posts_delete_post = async (req, res, next) => {
 
   if (!token) return res.sendStatus(401);
 
-  var decodedToken = jwt_decode(token);
+  const decodedToken = jwt_decode(token);
   await Account.findOne({ _id: decodedToken.id_account })
     .then(async (account) => {
       await Post.findOneAndRemove({
@@ -351,7 +351,7 @@ exports.posts_get_all_post = async (req, res, next) => {
 
     if (!token) return res.sendStatus(401);
 
-    var decodedToken = jwt_decode(token);
+    const decodedToken = jwt_decode(token);
     const myListFriend = await OtherInfo.findOne({ id_account: decodedToken.id_account }, { _id: 0, listFriend: 1 });
     const posts = await Post.find({
       $or: [
@@ -440,7 +440,7 @@ exports.posts_get_post_by_id = async (req, res, next) => {
 
     if (!token) return res.sendStatus(401);
 
-    var decodedToken = jwt_decode(token);
+    const decodedToken = jwt_decode(token);
     const post = await Post.findOne({ _id: req.params.id });
 
     const personalInfo = await PersonalInfo.findOne(
@@ -508,7 +508,7 @@ exports.posts_get_all_reaction = async (req, res, next) => {
 
     if (!token) return res.sendStatus(401);
 
-    var decodedToken = jwt_decode(token);
+    const decodedToken = jwt_decode(token);
     const myListFriend = await OtherInfo.findOne({ id_account: decodedToken.id_account }, { _id: 0, listFriend: 1 });
     const reactions = await React.find({ $or: [{ id_post: req.params.id }, { id_comment: req.params.id }] }).sort({
       createdAt: -1,
@@ -550,7 +550,7 @@ exports.posts_get_all_comment = async (req, res, next) => {
 
     if (!token) return res.sendStatus(401);
 
-    var decodedToken = jwt_decode(token);
+    const decodedToken = jwt_decode(token);
     const comments = await Comment.find({ id_post: req.params.id }).sort({ createdAt: -1 });
     let listComment = [];
     for (const [index, value] of comments.entries()) {
@@ -589,7 +589,7 @@ exports.posts_get_all_tagged_friend = async (req, res, next) => {
 
   if (!token) return res.sendStatus(401);
 
-  var decodedToken = jwt_decode(token);
+  const decodedToken = jwt_decode(token);
   await Post.findOne({ _id: req.params.id }, { id_friendTag: 1 })
     .then(async (post) => {
       let listTaggedFriend = [];
@@ -651,7 +651,7 @@ exports.posts_get_all_friend_to_tag = async (req, res, next) => {
 
     if (!token) return res.sendStatus(401);
 
-    var decodedToken = jwt_decode(token);
+    const decodedToken = jwt_decode(token);
     const myListFriend = await OtherInfo.findOne({ id_account: decodedToken.id_account }, { _id: 0, listFriend: 1 });
     let listFriend = [];
 

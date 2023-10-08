@@ -24,7 +24,7 @@ exports.accounts_get_timeline_info = async (req, res, next) => {
 
     if (!token) return res.sendStatus(401);
 
-    var decodedToken = jwt_decode(token);
+    const decodedToken = jwt_decode(token);
     const myFriends = await OtherInfo.findOne({ id_account: decodedToken.id_account }, { _id: 0, listFriend: 1 });
     let friendStatus = '';
     let id_friendRequest = '';
@@ -145,7 +145,7 @@ exports.accounts_get_about_info = async (req, res, next) => {
 
     if (!token) return res.sendStatus(401);
 
-    var decodedToken = jwt_decode(token);
+    const decodedToken = jwt_decode(token);
 
     const personalInfo = await PersonalInfo.findOne({ id_account: req.params.id });
     const favoriteInfo = await FavoriteInfo.findOne({ id_account: req.params.id });
@@ -174,7 +174,7 @@ exports.accounts_get_all_friends = async (req, res, next) => {
 
     if (!token) return res.sendStatus(401);
 
-    var decodedToken = jwt_decode(token);
+    const decodedToken = jwt_decode(token);
 
     const myInfo = await OtherInfo.findOne({ id_account: decodedToken.id_account }, { listFriend: 1 });
     const result = await OtherInfo.findOne({ id_account: req.params.id }, { listFriend: 1 });
@@ -230,7 +230,7 @@ exports.accounts_get_visual_media_info = async (req, res, next) => {
 
     if (!token) return res.sendStatus(401);
 
-    var decodedToken = jwt_decode(token);
+    const decodedToken = jwt_decode(token);
 
     const listURL = await VisualMedia.find(
       { $and: [{ id_account: req.params.id }, { id_post: { $ne: null } }] },
@@ -256,7 +256,7 @@ exports.accounts_get_all_avatars = async (req, res, next) => {
 
     if (!token) return res.sendStatus(401);
 
-    var decodedToken = jwt_decode(token);
+    const decodedToken = jwt_decode(token);
 
     const listURL = await VisualMedia.find(
       { $and: [{ id_account: req.params.id }, { id_post: null }] },
@@ -282,7 +282,7 @@ exports.accounts_get_tagged_in_posts = async (req, res, next) => {
 
     if (!token) return res.sendStatus(401);
 
-    var decodedToken = jwt_decode(token);
+    const decodedToken = jwt_decode(token);
 
     const posts = await Post.find({
       id_friendTag: { $in: [decodedToken.id_account] },
@@ -338,7 +338,7 @@ exports.accounts_update_personal_info = async (req, res, next) => {
 
     if (!token) return res.sendStatus(401);
 
-    var decodedToken = jwt_decode(token);
+    const decodedToken = jwt_decode(token);
     await PersonalInfo.findOneAndUpdate({ id_account: decodedToken.id_account }, req.body, { new: true });
     if (req.body.avatarData) {
       const fileStr = req.body.avatarData;
@@ -382,7 +382,7 @@ exports.accounts_update_favorite_info = async (req, res, next) => {
 
   if (!token) return res.sendStatus(401);
 
-  var decodedToken = jwt_decode(token);
+  const decodedToken = jwt_decode(token);
   await FavoriteInfo.findOneAndUpdate({ id_account: decodedToken.id_account }, req.body, { new: true })
     .then((result) => {
       res.status(200).json({
@@ -404,7 +404,7 @@ exports.accounts_update_education_info = async (req, res, next) => {
 
   if (!token) return res.sendStatus(401);
 
-  var decodedToken = jwt_decode(token);
+  const decodedToken = jwt_decode(token);
   await EducationInfo.findOneAndUpdate({ id_account: decodedToken.id_account }, req.body, { new: true })
     .then((result) => {
       res.status(200).json({
@@ -426,7 +426,7 @@ exports.accounts_update_other_info = async (req, res, next) => {
 
   if (!token) return res.sendStatus(401);
 
-  var decodedToken = jwt_decode(token);
+  const decodedToken = jwt_decode(token);
   await OtherInfo.findOneAndUpdate({ id_account: decodedToken.id_account }, req.body, { new: true })
     .then((result) => {
       res.status(200).json({
@@ -448,7 +448,7 @@ exports.accounts_search_accounts = async (req, res, next) => {
 
   if (!token) return res.sendStatus(401);
 
-  var decodedToken = jwt_decode(token);
+  const decodedToken = jwt_decode(token);
   const p = req.query.q;
   await PersonalInfo.find({ fullName: new RegExp(p, 'i') }, { _id: 0, id_account: 1, avatar: 1, fullName: 1 })
     .then(async (results) => {
@@ -502,7 +502,7 @@ exports.accounts_search_friends = async (req, res, next) => {
 
   if (!token) return res.sendStatus(401);
 
-  var decodedToken = jwt_decode(token);
+  const decodedToken = jwt_decode(token);
   const p = req.query.q;
   await OtherInfo.findOne({ id_account: req.params.id }, { listFriend: 1 })
     .then(async (result) => {
@@ -592,7 +592,7 @@ exports.accounts_get_all_friend_requests = async (req, res, next) => {
 
     if (!token) return res.sendStatus(401);
 
-    var decodedToken = jwt_decode(token);
+    const decodedToken = jwt_decode(token);
     const senders = await FriendRequest.find({ id_receiver: decodedToken.id_account }, { id_sender: 1 });
     const result = await OtherInfo.findOne({ id_account: decodedToken.id_account }, { listFriend: 1 });
 
@@ -645,7 +645,7 @@ exports.accounts_send_friend_request = async (req, res, next) => {
 
     if (!token) return res.sendStatus(401);
 
-    var decodedToken = jwt_decode(token);
+    const decodedToken = jwt_decode(token);
 
     const friendRequest = await new FriendRequest({
       id_sender: decodedToken.id_account,
@@ -687,7 +687,7 @@ exports.accounts_cancel_friend_request = async (req, res, next) => {
 
     if (!token) return res.sendStatus(401);
 
-    var decodedToken = jwt_decode(token);
+    const decodedToken = jwt_decode(token);
     const friendRequest = await FriendRequest.findOneAndDelete({
       $and: [{ id_sender: decodedToken.id_account }, { id_receiver: req.params.id }],
     });
@@ -723,7 +723,7 @@ exports.accounts_accept_friend_request = async (req, res, next) => {
 
     if (!token) return res.sendStatus(401);
 
-    var decodedToken = jwt_decode(token);
+    const decodedToken = jwt_decode(token);
     const friendRequest = await FriendRequest.findOne({ _id: req.params.id });
     if (friendRequest.id_receiver != decodedToken.id_account) {
       res.sendStatus(401);
@@ -806,7 +806,7 @@ exports.accounts_decline_friend_request = async (req, res, next) => {
 
   if (!token) return res.sendStatus(401);
 
-  var decodedToken = jwt_decode(token);
+  const decodedToken = jwt_decode(token);
 
   await FriendRequest.findOne({ _id: req.params.id })
     .then(async (friendRequest) => {
@@ -842,7 +842,7 @@ exports.accounts_unfriend = async (req, res, next) => {
 
     if (!token) return res.sendStatus(401);
 
-    var decodedToken = jwt_decode(token);
+    const decodedToken = jwt_decode(token);
     const myListFriend = await OtherInfo.findOne({ id_account: decodedToken.id_account }, { _id: 0, listFriend: 1 });
     const friendRemovedList1 = await myListFriend.listFriend.filter((friend) => friend != req.params.id);
     await OtherInfo.findOneAndUpdate({ id_account: decodedToken.id_account }, { listFriend: friendRemovedList1 });
@@ -872,7 +872,7 @@ exports.accounts_react = async (req, res, next) => {
 
     if (!token) return res.sendStatus(401);
 
-    var decodedToken = jwt_decode(token);
+    const decodedToken = jwt_decode(token);
     const personalInfo = await PersonalInfo.findOne(
       { id_account: decodedToken.id_account },
       { _id: 0, avatar: 1, fullName: 1 },
@@ -988,7 +988,7 @@ exports.accounts_update_react = async (req, res, next) => {
 
   if (!token) return res.sendStatus(401);
 
-  var decodedToken = jwt_decode(token);
+  const decodedToken = jwt_decode(token);
   await React.findOneAndUpdate(
     {
       id_post: req.body.id_post,
@@ -1026,7 +1026,7 @@ exports.accounts_unreact_post = async (req, res, next) => {
 
     if (!token) return res.sendStatus(401);
 
-    var decodedToken = jwt_decode(token);
+    const decodedToken = jwt_decode(token);
     const result = await React.findOneAndRemove({
       id_post: req.params.id,
       id_account: decodedToken.id_account,
@@ -1070,7 +1070,7 @@ exports.accounts_unreact_comment = async (req, res, next) => {
 
     if (!token) return res.sendStatus(401);
 
-    var decodedToken = jwt_decode(token);
+    const decodedToken = jwt_decode(token);
     const result = await React.findOneAndRemove({
       id_comment: req.params.id,
       id_account: decodedToken.id_account,
@@ -1109,7 +1109,7 @@ exports.accounts_comment_post = async (req, res, next) => {
 
     if (!token) return res.sendStatus(401);
 
-    var decodedToken = jwt_decode(token);
+    const decodedToken = jwt_decode(token);
 
     let uploadedResponse;
     if (req.body.commentImage) {
@@ -1236,7 +1236,7 @@ exports.accounts_reply_comment_post = async (req, res, next) => {
 
     if (!token) return res.sendStatus(401);
 
-    var decodedToken = jwt_decode(token);
+    const decodedToken = jwt_decode(token);
     const comment = await new Comment({
       id_account: decodedToken.id_account,
       isReply: true,
@@ -1263,7 +1263,7 @@ exports.accounts_update_comment_post = async (req, res, next) => {
 
   if (!token) return res.sendStatus(401);
 
-  var decodedToken = jwt_decode(token);
+  const decodedToken = jwt_decode(token);
 
   const existedComment = await Comment.findOne({
     _id: req.body._id,
@@ -1336,7 +1336,7 @@ exports.accounts_delete_comment_post = async (req, res, next) => {
 
     if (!token) return res.sendStatus(401);
 
-    var decodedToken = jwt_decode(token);
+    const decodedToken = jwt_decode(token);
 
     const existedComment = await Comment.findOne({
       _id: req.params.id,
@@ -1383,7 +1383,7 @@ exports.accounts_get_friend_suggestions = async (req, res, next) => {
 
   if (!token) return res.sendStatus(401);
 
-  var decodedToken = jwt_decode(token);
+  const decodedToken = jwt_decode(token);
   await OtherInfo.findOne({ id_account: decodedToken.id_account }, { listFriend: 1 })
     .then(async (otherInfo) => {
       await Account.find({ _id: { $ne: decodedToken.id_account } }, { _id: 1 })
@@ -1478,7 +1478,7 @@ exports.accounts_get_all_contacts = async (req, res, next) => {
 
   if (!token) return res.sendStatus(401);
 
-  var decodedToken = jwt_decode(token);
+  const decodedToken = jwt_decode(token);
   await Conversation.find({ members: { $in: [decodedToken.id_account] }, status: true, name: '' })
     .then(async (conversations) => {
       let listContact = [];
@@ -1521,7 +1521,7 @@ exports.accounts_get_all_notifications = async (req, res, next) => {
 
     if (!token) return res.sendStatus(401);
 
-    var decodedToken = jwt_decode(token);
+    const decodedToken = jwt_decode(token);
     const notifications = await Notification.find({ id_receiver: decodedToken.id_account }).sort({
       notificationTime: -1,
     });
@@ -1565,7 +1565,7 @@ exports.accounts_get_unviewed_notifications_and_messages = async (req, res, next
 
     if (!token) return res.sendStatus(401);
 
-    var decodedToken = jwt_decode(token);
+    const decodedToken = jwt_decode(token);
     const notifications = await Notification.find({
       $and: [{ id_receiver: decodedToken.id_account }, { isViewed: false }],
     });

@@ -13,7 +13,7 @@ exports.chat_create_conversation = async (req, res, next) => {
 
   if (!token) return res.sendStatus(401);
 
-  var decodedToken = jwt_decode(token);
+  const decodedToken = jwt_decode(token);
   const newConversation = await Conversation({
     members: [decodedToken.id_account, req.body.id_account],
   });
@@ -40,7 +40,7 @@ exports.chat_get_all_conversation = async (req, res, next) => {
 
     if (!token) return res.sendStatus(401);
 
-    var decodedToken = jwt_decode(token);
+    const decodedToken = jwt_decode(token);
     const conversations = await Conversation.find({
       members: { $in: [decodedToken.id_account] },
     }).sort({
@@ -101,7 +101,7 @@ exports.chat_send_message = async (req, res, next) => {
 
     if (!token) return res.sendStatus(401);
 
-    var decodedToken = jwt_decode(token);
+    const decodedToken = jwt_decode(token);
     if (!req.body.id_conversation || !req.body.messageContent) {
       res.sendStatus(500);
       return;
@@ -143,7 +143,7 @@ exports.chat_get_all_message = async (req, res, next) => {
 
     if (!token) return res.sendStatus(401);
 
-    var decodedToken = jwt_decode(token);
+    const decodedToken = jwt_decode(token);
     const messages = await Message.find({ id_conversation: req.params.id });
     if (messages[messages.length - 1].id_sender != decodedToken.id_account) {
       if (!messages[messages.length - 1].viewedBy.includes(decodedToken.id_account)) {
@@ -198,7 +198,7 @@ exports.chat_create_group_chat = async (req, res, next) => {
 
     if (!token) return res.sendStatus(401);
 
-    var decodedToken = jwt_decode(token);
+    const decodedToken = jwt_decode(token);
 
     if (!req.body.name) {
       res.status(400).json({
@@ -232,6 +232,52 @@ exports.chat_create_group_chat = async (req, res, next) => {
           conversation: newConversation,
         });
       }
+    }
+  } catch (error) {
+    res.status(500).json({
+      error,
+    });
+  }
+};
+
+// [PATCH] /chat/update_group_chat/:id
+exports.chat_update_group_chat = async (req, res, next) => {
+  try {
+    const authHeader = req.header('Authorization');
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (!token) return res.sendStatus(401);
+
+    const decodedToken = jwt_decode(token);
+    const conversation = await Conversation.findOne({ _id: req.params.id });
+    if (conversation?.leader != decodedToken.id_account) {
+      res.status(401).json({
+        error: 'Unauthorized',
+      });
+    } else {
+      let groupChatPicture;
+      if (req.body.picture) {
+        const fileStr = req.body.picture;
+        groupChatPicture = await cloudinary.uploader.upload(fileStr, {
+          resource_type: 'image',
+          upload_preset: 'groupChat_setups',
+        });
+      }
+      if (conversation.picture !== 'group-chats/group_chat_wefjid.jpg')
+        await cloudinary.uploader.destroy(conversation.picture);
+
+      const updatedConversation = await Conversation.findOneAndUpdate(
+        {
+          _id: req.params.id,
+        },
+        {
+          ...req.body,
+        },
+      );
+      res.status(200).json({
+        message: 'update successfully',
+        updatedConversation,
+      });
     }
   } catch (error) {
     res.status(500).json({

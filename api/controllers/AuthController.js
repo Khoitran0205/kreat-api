@@ -116,7 +116,7 @@ exports.auth_log_out = async (req, res, next) => {
 
   if (!token) return res.sendStatus(401);
 
-  var decodedToken = jwt_decode(token);
+  const decodedToken = jwt_decode(token);
   await Account.findOneAndUpdate({ _id: decodedToken.id_account }, { refreshToken: '' })
     .then(async (result) => {
       if (!result) {
@@ -149,7 +149,7 @@ exports.auth_refresh_token = async (req, res, next) => {
 
   if (!token) return res.sendStatus(401);
 
-  var decodedToken = jwt_decode(token);
+  const decodedToken = jwt_decode(token);
   await Account.findOne({ email: decodedToken.email }, { refreshToken: 1, email: 1, _id: 1 })
     .then(async (result) => {
       if (!result.refreshToken) return res.sendStatus(403);
