@@ -63,7 +63,7 @@ exports.chat_get_all_conversation = async (req, res, next) => {
       if (latestMessage.length > 0 || conversation?.name) {
         conversationContent = {
           id_conversation: conversation._id,
-          id_account: conversation?.name ? conversation?.leader : id_other_member,
+          id_account: conversation?.name ? 'null' : id_other_member,
           avatar: conversation?.picture ? conversation?.picture : personalInfo.avatar,
           fullName: conversation?.name ? conversation?.name : personalInfo.fullName,
           status: conversation.status,
