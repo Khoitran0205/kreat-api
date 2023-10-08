@@ -176,7 +176,7 @@ exports.chat_create_group_chat = async (req, res, next) => {
           error: 'The number of members is not enough to create a group chat',
         });
       } else {
-        let groupChatPicture = 'group-chats/group_chat_wefjid.jpg';
+        let groupChatPicture;
         if (req.body.picture) {
           const fileStr = req.body.picture;
           groupChatPicture = await cloudinary.uploader.upload(fileStr, {
@@ -188,7 +188,7 @@ exports.chat_create_group_chat = async (req, res, next) => {
           ...req.body,
           members: [...req.body.members, decodedToken.id_account],
           leader: decodedToken.id_account,
-          picture: groupChatPicture,
+          picture: groupChatPicture ? groupChatPicture?.public_id : 'group-chats/group_chat_wefjid.jpg',
           status: true,
         });
         await newConversation.save();
