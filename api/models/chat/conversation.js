@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const conversationSchema = mongoose.Schema(
   {
     members: { type: Array, default: [] },
-    leader: { type: mongoose.Types.ObjectId, require: true },
+    leader: { type: mongoose.Types.ObjectId, default: null },
     name: { type: String, default: '' },
     picture: { type: String, default: '' },
     status: { type: Boolean, default: false },
