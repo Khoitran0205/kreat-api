@@ -1,6 +1,7 @@
 const Conversation = require('../models/chat/conversation');
 const Message = require('../models/chat/message');
 const PersonalInfo = require('../models/user/personal_info');
+const OtherInfo = require('../models/user/other_info');
 
 const { cloudinary } = require('../../utils/cloudinary');
 
@@ -273,6 +274,48 @@ exports.chat_get_all_members_group_chat = async (req, res, next) => {
       res.status(200).json({
         message: 'get group chat members successfully',
         listMember,
+      });
+    }
+  } catch (error) {
+    res.status(500).json({
+      error,
+    });
+  }
+};
+
+// [GET] /chat/get_all_friends_for_group_chat/:id
+exports.chat_get_all_friends_for_group_chat = async (req, res, next) => {
+  try {
+    const authHeader = req.header('Authorization');
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (!token) return res.sendStatus(401);
+
+    const decodedToken = jwt_decode(token);
+
+    const conversation = await Conversation.findOne({ _id: req.params.id });
+    if (!conversation) {
+      res.status(401).json({
+        error: 'Conversation not existed',
+      });
+    } else {
+      const members = conversation.members;
+      const { listFriend } = await OtherInfo.findOne({ id_account: decodedToken.id_account }, { listFriend: 1 });
+
+      const listFriendForGroupChat = [];
+      for (const [index, friend] of listFriend?.entries()) {
+        const personalInfo = await PersonalInfo.findOne({ id_account: friend }, { avatar: 1, fullName: 1 });
+        const isJoined = members.includes(friend.toString());
+        listFriendForGroupChat.push({
+          id: friend,
+          avatar: personalInfo.avatar,
+          fullName: personalInfo.fullName,
+          isJoined,
+        });
+      }
+      res.status(200).json({
+        message: 'get all friends for group chat successfully',
+        listFriend: listFriendForGroupChat,
       });
     }
   } catch (error) {
