@@ -351,29 +351,19 @@ exports.chat_update_group_chat = async (req, res, next) => {
           await cloudinary.uploader.destroy(conversation.picture);
       }
 
-      const updatedConversation = await Conversation.findOneAndUpdate(
-        {
-          _id: req.params.id,
-        },
-        {
-          ...req.body,
-          picture: req.body.picture ? groupChatPicture?.public_id : groupChatPicture,
-        },
-      );
+      let updatedMembers;
       const personalInfo = await PersonalInfo({ id_account: decodedToken.id_account }, { fullName: 1, avatar: 1 });
-      if (req.body.members) {
-        const deletedMembers = conversation?.members?.filter((member) => !req.body.members?.includes(member));
-        for (let i = 0; i < deletedMembers.length; i++) {
-          const deletedPersonalInfo = await PersonalInfo({ id_account: deletedMembers[i] }, { fullName: 1, avatar: 1 });
-          const newNotiMessage = await new Message({
-            id_conversation: req.params.id,
-            id_sender: decodedToken.id_account,
-            messageContent: `${deletedPersonalInfo?.fullName} has just been removed from the group chat by ${personalInfo.fullName}`,
-            viewedBy: [decodedToken.id_account],
-            type: 'notification',
-          });
-          await newNotiMessage.save();
-        }
+      if (req.body.member) {
+        updatedMembers = await conversation?.members?.filter((member) => member != req.body.member);
+        const deletedPersonalInfo = await PersonalInfo({ id_account: req.body.member }, { fullName: 1, avatar: 1 });
+        const newNotiMessage = await new Message({
+          id_conversation: req.params.id,
+          id_sender: decodedToken.id_account,
+          messageContent: `${deletedPersonalInfo?.fullName} has just been removed from the group chat by ${personalInfo.fullName}`,
+          viewedBy: [decodedToken.id_account],
+          type: 'notification',
+        });
+        await newNotiMessage.save();
       }
       if (req.body.name) {
         const newNotiMessage = await new Message({
@@ -396,6 +386,17 @@ exports.chat_update_group_chat = async (req, res, next) => {
         });
         await newNotiMessage.save();
       }
+
+      const updatedConversation = await Conversation.findOneAndUpdate(
+        {
+          _id: req.params.id,
+        },
+        {
+          ...req.body,
+          picture: req.body.picture ? groupChatPicture?.public_id : groupChatPicture,
+          members: req.body.member ? updatedMembers : conversation?.members,
+        },
+      );
 
       res.status(200).json({
         message: 'update successfully',
