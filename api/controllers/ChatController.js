@@ -432,10 +432,13 @@ exports.chat_add_members_group_chat = async (req, res, next) => {
         ...req.body,
       },
     );
-    const personalInfo = await PersonalInfo({ id_account: decodedToken.id_account }, { fullName: 1, avatar: 1 });
+    const personalInfo = await PersonalInfo.findOne(
+      { id_account: decodedToken.id_account },
+      { fullName: 1, avatar: 1 },
+    );
     const addedMembers = req.body.members?.filter((member) => !conversation?.members?.includes(member));
     for (let i = 0; i < addedMembers.length; i++) {
-      const addedPersonalInfo = await PersonalInfo({ id_account: addedMembers[i] }, { fullName: 1, avatar: 1 });
+      const addedPersonalInfo = await PersonalInfo.findOne({ id_account: addedMembers[i] }, { fullName: 1, avatar: 1 });
       const newNotiMessage = await new Message({
         id_conversation: req.params.id,
         id_sender: decodedToken.id_account,
