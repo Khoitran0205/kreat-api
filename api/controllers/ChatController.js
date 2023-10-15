@@ -352,10 +352,16 @@ exports.chat_update_group_chat = async (req, res, next) => {
       }
 
       let updatedMembers;
-      const personalInfo = await PersonalInfo({ id_account: decodedToken.id_account }, { fullName: 1, avatar: 1 });
+      const personalInfo = await PersonalInfo.findOne(
+        { id_account: decodedToken.id_account },
+        { fullName: 1, avatar: 1 },
+      );
       if (req.body.member) {
         updatedMembers = await conversation?.members?.filter((member) => member != req.body.member);
-        const deletedPersonalInfo = await PersonalInfo({ id_account: req.body.member }, { fullName: 1, avatar: 1 });
+        const deletedPersonalInfo = await PersonalInfo.findOne(
+          { id_account: req.body.member },
+          { fullName: 1, avatar: 1 },
+        );
         const newNotiMessage = await new Message({
           id_conversation: req.params.id,
           id_sender: decodedToken.id_account,
