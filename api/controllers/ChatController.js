@@ -231,6 +231,17 @@ exports.chat_create_group_chat = async (req, res, next) => {
         });
         await newConversation.save();
 
+        const personalInfo = await PersonalInfo.findOne({ id_account: decodedToken.id_account }, { fullName: 1 });
+
+        const newNotiMessage = await new Message({
+          id_conversation: newConversation._id,
+          id_sender: decodedToken.id_account,
+          messageContent: `The group chat has just been created by ${personalInfo.fullName}`,
+          viewedBy: [decodedToken.id_account],
+          type: 'notification',
+        });
+        await newNotiMessage.save();
+
         res.status(201).json({
           message: 'group chat created successfully',
           conversation: newConversation,
