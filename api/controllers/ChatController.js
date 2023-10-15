@@ -474,7 +474,10 @@ exports.leave_group_chat = async (req, res, next) => {
         members: listMember.filter((member) => member != decodedToken.id_account),
       },
     );
-    const personalInfo = await PersonalInfo({ id_account: decodedToken.id_account }, { fullName: 1, avatar: 1 });
+    const personalInfo = await PersonalInfo.findOne(
+      { id_account: decodedToken.id_account },
+      { fullName: 1, avatar: 1 },
+    );
     const newNotiMessage = await new Message({
       id_conversation: req.params.id,
       id_sender: decodedToken.id_account,
