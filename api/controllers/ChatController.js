@@ -273,7 +273,7 @@ exports.chat_get_all_members_group_chat = async (req, res, next) => {
       }
       res.status(200).json({
         message: 'get group chat members successfully',
-        listMember,
+        listMember: listMember.reverse(),
       });
     }
   } catch (error) {
@@ -389,6 +389,47 @@ exports.chat_update_group_chat = async (req, res, next) => {
 
 // [PATCH] /chat/add_members_group_chat/:id
 exports.chat_add_members_group_chat = async (req, res, next) => {
+  try {
+    const authHeader = req.header('Authorization');
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (!token) return res.sendStatus(401);
+
+    const decodedToken = jwt_decode(token);
+    const conversation = await Conversation.findOne({ _id: req.params.id });
+    const updatedConversation = await Conversation.findOneAndUpdate(
+      { _id: req.params.id },
+      {
+        ...req.body,
+      },
+    );
+    const personalInfo = await PersonalInfo({ id_account: decodedToken.id_account }, { fullName: 1, avatar: 1 });
+    const addedMembers = req.body.members?.filter((member) => !conversation?.members?.includes(member));
+    for (let i = 0; i < addedMembers.length; i++) {
+      const addedPersonalInfo = await PersonalInfo({ id_account: addedMembers[i] }, { fullName: 1, avatar: 1 });
+      const newNotiMessage = await new Message({
+        id_conversation: req.params.id,
+        id_sender: decodedToken.id_account,
+        messageContent: `${addedPersonalInfo?.fullName} has just been added to the group chat by ${personalInfo.fullName}`,
+        viewedBy: [decodedToken.id_account],
+        type: 'notification',
+      });
+      await newNotiMessage.save();
+    }
+
+    res.status(200).json({
+      message: 'update successfully',
+      updatedConversation,
+    });
+  } catch (error) {
+    res.status(500).json({
+      error,
+    });
+  }
+};
+
+// [PATCH] /chat/leave_group_chat/:id
+exports.leave_group_chat = async (req, res, next) => {
   try {
     const authHeader = req.header('Authorization');
     const token = authHeader && authHeader.split(' ')[1];

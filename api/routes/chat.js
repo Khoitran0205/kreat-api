@@ -23,5 +23,6 @@ router.get(
 );
 router.patch('/update_group_chat/:id', authenticateToken, ChatController.chat_update_group_chat);
 router.patch('/add_members_group_chat/:id', authenticateToken, ChatController.chat_add_members_group_chat);
+router.patch('/leave_group_chat/:id', authenticateToken, ChatController.leave_group_chat);
 
 module.exports = router;
