@@ -243,7 +243,7 @@ exports.chat_create_group_chat = async (req, res, next) => {
   }
 };
 
-// [GET] /chat/create_group_chat/:id
+// [GET] /chat/get_all_members_group_chat/:id
 exports.chat_get_all_members_group_chat = async (req, res, next) => {
   try {
     const authHeader = req.header('Authorization');
@@ -267,6 +267,7 @@ exports.chat_get_all_members_group_chat = async (req, res, next) => {
           id: member,
           avatar: personalInfo.avatar,
           fullName: personalInfo.fullName,
+          isLeader: conversation.leader == member ? true : false,
         });
       }
       res.status(200).json({
