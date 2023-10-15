@@ -360,8 +360,8 @@ exports.chat_update_group_chat = async (req, res, next) => {
           picture: req.body.picture ? groupChatPicture?.public_id : groupChatPicture,
         },
       );
+      const personalInfo = await PersonalInfo({ id_account: decodedToken.id_account }, { fullName: 1, avatar: 1 });
       if (req.body.members) {
-        const personalInfo = await PersonalInfo({ id_account: decodedToken.id_account }, { fullName: 1, avatar: 1 });
         const deletedMembers = conversation?.members?.filter((member) => !req.body.members?.includes(member));
         for (let i = 0; i < deletedMembers.length; i++) {
           const deletedPersonalInfo = await PersonalInfo({ id_account: deletedMembers[i] }, { fullName: 1, avatar: 1 });
@@ -375,6 +375,28 @@ exports.chat_update_group_chat = async (req, res, next) => {
           await newNotiMessage.save();
         }
       }
+      if (req.body.name) {
+        const newNotiMessage = await new Message({
+          id_conversation: req.params.id,
+          id_sender: decodedToken.id_account,
+          messageContent: `The group chat name has just been changed by ${personalInfo.fullName}`,
+          viewedBy: [decodedToken.id_account],
+          type: 'notification',
+        });
+        await newNotiMessage.save();
+      }
+
+      if (req.body.picture) {
+        const newNotiMessage = await new Message({
+          id_conversation: req.params.id,
+          id_sender: decodedToken.id_account,
+          messageContent: `The group chat picture has just been changed by ${personalInfo.fullName}`,
+          viewedBy: [decodedToken.id_account],
+          type: 'notification',
+        });
+        await newNotiMessage.save();
+      }
+
       res.status(200).json({
         message: 'update successfully',
         updatedConversation,
