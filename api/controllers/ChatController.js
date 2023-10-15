@@ -243,6 +243,44 @@ exports.chat_create_group_chat = async (req, res, next) => {
   }
 };
 
+// [GET] /chat/create_group_chat/:id
+exports.chat_get_all_members_group_chat = async (req, res, next) => {
+  try {
+    const authHeader = req.header('Authorization');
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (!token) return res.sendStatus(401);
+
+    const decodedToken = jwt_decode(token);
+
+    const conversation = await Conversation.findOne({ _id: req.params.id });
+    if (!conversation) {
+      res.status(401).json({
+        error: 'Conversation not existed',
+      });
+    } else {
+      const members = conversation.members;
+      const listMember = [];
+      for (const [index, member] of members?.entries()) {
+        const personalInfo = await PersonalInfo.findOne({ id_account: member }, { avatar: 1, fullName: 1 });
+        listMember.push({
+          id: member,
+          avatar: personalInfo.avatar,
+          fullName: personalInfo.fullName,
+        });
+      }
+      res.status(200).json({
+        message: 'get group chat members successfully',
+        listMember,
+      });
+    }
+  } catch (error) {
+    res.status(500).json({
+      error,
+    });
+  }
+};
+
 // [PATCH] /chat/update_group_chat/:id
 exports.chat_update_group_chat = async (req, res, next) => {
   try {
