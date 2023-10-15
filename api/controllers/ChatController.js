@@ -438,28 +438,25 @@ exports.leave_group_chat = async (req, res, next) => {
 
     const decodedToken = jwt_decode(token);
     const conversation = await Conversation.findOne({ _id: req.params.id });
+    const listMember = conversation?.members;
     const updatedConversation = await Conversation.findOneAndUpdate(
       { _id: req.params.id },
       {
-        ...req.body,
+        members: listMember.filter((member) => member != decodedToken.id_account),
       },
     );
     const personalInfo = await PersonalInfo({ id_account: decodedToken.id_account }, { fullName: 1, avatar: 1 });
-    const addedMembers = req.body.members?.filter((member) => !conversation?.members?.includes(member));
-    for (let i = 0; i < addedMembers.length; i++) {
-      const addedPersonalInfo = await PersonalInfo({ id_account: addedMembers[i] }, { fullName: 1, avatar: 1 });
-      const newNotiMessage = await new Message({
-        id_conversation: req.params.id,
-        id_sender: decodedToken.id_account,
-        messageContent: `${addedPersonalInfo?.fullName} has just been added to the group chat by ${personalInfo.fullName}`,
-        viewedBy: [decodedToken.id_account],
-        type: 'notification',
-      });
-      await newNotiMessage.save();
-    }
+    const newNotiMessage = await new Message({
+      id_conversation: req.params.id,
+      id_sender: decodedToken.id_account,
+      messageContent: `${personalInfo?.fullName} has just left the group chat`,
+      viewedBy: [decodedToken.id_account],
+      type: 'notification',
+    });
+    await newNotiMessage.save();
 
     res.status(200).json({
-      message: 'update successfully',
+      message: 'leave group chat successfully',
       updatedConversation,
     });
   } catch (error) {
