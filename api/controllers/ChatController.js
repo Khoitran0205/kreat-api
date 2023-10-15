@@ -375,7 +375,7 @@ exports.chat_update_group_chat = async (req, res, next) => {
         const newNotiMessage = await new Message({
           id_conversation: req.params.id,
           id_sender: decodedToken.id_account,
-          messageContent: `The group chat name has just been changed by ${personalInfo.fullName}`,
+          messageContent: `The group chat name has just been changed to "${req.body.name}" by ${personalInfo.fullName}`,
           viewedBy: [decodedToken.id_account],
           type: 'notification',
         });
