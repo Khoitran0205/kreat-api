@@ -176,6 +176,7 @@ exports.chat_get_all_message = async (req, res, next) => {
         avatar: personalInfo.avatar,
         fullName: personalInfo.fullName,
         messageContent: message.messageContent,
+        type: message.type,
         viewedBy: message.viewedBy,
         createdAt: message.createdAt,
         updatedAt: message.updatedAt,
