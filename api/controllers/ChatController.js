@@ -121,6 +121,7 @@ exports.chat_send_message = async (req, res, next) => {
       id_sender: decodedToken.id_account,
       id_conversation: req.body.id_conversation,
       messageContent: req.body.messageContent,
+      type: 'message',
       viewedBy: [decodedToken.id_account],
     });
 
