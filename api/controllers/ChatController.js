@@ -286,8 +286,8 @@ exports.chat_get_all_members_group_chat = async (req, res, next) => {
       }
 
       listMember.sort((a, b) => {
-        if (a.isLeader === true && b.isLeader === false) return -1;
-        if (a.isLeader === false && b.isLeader === true) return 1;
+        if (a.isLeader === true && b.isLeader === false) return 1;
+        if (a.isLeader === false && b.isLeader === true) return -1;
         return 0;
       });
 
