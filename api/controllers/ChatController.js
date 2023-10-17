@@ -320,7 +320,7 @@ exports.chat_get_all_friends_for_group_chat = async (req, res, next) => {
         const personalInfo = await PersonalInfo.findOne({ id_account: friend }, { avatar: 1, fullName: 1 });
         const isJoined = members.includes(friend.toString());
         listFriendForGroupChat.push({
-          id: friend,
+          id_account: friend,
           avatar: personalInfo.avatar,
           fullName: personalInfo.fullName,
           isJoined,
@@ -438,20 +438,14 @@ exports.chat_add_members_group_chat = async (req, res, next) => {
     if (!token) return res.sendStatus(401);
 
     const decodedToken = jwt_decode(token);
+    const newMembers = req.body.newMembers;
     const conversation = await Conversation.findOne({ _id: req.params.id });
-    const updatedConversation = await Conversation.findOneAndUpdate(
-      { _id: req.params.id },
-      {
-        ...req.body,
-      },
-    );
     const personalInfo = await PersonalInfo.findOne(
       { id_account: decodedToken.id_account },
       { fullName: 1, avatar: 1 },
     );
-    const addedMembers = req.body.members?.filter((member) => !conversation?.members?.includes(member));
-    for (let i = 0; i < addedMembers.length; i++) {
-      const addedPersonalInfo = await PersonalInfo.findOne({ id_account: addedMembers[i] }, { fullName: 1, avatar: 1 });
+    for (let i = 0; i < newMembers?.length; i++) {
+      const addedPersonalInfo = await PersonalInfo.findOne({ id_account: newMembers[i] }, { fullName: 1, avatar: 1 });
       const newNotiMessage = await new Message({
         id_conversation: req.params.id,
         id_sender: decodedToken.id_account,
@@ -461,6 +455,13 @@ exports.chat_add_members_group_chat = async (req, res, next) => {
       });
       await newNotiMessage.save();
     }
+
+    const updatedConversation = await Conversation.findOneAndUpdate(
+      { _id: req.params.id },
+      {
+        members: [...conversation?.members, ...newMembers],
+      },
+    );
 
     res.status(200).json({
       message: 'update successfully',
