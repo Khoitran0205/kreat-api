@@ -326,6 +326,13 @@ exports.chat_get_all_friends_for_group_chat = async (req, res, next) => {
           isJoined,
         });
       }
+
+      listFriendForGroupChat.sort((a, b) => {
+        if (a.isJoined === true && b.isJoined === false) return 1;
+        if (a.isJoined === false && b.isJoined === true) return -1;
+        return 0;
+      });
+
       res.status(200).json({
         message: 'get all friends for group chat successfully',
         listFriend: listFriendForGroupChat,
