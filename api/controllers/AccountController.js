@@ -1592,3 +1592,39 @@ exports.accounts_get_unviewed_notifications_and_messages = async (req, res, next
     });
   }
 };
+
+// [POST] /accounts/reset_password
+exports.reset_password = async (req, res, next) => {
+  try {
+    const authHeader = req.header('Authorization');
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (!token) return res.sendStatus(401);
+
+    const decodedToken = jwt_decode(token);
+    const account = await Account.findOne({ _id: decodedToken.id_account });
+    if (!account) {
+      res.status(401).json({
+        error: 'Account not existed',
+      });
+    } else {
+      const passwordMatch = await bcrypt.compare(req.body.oldPassword, account.password);
+      if (passwordMatch.toString() === 'false') {
+        res.status(401).json({
+          error: 'Old password is not correct',
+        });
+      } else {
+        const salt = await bcrypt.genSalt();
+        const hashedPassword = await bcrypt.hash(req.body.newPassword, salt);
+        await Account.findOneAndUpdate({ _id: decodedToken.id_account }, { ...account, password: hashedPassword });
+        res.status(200).json({
+          message: 'reset password successfully',
+        });
+      }
+    }
+  } catch (error) {
+    res.status(500).json({
+      error,
+    });
+  }
+};

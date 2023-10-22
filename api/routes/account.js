@@ -58,4 +58,7 @@ router.get(
   AccountController.accounts_get_unviewed_notifications_and_messages,
 );
 
+// Password
+router.post('/reset_password', authenticateToken, AccountController.reset_password);
+
 module.exports = router;
