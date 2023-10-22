@@ -1618,7 +1618,7 @@ exports.reset_password = async (req, res, next) => {
       } else {
         const salt = await bcrypt.genSalt();
         const hashedPassword = await bcrypt.hash(req.body.newPassword, salt);
-        await Account.findOneAndUpdate({ _id: decodedToken.id_account }, { ...account, password: hashedPassword });
+        await Account.findOneAndUpdate({ _id: decodedToken.id_account }, { password: hashedPassword });
         res.status(200).json({
           message: 'reset password successfully',
         });
@@ -1684,10 +1684,7 @@ exports.reset_forgotten_password = async (req, res, next) => {
       } else {
         const salt = await bcrypt.genSalt();
         const hashedPassword = await bcrypt.hash(req.body.newPassword, salt);
-        await Account.findOneAndUpdate(
-          { _id: decodedToken.id_account },
-          { ...account, password: hashedPassword, code: '' },
-        );
+        await Account.findOneAndUpdate({ _id: decodedToken.id_account }, { password: hashedPassword, code: '' });
         res.status(200).json({
           message: 'reset forgotten password successfully',
         });
