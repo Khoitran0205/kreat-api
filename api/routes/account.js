@@ -60,6 +60,6 @@ router.get(
 // Password
 router.post('/reset_password', authenticateToken, AccountController.reset_password);
 router.post('/send_code', AccountController.send_code);
-router.post('/reset_forgotten_password', authenticateToken, AccountController.reset_forgotten_password);
+router.post('/reset_forgotten_password', AccountController.reset_forgotten_password);
 
 module.exports = router;
