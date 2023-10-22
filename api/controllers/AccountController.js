@@ -15,6 +15,8 @@ const Notification = require('../models/notification');
 const { cloudinary } = require('../../utils/cloudinary');
 
 const jwt_decode = require('jwt-decode');
+const { randomNumber } = require('../../utils/generating_code');
+const sendForgotPasswordCode = require('../../utils/nodemailer');
 
 // [GET] /accounts/:id/timeline
 exports.accounts_get_timeline_info = async (req, res, next) => {
@@ -1619,6 +1621,75 @@ exports.reset_password = async (req, res, next) => {
         await Account.findOneAndUpdate({ _id: decodedToken.id_account }, { ...account, password: hashedPassword });
         res.status(200).json({
           message: 'reset password successfully',
+        });
+      }
+    }
+  } catch (error) {
+    res.status(500).json({
+      error,
+    });
+  }
+};
+
+// [POST] /accounts/send_code
+exports.send_code = async (req, res, next) => {
+  try {
+    const authHeader = req.header('Authorization');
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (!token) return res.sendStatus(401);
+
+    const decodedToken = jwt_decode(token);
+    const account = await Account.findOne({ _id: decodedToken.id_account });
+    if (!account) {
+      res.status(401).json({
+        error: 'Account not existed',
+      });
+    } else {
+      const code = randomNumber(6);
+      const personalInfo = await PersonalInfo.findOne({ id_account: decodedToken.id_account }, { fullName: 1 });
+      sendForgotPasswordCode(account.email, personalInfo?.fullName, code);
+      await Account.findOneAndUpdate({ _id: decodedToken.id_account }, { ...account, code });
+      res.status(200).json({
+        message: 'send code successfully',
+      });
+    }
+  } catch (error) {
+    res.status(500).json({
+      error,
+    });
+  }
+};
+
+// [POST] /accounts/reset_forgotten_password
+exports.reset_forgotten_password = async (req, res, next) => {
+  try {
+    const authHeader = req.header('Authorization');
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (!token) return res.sendStatus(401);
+
+    const decodedToken = jwt_decode(token);
+    const account = await Account.findOne({ _id: decodedToken.id_account });
+    if (!account) {
+      res.status(401).json({
+        error: 'Account not existed',
+      });
+    } else {
+      const codeMatch = req.body.code.toString() === account.code.toString();
+      if (codeMatch.toString() === 'false') {
+        res.status(401).json({
+          error: 'Code is not correct',
+        });
+      } else {
+        const salt = await bcrypt.genSalt();
+        const hashedPassword = await bcrypt.hash(req.body.newPassword, salt);
+        await Account.findOneAndUpdate(
+          { _id: decodedToken.id_account },
+          { ...account, password: hashedPassword, code: '' },
+        );
+        res.status(200).json({
+          message: 'reset forgotten password successfully',
         });
       }
     }

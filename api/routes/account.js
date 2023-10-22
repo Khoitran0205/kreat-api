@@ -51,7 +51,6 @@ router.get('/contact', authenticateToken, AccountController.accounts_get_all_con
 
 // Notifications
 router.get('/notification', authenticateToken, AccountController.accounts_get_all_notifications);
-
 router.get(
   '/unviewed_notification_and_message',
   authenticateToken,
@@ -60,5 +59,7 @@ router.get(
 
 // Password
 router.post('/reset_password', authenticateToken, AccountController.reset_password);
+router.post('/send_code', authenticateToken, AccountController.send_code);
+router.post('/reset_forgotten_password', authenticateToken, AccountController.reset_forgotten_password);
 
 module.exports = router;
