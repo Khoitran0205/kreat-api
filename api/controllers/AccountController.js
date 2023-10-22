@@ -15,7 +15,7 @@ const Notification = require('../models/notification');
 const { cloudinary } = require('../../utils/cloudinary');
 
 const jwt_decode = require('jwt-decode');
-const { randomNumber } = require('../../utils/generating_code');
+const randomNumber = require('../../utils/generating_code');
 const sendForgotPasswordCode = require('../../utils/nodemailer');
 
 // [GET] /accounts/:id/timeline
@@ -1646,10 +1646,10 @@ exports.send_code = async (req, res, next) => {
         error: 'Account not existed',
       });
     } else {
-      const code = randomNumber(6);
+      const code = await randomNumber(6);
       const personalInfo = await PersonalInfo.findOne({ id_account: decodedToken.id_account }, { fullName: 1 });
       sendForgotPasswordCode(account.email, personalInfo?.fullName, code);
-      await Account.findOneAndUpdate({ _id: decodedToken.id_account }, { ...account, code });
+      await Account.findOneAndUpdate({ _id: decodedToken.id_account }, { ...account, code: 'haha' });
       res.status(200).json({
         message: 'send code successfully',
       });
