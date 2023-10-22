@@ -1634,22 +1634,16 @@ exports.reset_password = async (req, res, next) => {
 // [POST] /accounts/send_code
 exports.send_code = async (req, res, next) => {
   try {
-    const authHeader = req.header('Authorization');
-    const token = authHeader && authHeader.split(' ')[1];
-
-    if (!token) return res.sendStatus(401);
-
-    const decodedToken = jwt_decode(token);
-    const account = await Account.findOne({ _id: decodedToken.id_account });
+    const account = await Account.findOne({ email: req.body.email });
     if (!account) {
       res.status(401).json({
         error: 'Account not existed',
       });
     } else {
       const code = await randomNumber(6);
-      const personalInfo = await PersonalInfo.findOne({ id_account: decodedToken.id_account }, { fullName: 1 });
+      const personalInfo = await PersonalInfo.findOne({ id_account: account._id }, { fullName: 1 });
       sendForgotPasswordCode(account.email, personalInfo?.fullName, code);
-      await Account.findOneAndUpdate({ _id: decodedToken.id_account }, { code });
+      await Account.findOneAndUpdate({ _id: account._id }, { code });
       res.status(200).json({
         message: 'send code successfully',
       });
@@ -1664,13 +1658,7 @@ exports.send_code = async (req, res, next) => {
 // [POST] /accounts/reset_forgotten_password
 exports.reset_forgotten_password = async (req, res, next) => {
   try {
-    const authHeader = req.header('Authorization');
-    const token = authHeader && authHeader.split(' ')[1];
-
-    if (!token) return res.sendStatus(401);
-
-    const decodedToken = jwt_decode(token);
-    const account = await Account.findOne({ _id: decodedToken.id_account });
+    const account = await Account.findOne({ email: req.body.email });
     if (!account) {
       res.status(401).json({
         error: 'Account not existed',
@@ -1684,7 +1672,7 @@ exports.reset_forgotten_password = async (req, res, next) => {
       } else {
         const salt = await bcrypt.genSalt();
         const hashedPassword = await bcrypt.hash(req.body.newPassword, salt);
-        await Account.findOneAndUpdate({ _id: decodedToken.id_account }, { password: hashedPassword, code: '' });
+        await Account.findOneAndUpdate({ _id: account._id }, { password: hashedPassword, code: '' });
         res.status(200).json({
           message: 'reset forgotten password successfully',
         });
