@@ -1649,7 +1649,7 @@ exports.send_code = async (req, res, next) => {
       const code = await randomNumber(6);
       const personalInfo = await PersonalInfo.findOne({ id_account: decodedToken.id_account }, { fullName: 1 });
       sendForgotPasswordCode(account.email, personalInfo?.fullName, code);
-      await Account.findOneAndUpdate({ _id: decodedToken.id_account }, { ...account, code: 'haha' });
+      await Account.findOneAndUpdate({ _id: decodedToken.id_account }, { code });
       res.status(200).json({
         message: 'send code successfully',
       });
