@@ -1,4 +1,4 @@
-export const randomNumber = (length) => {
+const randomNumber = (length) => {
   let result = '';
   const characters = '0123456789';
   const charactersLength = characters.length;
@@ -7,3 +7,5 @@ export const randomNumber = (length) => {
   }
   return result;
 };
+
+module.exports = randomNumber;
