@@ -11,6 +11,7 @@ const VisualMedia = require('../models/post/visual_media');
 const Conversation = require('../models/chat/conversation');
 const Message = require('../models/chat/message');
 const Notification = require('../models/notification');
+const bcrypt = require('bcrypt');
 
 const { cloudinary } = require('../../utils/cloudinary');
 
