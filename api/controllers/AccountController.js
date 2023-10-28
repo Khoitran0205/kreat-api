@@ -11,6 +11,7 @@ const VisualMedia = require('../models/post/visual_media');
 const Conversation = require('../models/chat/conversation');
 const Message = require('../models/chat/message');
 const Notification = require('../models/notification');
+const Setting = require('../models/user/setting');
 const bcrypt = require('bcrypt');
 
 const { cloudinary } = require('../../utils/cloudinary');
@@ -1679,6 +1680,30 @@ exports.reset_forgotten_password = async (req, res, next) => {
         });
       }
     }
+  } catch (error) {
+    res.status(500).json({
+      error,
+    });
+  }
+};
+
+// [PATCH] /accounts/update_setting
+exports.update_setting = async (req, res, next) => {
+  try {
+    const authHeader = req.header('Authorization');
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (!token) return res.sendStatus(401);
+
+    const decodedToken = jwt_decode(token);
+    const updatedSetting = await Setting.findOneAndUpdate(
+      { id_account: decodedToken.id_account },
+      { postDisplay: req.body.postDisplay },
+    );
+    res.status(200).json({
+      message: 'setting updated successfully',
+      updatedSetting,
+    });
   } catch (error) {
     res.status(500).json({
       error,

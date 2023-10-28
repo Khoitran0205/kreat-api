@@ -9,6 +9,7 @@ const PersonalInfo = require('../models/user/personal_info');
 const EducationInfo = require('../models/user/education_info');
 const FavoriteInfo = require('../models/user/favorite_info');
 const OtherInfo = require('../models/user/other_info');
+const Setting = require('../models/user/setting');
 
 env.config();
 
@@ -40,7 +41,12 @@ exports.auth_sign_up = async (req, res, next) => {
           id_account: account._id,
         });
         await other_info.save();
-        sendVerificationMail(req.body.email, req.body.fullName, account._id);
+        const setting = await new Setting({
+          id_account: account._id,
+          postDisplay: 'slider',
+        });
+        await setting.save();
+        await sendVerificationMail(req.body.email, req.body.fullName, account._id);
         res.status(201).json({
           message: 'account created',
           account: result,
@@ -87,6 +93,8 @@ exports.auth_log_in = async (req, res, next) => {
             { id_account: 1, avatar: 1, fullName: 1 },
           );
 
+          const setting = await Setting.findOne({ id_account: account._id }, { postDisplay: 1 });
+
           res.status(200).json({
             message: 'Log in successfully',
             accessToken,
@@ -94,6 +102,7 @@ exports.auth_log_in = async (req, res, next) => {
             id_account: userInfo.id_account,
             fullName: userInfo.fullName,
             avatar: userInfo.avatar,
+            postDisplay: setting?.postDisplay,
           });
         }
       } else {
