@@ -63,6 +63,7 @@ router.post('/send_code', AccountController.send_code);
 router.post('/reset_forgotten_password', AccountController.reset_forgotten_password);
 
 // Settings
+router.get('/setting', AccountController.setting);
 router.patch('/update_setting', AccountController.update_setting);
 
 module.exports = router;

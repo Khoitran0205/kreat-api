@@ -1687,6 +1687,27 @@ exports.reset_forgotten_password = async (req, res, next) => {
   }
 };
 
+// [GET] /accounts/setting
+exports.setting = async (req, res, next) => {
+  try {
+    const authHeader = req.header('Authorization');
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (!token) return res.sendStatus(401);
+
+    const decodedToken = jwt_decode(token);
+    const setting = await Setting.findOne({ id_account: decodedToken.id_account });
+    res.status(200).json({
+      message: 'get setting successfully',
+      setting,
+    });
+  } catch (error) {
+    res.status(500).json({
+      error,
+    });
+  }
+};
+
 // [PATCH] /accounts/update_setting
 exports.update_setting = async (req, res, next) => {
   try {
