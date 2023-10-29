@@ -102,7 +102,7 @@ exports.auth_log_in = async (req, res, next) => {
             id_account: userInfo.id_account,
             fullName: userInfo.fullName,
             avatar: userInfo.avatar,
-            postDisplay: setting?.postDisplay,
+            setting,
           });
         }
       } else {
