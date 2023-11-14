@@ -149,6 +149,82 @@ exports.accounts_get_timeline_info = async (req, res, next) => {
   }
 };
 
+// [GET] /accounts/scheduled_posts
+exports.accounts_get_scheduled_posts = async (req, res, next) => {
+  try {
+    const authHeader = req.header('Authorization');
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (!token) return res.sendStatus(401);
+
+    const decodedToken = jwt_decode(token);
+    const posts = await Post.find({
+      $and: [{ isActive: false }, { id_account: decodedToken.id_account }],
+    }).sort({ createdAt: 1 });
+    const listPost = [];
+
+    for (const [index, value] of posts.entries()) {
+      let postInfo = {};
+      const personalInfo = await PersonalInfo.findOne(
+        { id_account: value.id_account },
+        { _id: 0, avatar: 1, fullName: 1 },
+      );
+      const listReaction = await React.find({ id_post: value._id, id_comment: null }, { id_account: 1, reactType: 1 });
+      const comments = await Comment.find({ id_post: value._id });
+
+      let shareContent = {};
+      if (value.isShared) {
+        const sharedPersonalInfo = await PersonalInfo.findOne(
+          { id_account: value.shareContent.shared_id_account },
+          { _id: 0, avatar: 1, fullName: 1 },
+        );
+        shareContent = {
+          shared_id_account: value.shareContent.shared_id_account,
+          shared_avatar: sharedPersonalInfo.avatar,
+          shared_fullName: sharedPersonalInfo.fullName,
+          shared_id_visualMedia: value.shareContent.shared_id_visualMedia,
+          shared_postContent: value.shareContent.shared_postContent,
+          shared_postFeeling: value.shareContent.shared_postFeeling,
+          shared_postPrivacy: value.shareContent.shared_postPrivacy,
+          shared_createdAt: value.shareContent.shared_createdAt,
+          shared_id_friendTag: value.shareContent.shared_id_friendTag,
+          shared_location: value.shareContent.shared_location,
+        };
+      }
+
+      postInfo = {
+        _id: value._id,
+        id_account: value.id_account,
+        avatar: personalInfo.avatar,
+        fullName: personalInfo.fullName,
+        id_visualMedia: value.id_visualMedia,
+        postContent: value.postContent,
+        postFeeling: value.postFeeling,
+        postPrivacy: value.postPrivacy,
+        id_friendTag: value.id_friendTag,
+        location: value.location,
+        isShared: value.isShared,
+        shareId: value.shareId,
+        shareContent,
+        createdAt: value.createdAt,
+        listReaction,
+        commentAmount: comments.length,
+      };
+
+      listPost.push(postInfo);
+    }
+
+    res.status(200).json({
+      message: 'get scheduled posts successfully',
+      listPost,
+    });
+  } catch (err) {
+    res.status(500).json({
+      error: err,
+    });
+  }
+};
+
 // [GET] /accounts/:id/about
 exports.accounts_get_about_info = async (req, res, next) => {
   try {

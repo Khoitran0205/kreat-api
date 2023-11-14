@@ -7,6 +7,7 @@ const AccountController = require('../controllers/AccountController');
 
 //Interact with account's info
 router.get('/:id/timeline', authenticateToken, AccountController.accounts_get_timeline_info);
+router.get('/scheduled_posts', authenticateToken, AccountController.accounts_get_scheduled_posts);
 router.get('/:id/about', authenticateToken, AccountController.accounts_get_about_info);
 router.get('/:id/friends', authenticateToken, AccountController.accounts_get_all_friends);
 router.get('/:id/visual_media', authenticateToken, AccountController.accounts_get_visual_media_info);
