@@ -6,6 +6,7 @@ const React = require('../models/post/react');
 const Comment = require('../models/post/comment');
 const VisualMedia = require('../models/post/visual_media');
 const Notification = require('../models/notification');
+const schedule = require('node-schedule');
 
 const { cloudinary } = require('../../utils/cloudinary');
 
@@ -62,6 +63,7 @@ exports.posts_create_post = async (req, res, next) => {
     const post = new Post({
       id_account: decodedToken.id_account,
       id_visualMedia,
+      isActive: req.body.isScheduled?.toString() === 'true' ? false : true,
       ...req.body,
     });
     const result = await post.save();
@@ -76,6 +78,13 @@ exports.posts_create_post = async (req, res, next) => {
       }));
       await VisualMedia.insertMany(visualMediaArray);
     }
+
+    if (req.body.isScheduled?.toString() === 'true') {
+      schedule.scheduleJob(req.body.scheduleDate, async function () {
+        await Post.findOneAndUpdate({ _id: result._id }, { isActive: true, createdAt: new Date() });
+      });
+    }
+
     if (result.id_friendTag.length !== 0) {
       const personalInfo = await PersonalInfo.findOne({ id_account: decodedToken.id_account }, { _id: 0, fullName: 1 });
       for (const [index, value] of result.id_friendTag.entries()) {
@@ -366,14 +375,15 @@ exports.posts_get_all_post = async (req, res, next) => {
     const myListFriend = await OtherInfo.findOne({ id_account: decodedToken.id_account }, { _id: 0, listFriend: 1 });
     const posts = await Post.find({
       $or: [
-        { postPrivacy: 'public' },
+        { $and: [{ postPrivacy: 'public' }, { isActive: true }] },
         {
           $and: [
             { postPrivacy: 'friend' },
+            { isActive: true },
             { $or: [{ id_account: { $in: myListFriend.listFriend } }, { id_account: decodedToken.id_account }] },
           ],
         },
-        { $and: [{ postPrivacy: 'private' }, { id_account: decodedToken.id_account }] },
+        { $and: [{ postPrivacy: 'private' }, { isActive: true }, { id_account: decodedToken.id_account }] },
       ],
     })
       .sort({ createdAt: -1 })

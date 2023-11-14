@@ -25,6 +25,7 @@ const postSchema = mongoose.Schema(
     postPrivacy: { type: String, default: '' },
     id_friendTag: { type: Array, default: [] },
     location: { type: String, default: '' },
+    isActive: { type: Boolean, default: true },
     isShared: { type: Boolean, default: false },
     shareId: { type: mongoose.Types.ObjectId, default: null },
     shareContent: { type: sharedPostSchema, default: {} },
