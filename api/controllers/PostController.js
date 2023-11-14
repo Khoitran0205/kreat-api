@@ -60,13 +60,11 @@ exports.posts_create_post = async (req, res, next) => {
       await Promise.all(promises);
     }
 
-    const convertedDate = new Date(req.body.scheduleDate);
-
     const post = new Post({
       id_account: decodedToken.id_account,
       id_visualMedia,
       isActive: req.body.isScheduled?.toString() === 'true' ? false : true,
-      createdAt: req.body.isScheduled?.toString() === 'true' ? convertedDate : new Date(),
+      createdAt: req.body.isScheduled?.toString() === 'true' ? new Date(req.body.scheduleDate) : new Date(),
       ...req.body,
     });
     const result = await post.save();
@@ -83,7 +81,7 @@ exports.posts_create_post = async (req, res, next) => {
     }
 
     if (req.body.isScheduled?.toString() === 'true') {
-      schedule.scheduleJob(convertedDate, async function () {
+      schedule.scheduleJob(new Date(req.body.scheduleDate), async function () {
         await Post.findOneAndUpdate({ _id: result._id }, { isActive: true });
         const newNotification = await new Notification({
           id_senders: [],
@@ -91,7 +89,7 @@ exports.posts_create_post = async (req, res, next) => {
           id_post: result._id,
           notificationType: 'upload',
           notificationContent: `Your post has been published.`,
-          notificationTime: convertedDate,
+          notificationTime: new Date(req.body.scheduleDate),
           isViewed: false,
         });
         await newNotification.save();
