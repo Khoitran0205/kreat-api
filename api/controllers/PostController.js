@@ -7,10 +7,13 @@ const Comment = require('../models/post/comment');
 const VisualMedia = require('../models/post/visual_media');
 const Notification = require('../models/notification');
 const schedule = require('node-schedule');
+const env = require('dotenv');
 
 const { cloudinary } = require('../../utils/cloudinary');
 
 const jwt_decode = require('jwt-decode');
+
+env.config();
 
 // [POST] /posts/create_post
 exports.posts_create_post = async (req, res, next) => {
@@ -84,7 +87,7 @@ exports.posts_create_post = async (req, res, next) => {
       schedule.scheduleJob(new Date(req.body.scheduleDate), async function () {
         await Post.findOneAndUpdate({ _id: result._id }, { isActive: true });
         const newNotification = await new Notification({
-          id_senders: [],
+          id_senders: [process.env.ADMIN_ID],
           id_receiver: decodedToken.id_account,
           id_post: result._id,
           notificationType: 'upload',

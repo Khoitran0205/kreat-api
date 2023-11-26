@@ -1628,7 +1628,7 @@ exports.accounts_get_all_notifications = async (req, res, next) => {
         notificationContent: value.notificationContent,
         notificationTime: value.notificationTime,
         isViewed: value.isViewed,
-        avatar: personalInfo?.avatar,
+        avatar: personalInfo.avatar,
       };
       listNotification.push(notificationInfo);
       await Notification.findOneAndUpdate({ $and: [{ _id: value._id }, { isViewed: false }] }, { isViewed: true });
