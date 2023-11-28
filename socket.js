@@ -10,7 +10,7 @@ connectToDb();
 
 const io = require('socket.io')(socketPort, {
   cors: {
-    origin: 'http://localhost:3001',
+    origin: 'https://kreat-api.onrender.com',
   },
 });
 
