@@ -5,8 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js",
-    "socketServer": "node socket.js",
+    "start": "nodemon server.js",
+    "socketServer": "nodemon socket.js",
     "build": "node server.js"
   },
   "repository": {
