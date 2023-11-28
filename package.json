@@ -6,7 +6,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js",
-    "socketServer": "node socket.js"
+    "socketServer": "node socket.js",
+    "build": "node server.js"
   },
   "repository": {
     "type": "git",
