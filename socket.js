@@ -55,8 +55,8 @@ io.on('connection', (socket) => {
     io.to(user.socketId).emit('getMessage', {
       id_conversation,
       id_sender,
-      avatar: senderInfo.avatar,
-      fullName: senderInfo.fullName,
+      avatar: senderInfo?.avatar,
+      fullName: senderInfo?.fullName,
       messageContent,
     });
   });
@@ -67,6 +67,30 @@ io.on('connection', (socket) => {
       const user = getOnlineUser(value);
       io.to(user.socketId).emit('getNotification');
     }
+  });
+
+  // call other user
+  socket.on('callUser', async (id_conversation, id_sender, id_receiver) => {
+    const user = getOnlineUser(id_receiver);
+    const senderInfo = await PersonalInfo.findOne({ id_account: id_sender }, { _id: 0, avatar: 1, fullName: 1 });
+    io.to(user.socketId).emit('getCall', {
+      id_conversation,
+      id_sender,
+      avatar: senderInfo?.avatar,
+      fullName: senderInfo?.fullName,
+    });
+  });
+
+  // answer the call
+  socket.on('answerCall', async (id_conversation, id_sender, id_receiver) => {
+    const user = getOnlineUser(id_receiver);
+    const senderInfo = await PersonalInfo.findOne({ id_account: id_sender }, { _id: 0, avatar: 1, fullName: 1 });
+    io.to(user.socketId).emit('callAccepted', {
+      id_conversation,
+      id_sender,
+      avatar: senderInfo?.avatar,
+      fullName: senderInfo?.fullName,
+    });
   });
 
   // when a user logouts

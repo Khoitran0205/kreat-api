@@ -2,7 +2,7 @@ const jwt = require('jsonwebtoken');
 const env = require('dotenv');
 const bcrypt = require('bcrypt');
 const jwt_decode = require('jwt-decode');
-const sendVerificationMail = require('../../utils/nodemailer');
+const nodemailer = require('../../utils/nodemailer');
 
 const Account = require('../models/user/account');
 const PersonalInfo = require('../models/user/personal_info');
@@ -180,7 +180,7 @@ exports.auth_refresh_token = async (req, res, next) => {
 // [POST] auth/send_verification_mail
 exports.send_verification_mail = async (req, res, next) => {
   try {
-    await sendVerificationMail(req.body.email, req.body.fullName, req.body.id_account).then(() => {
+    await nodemailer.sendVerificationMail(req.body.email, req.body.fullName, req.body.id_account).then(() => {
       res.status(201).json({
         message: 'mail sent successfully',
       });

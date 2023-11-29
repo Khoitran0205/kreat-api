@@ -18,7 +18,7 @@ const { cloudinary } = require('../../utils/cloudinary');
 
 const jwt_decode = require('jwt-decode');
 const randomNumber = require('../../utils/generating_code');
-const sendForgotPasswordCode = require('../../utils/nodemailer');
+const nodemailer = require('../../utils/nodemailer');
 
 // [GET] /accounts/:id/timeline
 exports.accounts_get_timeline_info = async (req, res, next) => {
@@ -1728,7 +1728,7 @@ exports.send_code = async (req, res, next) => {
     } else {
       const code = await randomNumber(6);
       const personalInfo = await PersonalInfo.findOne({ id_account: account._id }, { fullName: 1 });
-      sendForgotPasswordCode(account.email, personalInfo?.fullName, code);
+      await nodemailer.sendForgotPasswordCode(account.email, personalInfo?.fullName, code);
       await Account.findOneAndUpdate({ _id: account._id }, { code });
       res.status(200).json({
         message: 'send code successfully',

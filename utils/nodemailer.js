@@ -2,7 +2,7 @@ const nodemailer = require('nodemailer');
 const Mailgen = require('mailgen');
 require('dotenv').config();
 
-const sendVerificationMail = async (targetEmail, fullName, id_account) => {
+exports.sendVerificationMail = async (targetEmail, fullName, id_account) => {
   try {
     const transporter = nodemailer.createTransport({
       service: 'gmail',
@@ -17,7 +17,7 @@ const sendVerificationMail = async (targetEmail, fullName, id_account) => {
       product: {
         name: 'The KreaT Team',
         link: 'https://mailgen.js/',
-        logo: 'https://res.cloudinary.com/dzuzcewvj/image/upload/v1687577905/avatars/wcqkxwj8xw2vjfkdrmok.png',
+        logo: 'https://res.cloudinary.com/dzuzcewvj/image/upload/v1700969443/avatars/image_17_mqlyad.png',
         logoHeight: '200px',
         copyright: 'Copyright © 2023 KreaT. All rights reserved.',
       },
@@ -30,9 +30,9 @@ const sendVerificationMail = async (targetEmail, fullName, id_account) => {
         action: {
           instructions: 'To get started with KreaT, please verify your email below:',
           button: {
-            color: '#0093FF',
+            color: '#FF6666',
             text: 'Verify your email',
-            link: `http://localhost:3000/auth/verify/${id_account}`,
+            link: `https://kreat-api.onrender.com/auth/verify/${id_account}`,
           },
         },
         signature: 'Sincerely',
@@ -53,7 +53,7 @@ const sendVerificationMail = async (targetEmail, fullName, id_account) => {
   }
 };
 
-const sendForgotPasswordCode = async (targetEmail, fullName, code) => {
+exports.sendForgotPasswordCode = async (targetEmail, fullName, code) => {
   try {
     const transporter = nodemailer.createTransport({
       service: 'gmail',
@@ -68,7 +68,7 @@ const sendForgotPasswordCode = async (targetEmail, fullName, code) => {
       product: {
         name: 'The KreaT Team',
         link: 'https://mailgen.js/',
-        logo: 'https://res.cloudinary.com/dzuzcewvj/image/upload/v1687577905/avatars/wcqkxwj8xw2vjfkdrmok.png',
+        logo: 'https://res.cloudinary.com/dzuzcewvj/image/upload/v1700969443/avatars/image_17_mqlyad.png',
         logoHeight: '200px',
         copyright: 'Copyright © 2023 KreaT. All rights reserved.',
       },
@@ -95,6 +95,3 @@ const sendForgotPasswordCode = async (targetEmail, fullName, code) => {
     console.log('error: ' + error);
   }
 };
-
-module.exports = sendVerificationMail;
-module.exports = sendForgotPasswordCode;
