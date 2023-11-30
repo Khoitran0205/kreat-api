@@ -70,7 +70,7 @@ io.on('connection', (socket) => {
   });
 
   // call other user
-  socket.on('callUser', async (id_conversation, id_sender, id_receiver) => {
+  socket.on('callUser', async ({ id_conversation, id_sender, id_receiver }) => {
     console.log('get call');
     const user = getOnlineUser(id_receiver);
     console.log(user);
