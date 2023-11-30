@@ -196,7 +196,7 @@ exports.send_verification_mail = async (req, res, next) => {
 exports.verify_account = async (req, res, next) => {
   try {
     const account = await Account.findOneAndUpdate({ _id: req.params.id }, { isVerified: true });
-    res.redirect('http://localhost:3001/authentication');
+    res.redirect('https://kreat-ui.vercel.app/authentication');
   } catch (error) {
     res.status(500).json({
       error,
