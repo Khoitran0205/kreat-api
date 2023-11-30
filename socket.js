@@ -71,12 +71,7 @@ io.on('connection', (socket) => {
 
   // call other user
   socket.on('callUser', async ({ id_conversation, id_sender, id_receiver }) => {
-    console.log('get call');
     const user = getOnlineUser(id_receiver);
-    console.log(user);
-    console.log(id_conversation);
-    console.log(id_sender);
-    console.log(id_receiver);
     const senderInfo = await PersonalInfo.findOne({ id_account: id_sender }, { _id: 0, avatar: 1, fullName: 1 });
     io.to(user.socketId).emit('getCall', {
       id_conversation,
