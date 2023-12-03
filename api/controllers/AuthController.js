@@ -11,8 +11,6 @@ const FavoriteInfo = require('../models/user/favorite_info');
 const OtherInfo = require('../models/user/other_info');
 const Setting = require('../models/user/setting');
 
-const sendVerificationMail = require('../../utils/nodemailer');
-
 env.config();
 
 // [POST] /auth/signup
@@ -54,7 +52,7 @@ exports.auth_sign_up = async (req, res, next) => {
             postDisplay: 'slider',
           });
           await setting.save();
-          await sendVerificationMail(req.body.email, req.body.fullName, account._id);
+          await nodemailer.sendVerificationMail(req.body.email, req.body.fullName, account._id);
           res.status(201).json({
             message: 'account created',
             account: result,
