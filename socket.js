@@ -80,7 +80,7 @@ io.on('connection', (socket) => {
       fullName: senderInfo?.fullName,
     });
     socket.join(id_conversation);
-    socket.to(id_conversation).broadcast.emit('userJoinVideoCall', id_sender);
+    socket.to(id_conversation).emit('userJoinVideoCall', id_sender);
   });
 
   // answer the call
