@@ -15,6 +15,7 @@ const Setting = require('../models/user/setting');
 const bcrypt = require('bcrypt');
 
 const { cloudinary } = require('../../utils/cloudinary');
+const sendForgotPasswordCode = require('../../utils/nodemailer');
 
 const jwt_decode = require('jwt-decode');
 const randomNumber = require('../../utils/generating_code');

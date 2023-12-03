@@ -11,6 +11,8 @@ const FavoriteInfo = require('../models/user/favorite_info');
 const OtherInfo = require('../models/user/other_info');
 const Setting = require('../models/user/setting');
 
+const sendVerificationMail = require('../../utils/nodemailer');
+
 env.config();
 
 // [POST] /auth/signup
