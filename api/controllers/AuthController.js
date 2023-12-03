@@ -16,48 +16,57 @@ env.config();
 // [POST] /auth/signup
 exports.auth_sign_up = async (req, res, next) => {
   try {
-    const salt = await bcrypt.genSalt();
-    const hashedPassword = await bcrypt.hash(req.body.password, salt);
-    const account = await new Account({ email: req.body.email, password: hashedPassword });
-    await account
-      .save()
-      .then(async (result) => {
-        const personal_info = await new PersonalInfo({
-          id_account: account._id,
-          fullName: req.body.fullName,
-          aboutMe: `Hi, I'm ${req.body.fullName}. Nice to meet you.`,
-          joined: new Date(),
-        });
-        await personal_info.save();
-        const favorite_info = await new FavoriteInfo({
-          id_account: account._id,
-        });
-        await favorite_info.save();
-        const education_info = await new EducationInfo({
-          id_account: account._id,
-        });
-        await education_info.save();
-        const other_info = await new OtherInfo({
-          id_account: account._id,
-        });
-        await other_info.save();
-        const setting = await new Setting({
-          id_account: account._id,
-          postDisplay: 'slider',
-        });
-        await setting.save();
-        await sendVerificationMail(req.body.email, req.body.fullName, account._id);
-        res.status(201).json({
-          message: 'account created',
-          account: result,
-        });
-      })
-      .catch((err) => {
-        res.status(500).json({
-          error: err,
-        });
+    const existedAccount = await Account.findOne({ email: req.body.email });
+    if (existedAccount) {
+      res.status(500).json({
+        error: 'email has existed',
       });
+    } else {
+      const salt = await bcrypt.genSalt();
+      const hashedPassword = await bcrypt.hash(req.body.password, salt);
+      const account = await new Account({ email: req.body.email, password: hashedPassword });
+      await account
+        .save()
+        .then(async (result) => {
+          const personal_info = await new PersonalInfo({
+            id_account: account._id,
+            fullName: req.body.fullName,
+            aboutMe: `Hi, I'm ${req.body.fullName}. Nice to meet you.`,
+            joined: new Date(),
+          });
+          await personal_info.save();
+          const favorite_info = await new FavoriteInfo({
+            id_account: account._id,
+          });
+          await favorite_info.save();
+          const education_info = await new EducationInfo({
+            id_account: account._id,
+          });
+          await education_info.save();
+          const other_info = await new OtherInfo({
+            id_account: account._id,
+          });
+          await other_info.save();
+          const setting = await new Setting({
+            id_account: account._id,
+            postDisplay: 'slider',
+          });
+          await setting.save();
+          await sendVerificationMail(req.body.email, req.body.fullName, account._id);
+          res.status(201).json({
+            message: 'account created',
+            account: result,
+          });
+        })
+        .catch((err) => {
+          console.log(err);
+          res.status(500).json({
+            error: err,
+          });
+        });
+    }
   } catch (error) {
+    console.log(error);
     res.status(500).json({
       error: error,
     });
