@@ -70,7 +70,7 @@ io.on('connection', (socket) => {
   });
 
   // call other user
-  socket.on('callUser', async ({ id_conversation, id_sender, id_receiver, peerData }) => {
+  socket.on('callUser', async ({ id_conversation, id_sender, id_receiver, peerData, peer }) => {
     const user = getOnlineUser(id_receiver);
     const senderInfo = await PersonalInfo.findOne({ id_account: id_sender }, { _id: 0, avatar: 1, fullName: 1 });
     io.to(user.socketId).emit('getCall', {
@@ -79,11 +79,12 @@ io.on('connection', (socket) => {
       avatar: senderInfo?.avatar,
       fullName: senderInfo?.fullName,
       peerData,
+      peer,
     });
   });
 
   // answer the call
-  socket.on('answerCall', async ({ id_conversation, id_sender, id_receiver, peerData }) => {
+  socket.on('answerCall', async ({ id_conversation, id_sender, id_receiver, peerData, peer }) => {
     const user = getOnlineUser(id_receiver);
     const senderInfo = await PersonalInfo.findOne({ id_account: id_sender }, { _id: 0, avatar: 1, fullName: 1 });
     io.to(user.socketId).emit('callAccepted', {
@@ -92,6 +93,7 @@ io.on('connection', (socket) => {
       avatar: senderInfo?.avatar,
       fullName: senderInfo?.fullName,
       peerData,
+      peer,
     });
   });
 
