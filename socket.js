@@ -46,9 +46,9 @@ io.on('connection', (socket) => {
       io.to(friend.socketId).emit('getUser', otherOnlineFriends);
     }
     io.to(socket.id).emit('getUser', myOnlineFriends);
-  });
 
-  console.log(onlineUsers);
+    console.log(onlineUsers);
+  });
 
   // get and send message
   socket.on('sendMessage', async ({ id_conversation, id_sender, id_receiver, messageContent }) => {
