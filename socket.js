@@ -48,6 +48,8 @@ io.on('connection', (socket) => {
     io.to(socket.id).emit('getUser', myOnlineFriends);
   });
 
+  console.log(onlineUsers);
+
   // get and send message
   socket.on('sendMessage', async ({ id_conversation, id_sender, id_receiver, messageContent }) => {
     const user = getOnlineUser(id_receiver);
