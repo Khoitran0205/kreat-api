@@ -103,7 +103,7 @@ exports.auth_log_in = async (req, res, next) => {
             { id_account: 1, avatar: 1, fullName: 1 },
           );
 
-          const setting = await Setting.findOne({ id_account: account._id }, { postDisplay: 1 });
+          const setting = await Setting.findOne({ id_account: account._id }, { postDisplay: 1, languague: 1 });
 
           res.status(200).json({
             message: 'Log in successfully',
