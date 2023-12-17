@@ -1816,7 +1816,7 @@ exports.update_setting = async (req, res, next) => {
     const decodedToken = jwt_decode(token);
     const updatedSetting = await Setting.findOneAndUpdate(
       { id_account: decodedToken.id_account },
-      { postDisplay: req.body.postDisplay, languague: req.body.languague },
+      { postDisplay: req.body.postDisplay, language: req.body.language },
     );
     res.status(200).json({
       message: 'setting updated successfully',

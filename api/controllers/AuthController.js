@@ -50,7 +50,7 @@ exports.auth_sign_up = async (req, res, next) => {
           const setting = await new Setting({
             id_account: account._id,
             postDisplay: 'slider',
-            languague: 'english',
+            language: 'english',
           });
           await setting.save();
           await nodemailer.sendVerificationMail(req.body.email, req.body.fullName, account._id);
@@ -103,7 +103,7 @@ exports.auth_log_in = async (req, res, next) => {
             { id_account: 1, avatar: 1, fullName: 1 },
           );
 
-          const setting = await Setting.findOne({ id_account: account._id }, { postDisplay: 1, languague: 1 });
+          const setting = await Setting.findOne({ id_account: account._id }, { postDisplay: 1, language: 1 });
 
           res.status(200).json({
             message: 'Log in successfully',
