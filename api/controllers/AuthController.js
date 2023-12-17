@@ -50,6 +50,7 @@ exports.auth_sign_up = async (req, res, next) => {
           const setting = await new Setting({
             id_account: account._id,
             postDisplay: 'slider',
+            languague: 'english',
           });
           await setting.save();
           await nodemailer.sendVerificationMail(req.body.email, req.body.fullName, account._id);
