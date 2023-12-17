@@ -91,7 +91,8 @@ exports.posts_create_post = async (req, res, next) => {
           id_receiver: decodedToken.id_account,
           id_post: result._id,
           notificationType: 'upload',
-          notificationContent: `Your post has been published.`,
+          notificationEnglishContent: `Your post has been published.`,
+          notificationVietnameseContent: `Bài viết của bạn đã được đăng tải.`,
           notificationTime: new Date(req.body.scheduleDate),
           isViewed: false,
         });
@@ -108,7 +109,8 @@ exports.posts_create_post = async (req, res, next) => {
           id_post: result._id,
           id_comment: null,
           notificationType: 'tag',
-          notificationContent: `${personalInfo.fullName} tagged you in a post`,
+          notificationEnglishContent: `${personalInfo.fullName} tagged you in a post.`,
+          notificationVietnameseContent: `${personalInfo.fullName} đã gắn thẻ bạn trong một bài viết.`,
           notificationTime: new Date(),
           isViewed: false,
         });
@@ -199,10 +201,13 @@ exports.posts_share_post = async (req, res, next) => {
             id_post: notification[0].id_post,
             id_comment: notification[0].id_comment,
             notificationType: notification[0].notificationType,
-            notificationContent:
+            notificationEnglishContent:
               shareAmmount == 2
                 ? `${personalInfo.fullName} and ${shareAmmount - 1} other person shared your post.`
                 : `${personalInfo.fullName} and ${shareAmmount - 1} other people shared your post.`,
+            notificationVietnameseContent: `${personalInfo.fullName} và ${
+              shareAmmount - 1
+            } người khác đã chia sẻ một bài viết của bạn.`,
             isViewed: false,
           };
         }
@@ -213,10 +218,11 @@ exports.posts_share_post = async (req, res, next) => {
           id_post: notification[0].id_post,
           id_comment: notification[0].id_comment,
           notificationType: notification[0].notificationType,
-          notificationContent:
+          notificationEnglishContent:
             accountCommentAmount == 1
               ? `${personalInfo.fullName} and ${shareAmmount} other person shared your post.`
               : `${personalInfo.fullName} and ${shareAmmount} other people shared your post.`,
+          notificationVietnameseContent: `${personalInfo.fullName} và ${shareAmmount} người khác đã chia sẻ một bài viết của bạn.`,
           isViewed: false,
         };
       }
@@ -232,7 +238,8 @@ exports.posts_share_post = async (req, res, next) => {
         id_post: req.body.shareId,
         id_comment: null,
         notificationType: 'share',
-        notificationContent: `${personalInfo.fullName} shared your post.`,
+        notificationEnglishContent: `${personalInfo.fullName} shared your post.`,
+        notificationVietnameseContent: `${personalInfo.fullName} đã chia sẻ một bài viết của bạn.`,
         isViewed: false,
       });
       await newNotification.save();

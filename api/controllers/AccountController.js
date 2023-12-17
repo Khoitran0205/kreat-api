@@ -749,7 +749,8 @@ exports.accounts_send_friend_request = async (req, res, next) => {
       id_post: null,
       id_comment: null,
       notificationType: 'friend request',
-      notificationContent: `${personalInfo.fullName} sent you a friend request.`,
+      notificationEnglishContent: `${personalInfo.fullName} sent you a friend request.`,
+      notificationVietnameseContent: `${personalInfo.fullName} đã gửi cho bạn một lời mời kết bạn.`,
       notificationTime: new Date(),
       isViewed: false,
     });
@@ -857,7 +858,8 @@ exports.accounts_accept_friend_request = async (req, res, next) => {
           ],
         },
         {
-          notificationContent: `You and ${personalInfo2.fullName} are friends now.`,
+          notificationEnglishContent: `You and ${personalInfo2.fullName} are friends now.`,
+          notificationVietnameseContent: `Bạn và ${personalInfo2.fullName} đã trở thành bạn bè của nhau.`,
           notificationTime: new Date(),
           isViewed: false,
         },
@@ -869,7 +871,8 @@ exports.accounts_accept_friend_request = async (req, res, next) => {
         id_post: null,
         id_comment: null,
         notificationType: 'friend request',
-        notificationContent: `${personalInfo.fullName} accepted your friend request.`,
+        notificationEnglishContent: `${personalInfo.fullName} accepted your friend request.`,
+        notificationVietnameseContent: `${personalInfo.fullName} đã chấp nhận lời mời kết bạn của bạn.`,
         notificationTime: new Date(),
         isViewed: false,
       });
@@ -989,10 +992,11 @@ exports.accounts_react = async (req, res, next) => {
           id_post: notification[0].id_post,
           id_comment: notification[0].id_comment,
           notificationType: notification[0].notificationType,
-          notificationContent:
+          notificationEnglishContent:
             reactAmount == 1
               ? `${personalInfo.fullName} and ${reactAmount} other person reacted to your comment.`
               : `${personalInfo.fullName} and ${reactAmount} other people reacted to your comment.`,
+          notificationVietnameseContent: `${personalInfo.fullName} và ${reactAmount} người khác đã bày tỏ cảm xúc về một bình luận của bạn.`,
           notificationTime: new Date(),
           isViewed: false,
         };
@@ -1007,7 +1011,8 @@ exports.accounts_react = async (req, res, next) => {
           id_post: comment.id_post,
           id_comment: result.id_comment,
           notificationType: 'react',
-          notificationContent: `${personalInfo.fullName} reacted to your comment.`,
+          notificationEnglishContent: `${personalInfo.fullName} reacted to your comment.`,
+          notificationVietnameseContent: `${personalInfo.fullName} đã bày tỏ cảm xúc về một bình luận của bạn.`,
           notificationTime: new Date(),
           isViewed: false,
         });
@@ -1032,10 +1037,11 @@ exports.accounts_react = async (req, res, next) => {
         id_post: notification[0].id_post,
         id_comment: notification[0].id_comment,
         notificationType: notification[0].notificationType,
-        notificationContent:
+        notificationEnglishContent:
           reactAmount == 1
             ? `${personalInfo.fullName} and ${reactAmount} other person reacted to your post.`
             : `${personalInfo.fullName} and ${reactAmount} other people reacted to your post.`,
+        notificationVietnameseContent: `${personalInfo.fullName} và ${reactAmount} người khác đã bày tỏ cảm xúc về một bài viết của bạn.`,
         notificationTime: new Date(),
         isViewed: false,
       };
@@ -1050,7 +1056,8 @@ exports.accounts_react = async (req, res, next) => {
         id_post: result.id_post,
         id_comment: null,
         notificationType: 'react',
-        notificationContent: `${personalInfo.fullName} reacted to your post.`,
+        notificationEnglishContent: `${personalInfo.fullName} reacted to your post.`,
+        notificationVietnameseContent: `${personalInfo.fullName} đã bày tỏ cảm xúc về một bài viết của bạn.`,
         notificationTime: new Date(),
         isViewed: false,
       });
@@ -1262,10 +1269,13 @@ exports.accounts_comment_post = async (req, res, next) => {
             id_post: notification[0].id_post,
             id_comment: notification[0].id_comment,
             notificationType: notification[0].notificationType,
-            notificationContent:
+            notificationEnglishContent:
               accountCommentAmount == 2
                 ? `${personalInfo.fullName} and ${accountCommentAmount - 1} other person commented on your post.`
                 : `${personalInfo.fullName} and ${accountCommentAmount - 1} other people commented on your post.`,
+            notificationVietnameseContent: `${personalInfo.fullName} và ${
+              accountCommentAmount - 1
+            } người khác đã bình luận vào một bài viết của bạn.`,
             notificationTime: new Date(),
             isViewed: false,
           };
@@ -1277,10 +1287,11 @@ exports.accounts_comment_post = async (req, res, next) => {
           id_post: notification[0].id_post,
           id_comment: notification[0].id_comment,
           notificationType: notification[0].notificationType,
-          notificationContent:
+          notificationEnglishContent:
             accountCommentAmount == 1
               ? `${personalInfo.fullName} and ${accountCommentAmount} other person commented on your post.`
               : `${personalInfo.fullName} and ${accountCommentAmount} other people commented on your post.`,
+          notificationVietnameseContent: `${personalInfo.fullName} và ${accountCommentAmount} người khác đã bình luận vào một bài viết của bạn.`,
           notificationTime: new Date(),
           isViewed: false,
         };
@@ -1297,7 +1308,8 @@ exports.accounts_comment_post = async (req, res, next) => {
         id_post: req.body.id_post,
         id_comment: null,
         notificationType: 'comment',
-        notificationContent: `${personalInfo.fullName} commented on your post.`,
+        notificationEnglishContent: `${personalInfo.fullName} commented on your post.`,
+        notificationVietnameseContent: `${personalInfo.fullName} đã bình luận vào một bài viết của bạn.`,
         notificationTime: new Date(),
         isViewed: false,
       });
@@ -1625,7 +1637,8 @@ exports.accounts_get_all_notifications = async (req, res, next) => {
         id_post: value.id_post,
         id_comment: value.id_comment,
         notificationType: value.notificationType,
-        notificationContent: value.notificationContent,
+        notificationEnglishContent: value.notificationEnglishContent,
+        notificationVietnameseContent: value.notificationVietnameseContent,
         notificationTime: value.notificationTime,
         isViewed: value.isViewed,
         avatar: personalInfo.avatar,

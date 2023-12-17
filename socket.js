@@ -2,7 +2,6 @@ require('dotenv').config();
 const connectToDb = require('./config/db/index');
 const PersonalInfo = require('./api/models/user/personal_info');
 const OtherInfo = require('./api/models/user/other_info');
-const notification = require('./api/models/notification');
 
 const socketPort = process.env.SOCKETPORT;
 
