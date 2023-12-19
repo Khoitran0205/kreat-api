@@ -209,6 +209,7 @@ exports.posts_share_post = async (req, res, next) => {
               shareAmmount - 1
             } người khác đã chia sẻ một bài viết của bạn.`,
             isViewed: false,
+            notificationTime: new Date(),
           };
         }
       } else {
@@ -224,6 +225,7 @@ exports.posts_share_post = async (req, res, next) => {
               : `${personalInfo.fullName} and ${shareAmmount} other people shared your post.`,
           notificationVietnameseContent: `${personalInfo.fullName} và ${shareAmmount} người khác đã chia sẻ một bài viết của bạn.`,
           isViewed: false,
+          notificationTime: new Date(),
         };
       }
 
@@ -241,6 +243,7 @@ exports.posts_share_post = async (req, res, next) => {
         notificationEnglishContent: `${personalInfo.fullName} shared your post.`,
         notificationVietnameseContent: `${personalInfo.fullName} đã chia sẻ một bài viết của bạn.`,
         isViewed: false,
+        notificationTime: new Date(),
       });
       await newNotification.save();
     }
