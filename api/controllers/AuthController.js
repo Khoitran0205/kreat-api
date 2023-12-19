@@ -93,7 +93,7 @@ exports.auth_log_in = async (req, res, next) => {
           });
         } else {
           const user = { email: account.email, id_account: account._id };
-          const accessToken = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '100m' });
+          const accessToken = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1000d' });
           const refreshToken = jwt.sign(user, process.env.REFRESH_TOKEN_SECRET);
 
           await Account.findOneAndUpdate({ email: account.email }, { refreshToken: refreshToken });
