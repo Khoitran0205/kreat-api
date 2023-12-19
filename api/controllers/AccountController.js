@@ -982,7 +982,19 @@ exports.accounts_react = async (req, res, next) => {
       }
       const result = await react.save();
       const notification = await Notification.find({
-        $and: [{ id_comment: result.id_comment }, { notificationType: 'react' }],
+        $and: [
+          { id_comment: result.id_comment },
+          {
+            $or: [
+              { notificationType: 'like' },
+              { notificationType: 'love' },
+              { notificationType: 'haha' },
+              { notificationType: 'wow' },
+              { notificationType: 'sad' },
+              { notificationType: 'angry' },
+            ],
+          },
+        ],
       });
       if (notification.length >= 1) {
         const reactAmount = await notification[0].id_senders.length;
@@ -991,7 +1003,7 @@ exports.accounts_react = async (req, res, next) => {
           id_receiver: notification[0].id_receiver,
           id_post: notification[0].id_post,
           id_comment: notification[0].id_comment,
-          notificationType: notification[0].notificationType,
+          notificationType: req.body.reactType,
           notificationEnglishContent:
             reactAmount == 1
               ? `${personalInfo.fullName} and ${reactAmount} other person reacted to your comment.`
@@ -1001,7 +1013,21 @@ exports.accounts_react = async (req, res, next) => {
           isViewed: false,
         };
         await Notification.findOneAndUpdate(
-          { $and: [{ id_comment: result.id_comment }, { notificationType: 'react' }] },
+          {
+            $and: [
+              { id_comment: result.id_comment },
+              {
+                $or: [
+                  { notificationType: 'like' },
+                  { notificationType: 'love' },
+                  { notificationType: 'haha' },
+                  { notificationType: 'wow' },
+                  { notificationType: 'sad' },
+                  { notificationType: 'angry' },
+                ],
+              },
+            ],
+          },
           updateNotification,
         );
       } else {
@@ -1010,7 +1036,7 @@ exports.accounts_react = async (req, res, next) => {
           id_receiver: comment.id_account,
           id_post: comment.id_post,
           id_comment: result.id_comment,
-          notificationType: 'react',
+          notificationType: req.body.reactType,
           notificationEnglishContent: `${personalInfo.fullName} reacted to your comment.`,
           notificationVietnameseContent: `${personalInfo.fullName} đã bày tỏ cảm xúc về một bình luận của bạn.`,
           notificationTime: new Date(),
@@ -1027,7 +1053,19 @@ exports.accounts_react = async (req, res, next) => {
 
     const result = await react.save();
     const notification = await Notification.find({
-      $and: [{ id_post: result.id_post }, { notificationType: 'react' }],
+      $and: [
+        { id_post: result.id_post },
+        {
+          $or: [
+            { notificationType: 'like' },
+            { notificationType: 'love' },
+            { notificationType: 'haha' },
+            { notificationType: 'wow' },
+            { notificationType: 'sad' },
+            { notificationType: 'angry' },
+          ],
+        },
+      ],
     });
     if (notification.length >= 1) {
       const reactAmount = await notification[0].id_senders.length;
@@ -1036,7 +1074,7 @@ exports.accounts_react = async (req, res, next) => {
         id_receiver: notification[0].id_receiver,
         id_post: notification[0].id_post,
         id_comment: notification[0].id_comment,
-        notificationType: notification[0].notificationType,
+        notificationType: req.body.reactType,
         notificationEnglishContent:
           reactAmount == 1
             ? `${personalInfo.fullName} and ${reactAmount} other person reacted to your post.`
@@ -1046,7 +1084,21 @@ exports.accounts_react = async (req, res, next) => {
         isViewed: false,
       };
       await Notification.findOneAndUpdate(
-        { $and: [{ id_post: result.id_post }, { notificationType: 'react' }] },
+        {
+          $and: [
+            { id_post: result.id_post },
+            {
+              $or: [
+                { notificationType: 'like' },
+                { notificationType: 'love' },
+                { notificationType: 'haha' },
+                { notificationType: 'wow' },
+                { notificationType: 'sad' },
+                { notificationType: 'angry' },
+              ],
+            },
+          ],
+        },
         updateNotification,
       );
     } else {
@@ -1055,7 +1107,7 @@ exports.accounts_react = async (req, res, next) => {
         id_receiver: post.id_account,
         id_post: result.id_post,
         id_comment: null,
-        notificationType: 'react',
+        notificationType: req.body.reactType,
         notificationEnglishContent: `${personalInfo.fullName} reacted to your post.`,
         notificationVietnameseContent: `${personalInfo.fullName} đã bày tỏ cảm xúc về một bài viết của bạn.`,
         notificationTime: new Date(),
@@ -1131,15 +1183,53 @@ exports.accounts_unreact_post = async (req, res, next) => {
       res.sendStatus(401);
     } else {
       const notification = await Notification.findOne({
-        $and: [{ id_post: req.params.id }, { notificationType: 'react' }],
+        $and: [
+          { id_post: req.params.id },
+          {
+            $or: [
+              { notificationType: 'like' },
+              { notificationType: 'love' },
+              { notificationType: 'haha' },
+              { notificationType: 'wow' },
+              { notificationType: 'sad' },
+              { notificationType: 'angry' },
+            ],
+          },
+        ],
       });
-      const removeSenderList = await notification.id_senders.filter((sender) => sender != decodedToken.id_account);
+      const removeSenderList = await notification?.id_senders?.filter((sender) => sender != decodedToken.id_account);
       if (removeSenderList.length == 0) {
-        await Notification.findOneAndDelete({ $and: [{ id_post: req.params.id }, { notificationType: 'react' }] });
+        await Notification.findOneAndDelete({
+          $and: [
+            { id_post: req.params.id },
+            {
+              $or: [
+                { notificationType: 'like' },
+                { notificationType: 'love' },
+                { notificationType: 'haha' },
+                { notificationType: 'wow' },
+                { notificationType: 'sad' },
+                { notificationType: 'angry' },
+              ],
+            },
+          ],
+        });
       } else {
         await Notification.findOneAndUpdate(
           {
-            $and: [{ id_post: req.params.id }, { notificationType: 'react' }],
+            $and: [
+              { id_post: req.params.id },
+              {
+                $or: [
+                  { notificationType: 'like' },
+                  { notificationType: 'love' },
+                  { notificationType: 'haha' },
+                  { notificationType: 'wow' },
+                  { notificationType: 'sad' },
+                  { notificationType: 'angry' },
+                ],
+              },
+            ],
           },
           { id_senders: removeSenderList },
         );
@@ -1175,15 +1265,58 @@ exports.accounts_unreact_comment = async (req, res, next) => {
       res.sendStatus(401);
     } else {
       const notification = await Notification.findOne({
-        $and: [{ id_comment: req.params.id }, { notificationType: 'react' }],
+        $and: [
+          { id_comment: req.params.id },
+          {
+            $or: [
+              { notificationType: 'like' },
+              { notificationType: 'love' },
+              { notificationType: 'haha' },
+              { notificationType: 'wow' },
+              { notificationType: 'sad' },
+              { notificationType: 'angry' },
+            ],
+          },
+        ],
       });
-      const removeSenderList = await notification.id_senders.filter((sender) => sender != decodedToken.id_account);
-      await Notification.findOneAndUpdate(
-        {
-          $and: [{ id_comment: req.params.id }, { notificationType: 'react' }],
-        },
-        { id_senders: removeSenderList },
-      );
+      const removeSenderList = await notification?.id_senders?.filter((sender) => sender != decodedToken.id_account);
+      if (removeSenderList.length == 0) {
+        await Notification.findOneAndDelete({
+          $and: [
+            { id_comment: req.params.id },
+            {
+              $or: [
+                { notificationType: 'like' },
+                { notificationType: 'love' },
+                { notificationType: 'haha' },
+                { notificationType: 'wow' },
+                { notificationType: 'sad' },
+                { notificationType: 'angry' },
+              ],
+            },
+          ],
+        });
+      } else {
+        await Notification.findOneAndUpdate(
+          {
+            $and: [
+              { id_comment: req.params.id },
+              {
+                $or: [
+                  { notificationType: 'like' },
+                  { notificationType: 'love' },
+                  { notificationType: 'haha' },
+                  { notificationType: 'wow' },
+                  { notificationType: 'sad' },
+                  { notificationType: 'angry' },
+                ],
+              },
+            ],
+          },
+          { id_senders: removeSenderList },
+        );
+      }
+
       res.status(200).json({
         message: 'reaction on comment removed',
         reaction: result,
