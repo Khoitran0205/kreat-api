@@ -157,14 +157,14 @@ exports.posts_share_post = async (req, res, next) => {
     );
 
     const shareContent = {
-      shared_id_account: sharedPersonalInfo.id_account,
-      shared_id_visualMedia: sharedPost.id_visualMedia,
-      shared_postContent: sharedPost.postContent,
-      shared_postFeeling: sharedPost.postFeeling,
-      shared_postPrivacy: sharedPost.postPrivacy,
-      shared_createdAt: sharedPost.createdAt,
-      shared_id_friendTag: sharedPost.id_friendTag,
-      shared_location: sharedPost.location,
+      shared_id_account: sharedPersonalInfo?.id_account,
+      shared_id_visualMedia: sharedPost?.id_visualMedia,
+      shared_postContent: sharedPost?.postContent,
+      shared_postFeeling: sharedPost?.postFeeling,
+      shared_postPrivacy: sharedPost?.postPrivacy,
+      shared_createdAt: sharedPost?.createdAt,
+      shared_id_friendTag: sharedPost?.id_friendTag,
+      shared_location: sharedPost?.location,
     };
 
     const post = new Post({
