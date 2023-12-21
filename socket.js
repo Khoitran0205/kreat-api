@@ -48,6 +48,18 @@ const addUserCalling = (id_account, socketId) => {
   }
 };
 
+const removeUserCalling = (id_account) => {
+  const existedOnlineUser = getOnlineUser(id_account);
+  if (existedOnlineUser) {
+    for (let i = 0; i < onlineUsers?.length; i++) {
+      const onlineUser = onlineUsers[i];
+      if (onlineUser?.id_account?.toString() === id_account) {
+        delete onlineUsers[i]['socketCallingId'];
+      }
+    }
+  }
+};
+
 // when a user connects
 io.on('connection', (socket) => {
   socket.on('addUser', async (id_account) => {
@@ -98,6 +110,12 @@ io.on('connection', (socket) => {
 
   socket.on('addUserCalling', async (id_account) => {
     addUserCalling(id_account, socket.id);
+    console.log(onlineUsers);
+  });
+
+  socket.on('removeUserCalling', async (id_account) => {
+    removeUserCalling(id_account);
+    console.log(onlineUsers);
   });
 
   // answer the call
