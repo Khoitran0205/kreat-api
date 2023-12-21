@@ -84,6 +84,7 @@ io.on('connection', (socket) => {
   // answer the call
   socket.on('answerCall', async ({ id_conversation, id_sender, id_receiver, peerData }) => {
     const user = getOnlineUser(id_receiver);
+    console.log(onlineUsers);
     const senderInfo = await PersonalInfo.findOne({ id_account: id_sender }, { _id: 0, avatar: 1, fullName: 1 });
     io.to(user.socketId).emit('callAccepted', {
       id_conversation,
