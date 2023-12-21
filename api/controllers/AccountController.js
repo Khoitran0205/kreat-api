@@ -1813,7 +1813,7 @@ exports.accounts_get_unviewed_notifications_and_messages = async (req, res, next
       const message = await Message.find({ id_conversation: value._id }).sort({ createdAt: -1 }).limit(1);
       const latestMessage = message[0];
 
-      if (!latestMessage?.viewedBy?.includes(decodedToken.id_account)) {
+      if (latestMessage && !latestMessage?.viewedBy?.includes(decodedToken.id_account)) {
         unviewedMessageAmount++;
       }
     }
