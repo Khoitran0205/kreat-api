@@ -1804,7 +1804,18 @@ exports.accounts_get_unviewed_notifications_and_messages = async (req, res, next
       $and: [{ id_receiver: decodedToken.id_account }, { isViewed: false }],
     });
     const conversations = await Conversation.find({
-      $and: [{ members: { $in: [decodedToken.id_account] } }, { isViewed: false }],
+      $and: [
+        { members: { $in: [decodedToken.id_account] } },
+        {
+          viewedBy: {
+            $not: {
+              $elemMatch: {
+                $eq: decodedToken.id_account,
+              },
+            },
+          },
+        },
+      ],
     });
     let unviewedMessageAmount = 0;
     for (const [index, value] of conversations.entries()) {
