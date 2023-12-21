@@ -33,6 +33,21 @@ const getOnlineUser = (id_account) => {
   return onlineUsers.find((user) => user.id_account === id_account);
 };
 
+const addUserCalling = (id_account, socketId) => {
+  const existedOnlineUser = getOnlineUser(id_account);
+  if (existedOnlineUser) {
+    for (let i = 0; i < onlineUsers?.length; i++) {
+      const onlineUser = onlineUsers[i];
+      if (onlineUser?.id_account?.toString() === id_account) {
+        onlineUsers[i] = {
+          ...onlineUser,
+          socketCallingId: socketId,
+        };
+      }
+    }
+  }
+};
+
 // when a user connects
 io.on('connection', (socket) => {
   socket.on('addUser', async (id_account) => {
@@ -81,12 +96,15 @@ io.on('connection', (socket) => {
     });
   });
 
+  socket.on('addUserCalling', async (id_account) => {
+    addUserCalling(id_account, socket.id);
+  });
+
   // answer the call
   socket.on('answerCall', async ({ id_conversation, id_sender, id_receiver, peerData }) => {
     const user = getOnlineUser(id_receiver);
-    console.log(onlineUsers);
     const senderInfo = await PersonalInfo.findOne({ id_account: id_sender }, { _id: 0, avatar: 1, fullName: 1 });
-    io.to(user.socketId).emit('callAccepted', {
+    io.to(user.socketCallingId).emit('callAccepted', {
       id_conversation,
       id_sender,
       avatar: senderInfo?.avatar,
