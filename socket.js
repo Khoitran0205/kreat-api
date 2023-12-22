@@ -145,6 +145,7 @@ io.on('connection', (socket) => {
   // when a user disconnects
   socket.on('disconnect', async () => {
     const disconnectedUser = await onlineUsers.find((user) => user.socketId === socket.id);
+    const disconnectedInCallUser = await inCallUsers.find((user) => user.socketId === socket.id);
     if (disconnectedUser) {
       const myListFriend = await OtherInfo.findOne(
         { id_account: disconnectedUser.id_account },
@@ -157,6 +158,11 @@ io.on('connection', (socket) => {
         const otherOnlineFriends = onlineUsers.filter((value) => otherListFriend.listFriend.includes(value.id_account));
         io.to(friend.socketId).emit('getUser', otherOnlineFriends);
       }
+    }
+
+    if (disconnectedInCallUser) {
+      const { id_conversation, id_account } = disconnectedInCallUser;
+      removeUserCalling(id_conversation, id_account);
     }
   });
 });
