@@ -16,6 +16,7 @@ const io = require('socket.io')(socketPort, {
 console.log(`Socket server is listening on ${socketPort}...`);
 
 let onlineUsers = [];
+let inCallUsers = [];
 
 const addOnlineUser = (id_account, socketId) => {
   !onlineUsers.some((onlineUser) => onlineUser.id_account === id_account) && onlineUsers.push({ id_account, socketId });
@@ -33,31 +34,28 @@ const getOnlineUser = (id_account) => {
   return onlineUsers.find((user) => user.id_account === id_account);
 };
 
-const addUserCalling = (id_account, socketId) => {
+const addUserCalling = (id_conversation, id_account, socketId) => {
   const existedOnlineUser = getOnlineUser(id_account);
   if (existedOnlineUser) {
-    for (let i = 0; i < onlineUsers?.length; i++) {
-      const onlineUser = onlineUsers[i];
-      if (onlineUser?.id_account?.toString() === id_account) {
-        onlineUsers[i] = {
-          ...onlineUser,
-          socketCallingId: socketId,
-        };
-      }
-    }
+    !inCallUsers.some(
+      (inCallUser) => inCallUser.id_account === id_account && inCallUser.id_conversation === id_conversation,
+    ) &&
+      inCallUsers.push({
+        id_conversation,
+        id_account,
+        socketId,
+      });
   }
 };
 
-const removeUserCalling = (id_account) => {
-  const existedOnlineUser = getOnlineUser(id_account);
-  if (existedOnlineUser) {
-    for (let i = 0; i < onlineUsers?.length; i++) {
-      const onlineUser = onlineUsers[i];
-      if (onlineUser?.id_account?.toString() === id_account) {
-        delete onlineUsers[i]['socketCallingId'];
-      }
-    }
-  }
+const getInCallUser = (id_conversation, id_account) => {
+  return inCallUsers.find((user) => user.id_conversation === id_conversation && user.id_account === id_account);
+};
+
+const removeUserCalling = (id_conversation, id_account) => {
+  inCallUsers = inCallUsers.filter(
+    (inCallUser) => inCallUser.id_conversation !== id_conversation && inCallUser.id_account !== id_account,
+  );
 };
 
 // when a user connects
@@ -108,21 +106,19 @@ io.on('connection', (socket) => {
     });
   });
 
-  socket.on('addUserCalling', async (id_account) => {
-    addUserCalling(id_account, socket.id);
-    console.log(onlineUsers);
+  socket.on('addUserCalling', async ({ id_conversation, id_account }) => {
+    addUserCalling(id_conversation, id_account, socket.id);
   });
 
-  socket.on('removeUserCalling', async (id_account) => {
-    removeUserCalling(id_account);
-    console.log(onlineUsers);
+  socket.on('removeUserCalling', async ({ id_conversation, id_account }) => {
+    removeUserCalling(id_conversation, id_account);
   });
 
   // answer the call
   socket.on('answerCall', async ({ id_conversation, id_sender, id_receiver, peerData }) => {
-    const user = getOnlineUser(id_receiver);
+    const user = getInCallUser(id_conversation, id_receiver);
     const senderInfo = await PersonalInfo.findOne({ id_account: id_sender }, { _id: 0, avatar: 1, fullName: 1 });
-    io.to(user.socketCallingId).emit('callAccepted', {
+    io.to(user.socketId).emit('callAccepted', {
       id_conversation,
       id_sender,
       avatar: senderInfo?.avatar,
