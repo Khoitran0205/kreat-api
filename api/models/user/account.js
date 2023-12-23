@@ -13,6 +13,8 @@ const accountSchema = mongoose.Schema(
     refreshToken: { type: String, default: '' },
     isVerified: { type: Boolean, default: false },
     code: { type: String, default: '' },
+    isBlocked: { type: Boolean, default: false },
+    warningAmount: { type: Number, default: 0 },
   },
   {
     timestamps: {
