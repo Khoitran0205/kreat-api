@@ -52,10 +52,12 @@ const getInCallUser = (id_conversation, id_account) => {
   return inCallUsers.find((user) => user.id_conversation === id_conversation && user.id_account === id_account);
 };
 
-const removeUserCalling = (id_conversation, id_account) => {
-  inCallUsers = inCallUsers.filter(
-    (inCallUser) => inCallUser.id_conversation !== id_conversation && inCallUser.id_account !== id_account,
-  );
+const getOtherInCallUser = (id_conversation, id_account) => {
+  return inCallUsers.find((user) => user.id_conversation === id_conversation && user.id_account !== id_account);
+};
+
+const removeUsersCalling = (id_conversation) => {
+  inCallUsers = inCallUsers.filter((inCallUser) => inCallUser.id_conversation !== id_conversation);
 };
 
 // when a user connects
@@ -110,10 +112,6 @@ io.on('connection', (socket) => {
     addUserCalling(id_conversation, id_account, socket.id);
   });
 
-  socket.on('removeUserCalling', async ({ id_conversation, id_account }) => {
-    removeUserCalling(id_conversation, id_account);
-  });
-
   // answer the call
   socket.on('answerCall', async ({ id_conversation, id_sender, id_receiver, peerData }) => {
     const user = getInCallUser(id_conversation, id_receiver);
@@ -162,7 +160,12 @@ io.on('connection', (socket) => {
 
     if (disconnectedInCallUser) {
       const { id_conversation, id_account } = disconnectedInCallUser;
-      removeUserCalling(id_conversation, id_account);
+      const otherUserInCall = getOtherInCallUser(id_conversation, id_account);
+      if (otherUserInCall) {
+        const { socketId } = otherUserInCall;
+        io.to(socketId).emit('callEnded');
+      }
+      removeUsersCalling(id_conversation);
     }
   });
 });
