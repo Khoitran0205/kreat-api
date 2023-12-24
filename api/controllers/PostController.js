@@ -24,108 +24,242 @@ exports.posts_create_post = async (req, res, next) => {
     if (!token) return res.sendStatus(401);
 
     const decodedToken = jwt_decode(token);
-    let id_visualMedia = [];
-    if (req.body.visualData) {
-      const fileStr = req.body.visualData;
-      const promises = fileStr.map(async (url) => {
-        if (url.type == 'image') {
-          let uploadedResponse = await cloudinary.uploader.upload(url.data, {
-            resource_type: 'image',
-            upload_preset: 'dev_setups',
+
+    const existedAccount = await Account.findOne({ _id: decodedToken.id_account });
+    const { isBlocked } = existedAccount;
+
+    if (isBlocked) {
+      res.status(406).json({
+        message: 'this account is blocked',
+      });
+    } else {
+      const data = await axios.post(process.env.TOXIC_COMMENT_API, {
+        comments: req.body.postContent || '',
+      });
+      const checkToxic = data?.data?.response;
+      if (checkToxic[1] >= 0.5) {
+        const toxicDetection = await new ToxicDetection({
+          content: req.body.postContent,
+          id_account: decodedToken.id_account,
+          type: 'post',
+        });
+
+        await toxicDetection.save();
+
+        const newWarningAmount = existedAccount?.warningAmount + 1;
+
+        switch (newWarningAmount) {
+          case 3:
+            await Account.findOneAndUpdate(
+              { _id: decodedToken.id_account },
+              { isBlocked: true, warningAmount: newWarningAmount },
+            );
+
+            const block3Notification = await new Notification({
+              id_senders: [process.env.ADMIN_ID],
+              id_receiver: decodedToken.id_account,
+              notificationType: 'block',
+              notificationEnglishContent: `Your account will be blocked due to inappropriate language use. You will not be able to post or comment for the next 3 days.`,
+              notificationVietnameseContent: `Tài khoản của bạn sẽ bị khóa do sử dụng ngôn từ không phù hợp. Bạn sẽ không thể đăng bài hoặc bình luận trong 3 ngày tới.`,
+              notificationTime: new Date(),
+              isViewed: false,
+            });
+            await block3Notification.save();
+
+            const unblock3Date = add(new Date(), { days: 3 });
+            schedule.scheduleJob(unblock3Date, async function () {
+              await Account.findOneAndUpdate({ _id: decodedToken.id_account }, { isBlocked: false });
+              const unblock3Notification = await new Notification({
+                id_senders: [process.env.ADMIN_ID],
+                id_receiver: decodedToken.id_account,
+                notificationType: 'unblock',
+                notificationEnglishContent: `Your account has been unblocked.`,
+                notificationVietnameseContent: `Tài khoản của bạn đã được mở khóa.`,
+                notificationTime: new Date(unblock3Date),
+                isViewed: false,
+              });
+              await unblock3Notification.save();
+            });
+            break;
+          case 5:
+            await Account.findOneAndUpdate(
+              { _id: decodedToken.id_account },
+              { isBlocked: true, warningAmount: newWarningAmount },
+            );
+
+            const block5Notification = await new Notification({
+              id_senders: [process.env.ADMIN_ID],
+              id_receiver: decodedToken.id_account,
+              notificationType: 'block',
+              notificationEnglishContent: `Your account will be blocked due to inappropriate language use. You will not be able to post or comment for the next 7 days.`,
+              notificationVietnameseContent: `Tài khoản của bạn sẽ bị khóa do sử dụng ngôn từ không phù hợp. Bạn sẽ không thể đăng bài hoặc bình luận trong 7 ngày tới.`,
+              notificationTime: new Date(),
+              isViewed: false,
+            });
+            await block5Notification.save();
+
+            const unblock5Date = add(new Date(), { days: 7 });
+            schedule.scheduleJob(unblock5Date, async function () {
+              await Account.findOneAndUpdate({ _id: decodedToken.id_account }, { isBlocked: false });
+              const unblock5Notification = await new Notification({
+                id_senders: [process.env.ADMIN_ID],
+                id_receiver: decodedToken.id_account,
+                notificationType: 'unblock',
+                notificationEnglishContent: `Your account has been unblocked.`,
+                notificationVietnameseContent: `Tài khoản của bạn đã được mở khóa.`,
+                notificationTime: new Date(unblock5Date),
+                isViewed: false,
+              });
+              await unblock5Notification.save();
+            });
+            break;
+          case 7:
+            await Account.findOneAndUpdate(
+              { _id: decodedToken.id_account },
+              { isBlocked: true, warningAmount: newWarningAmount },
+            );
+
+            const block7Notification = await new Notification({
+              id_senders: [process.env.ADMIN_ID],
+              id_receiver: decodedToken.id_account,
+              notificationType: 'block',
+              notificationEnglishContent: `Your account will be blocked due to inappropriate language use. You will not be able to post or comment for the next 30 days.`,
+              notificationVietnameseContent: `Tài khoản của bạn sẽ bị khóa do sử dụng ngôn từ không phù hợp. Bạn sẽ không thể đăng bài hoặc bình luận trong 30 ngày tới.`,
+              notificationTime: new Date(),
+              isViewed: false,
+            });
+            await block7Notification.save();
+
+            const unblock7Date = add(new Date(), { days: 30 });
+            schedule.scheduleJob(unblock7Date, async function () {
+              await Account.findOneAndUpdate({ _id: decodedToken.id_account }, { isBlocked: false });
+              const unblock7Notification = await new Notification({
+                id_senders: [process.env.ADMIN_ID],
+                id_receiver: decodedToken.id_account,
+                notificationType: 'unblock',
+                notificationEnglishContent: `Your account has been unblocked.`,
+                notificationVietnameseContent: `Tài khoản của bạn đã được mở khóa.`,
+                notificationTime: new Date(unblock7Date),
+                isViewed: false,
+              });
+              await unblock7Notification.save();
+            });
+            break;
+          default:
+            await Account.findOneAndUpdate({ _id: decodedToken.id_account }, { warningAmount: newWarningAmount });
+            break;
+        }
+        res.status(400).json({
+          message: 'inappropriate language post',
+        });
+      } else {
+        let id_visualMedia = [];
+        if (req.body.visualData) {
+          const fileStr = req.body.visualData;
+          const promises = fileStr.map(async (url) => {
+            if (url.type == 'image') {
+              let uploadedResponse = await cloudinary.uploader.upload(url.data, {
+                resource_type: 'image',
+                upload_preset: 'dev_setups',
+              });
+              id_visualMedia.push({
+                type: 'image',
+                url: uploadedResponse.public_id,
+              });
+            } else if (url.type == 'video') {
+              let uploadedResponse = await cloudinary.uploader.upload(url.data, {
+                resource_type: 'video',
+                upload_preset: 'dev_setups',
+                chunk_size: 6000000,
+                eager: [
+                  { width: 300, height: 300, crop: 'pad', audio_codec: 'none' },
+                  {
+                    width: 160,
+                    height: 100,
+                    crop: 'crop',
+                    gravity: 'south',
+                    audio_codec: 'none',
+                  },
+                ],
+              });
+              id_visualMedia.push({
+                type: 'video',
+                url: uploadedResponse.public_id,
+              });
+            }
           });
-          id_visualMedia.push({
-            type: 'image',
-            url: uploadedResponse.public_id,
-          });
-        } else if (url.type == 'video') {
-          let uploadedResponse = await cloudinary.uploader.upload(url.data, {
-            resource_type: 'video',
-            upload_preset: 'dev_setups',
-            chunk_size: 6000000,
-            eager: [
-              { width: 300, height: 300, crop: 'pad', audio_codec: 'none' },
-              {
-                width: 160,
-                height: 100,
-                crop: 'crop',
-                gravity: 'south',
-                audio_codec: 'none',
-              },
-            ],
-          });
-          id_visualMedia.push({
-            type: 'video',
-            url: uploadedResponse.public_id,
+
+          await Promise.all(promises);
+        }
+
+        const post = new Post({
+          id_account: decodedToken.id_account,
+          id_visualMedia,
+          isActive: req.body.isScheduled?.toString() === 'true' ? false : true,
+          createdAt: req.body.isScheduled?.toString() === 'true' ? new Date(req.body.scheduleDate) : new Date(),
+          ...req.body,
+        });
+        const result = await post.save();
+        if (result.id_visualMedia) {
+          const visualMediaArray = result.id_visualMedia.map((value) => ({
+            id_post: result._id,
+            id_account: decodedToken.id_account,
+            url: {
+              visualType: value.type,
+              visualUrl: value.url,
+            },
+          }));
+          await VisualMedia.insertMany(visualMediaArray);
+        }
+
+        if (req.body.isScheduled?.toString() === 'true') {
+          schedule.scheduleJob(new Date(req.body.scheduleDate), async function () {
+            await Post.findOneAndUpdate({ _id: result._id }, { isActive: true });
+            const newNotification = await new Notification({
+              id_senders: [process.env.ADMIN_ID],
+              id_receiver: decodedToken.id_account,
+              id_post: result._id,
+              notificationType: 'upload',
+              notificationEnglishContent: `Your post has been published.`,
+              notificationVietnameseContent: `Bài viết của bạn đã được đăng tải.`,
+              notificationTime: new Date(req.body.scheduleDate),
+              isViewed: false,
+            });
+            await newNotification.save();
           });
         }
-      });
 
-      await Promise.all(promises);
-    }
-
-    const post = new Post({
-      id_account: decodedToken.id_account,
-      id_visualMedia,
-      isActive: req.body.isScheduled?.toString() === 'true' ? false : true,
-      createdAt: req.body.isScheduled?.toString() === 'true' ? new Date(req.body.scheduleDate) : new Date(),
-      ...req.body,
-    });
-    const result = await post.save();
-    if (result.id_visualMedia) {
-      const visualMediaArray = result.id_visualMedia.map((value) => ({
-        id_post: result._id,
-        id_account: decodedToken.id_account,
-        url: {
-          visualType: value.type,
-          visualUrl: value.url,
-        },
-      }));
-      await VisualMedia.insertMany(visualMediaArray);
-    }
-
-    if (req.body.isScheduled?.toString() === 'true') {
-      schedule.scheduleJob(new Date(req.body.scheduleDate), async function () {
-        await Post.findOneAndUpdate({ _id: result._id }, { isActive: true });
-        const newNotification = await new Notification({
-          id_senders: [process.env.ADMIN_ID],
-          id_receiver: decodedToken.id_account,
-          id_post: result._id,
-          notificationType: 'upload',
-          notificationEnglishContent: `Your post has been published.`,
-          notificationVietnameseContent: `Bài viết của bạn đã được đăng tải.`,
-          notificationTime: new Date(req.body.scheduleDate),
-          isViewed: false,
+        if (result.id_friendTag.length !== 0) {
+          const personalInfo = await PersonalInfo.findOne(
+            { id_account: decodedToken.id_account },
+            { _id: 0, fullName: 1 },
+          );
+          for (const [index, value] of result.id_friendTag.entries()) {
+            const newNotification = new Notification({
+              id_senders: [decodedToken.id_account],
+              id_receiver: value,
+              id_post: result._id,
+              id_comment: null,
+              notificationType: 'tag',
+              notificationEnglishContent: `${personalInfo.fullName} tagged you in a post.`,
+              notificationVietnameseContent: `${personalInfo.fullName} đã gắn thẻ bạn trong một bài viết.`,
+              notificationTime: new Date(),
+              isViewed: false,
+            });
+            await newNotification.save();
+          }
+          return res.status(201).json({
+            message: 'post created!',
+            post: result,
+            id_notification_receivers: result.id_friendTag,
+          });
+        }
+        return res.status(201).json({
+          message: 'post created!',
+          post: result,
         });
-        await newNotification.save();
-      });
-    }
-
-    if (result.id_friendTag.length !== 0) {
-      const personalInfo = await PersonalInfo.findOne({ id_account: decodedToken.id_account }, { _id: 0, fullName: 1 });
-      for (const [index, value] of result.id_friendTag.entries()) {
-        const newNotification = new Notification({
-          id_senders: [decodedToken.id_account],
-          id_receiver: value,
-          id_post: result._id,
-          id_comment: null,
-          notificationType: 'tag',
-          notificationEnglishContent: `${personalInfo.fullName} tagged you in a post.`,
-          notificationVietnameseContent: `${personalInfo.fullName} đã gắn thẻ bạn trong một bài viết.`,
-          notificationTime: new Date(),
-          isViewed: false,
-        });
-        await newNotification.save();
       }
-      return res.status(201).json({
-        message: 'post created!',
-        post: result,
-        id_notification_receivers: result.id_friendTag,
-      });
     }
-    return res.status(201).json({
-      message: 'post created!',
-      post: result,
-    });
   } catch (error) {
     return res.status(500).json({
       error,
@@ -142,117 +276,248 @@ exports.posts_share_post = async (req, res, next) => {
     if (!token) return res.sendStatus(401);
 
     const decodedToken = jwt_decode(token);
-    const personalInfo = await PersonalInfo.findOne({ id_account: decodedToken.id_account });
 
-    const sharedPost = await Post.findOne({ _id: req.body.shareId });
-    if (!sharedPost) {
-      return res.status(404).json({
-        message: 'Shared post not found!',
+    const existedAccount = await Account.findOne({ _id: decodedToken.id_account });
+    const { isBlocked } = existedAccount;
+
+    if (isBlocked) {
+      res.status(406).json({
+        message: 'this account is blocked',
       });
-    }
-
-    const sharedPersonalInfo = await PersonalInfo.findOne(
-      { id_account: sharedPost.id_account },
-      { _id: 0, id_account: 1, avatar: 1, fullName: 1 },
-    );
-
-    const shareContent = {
-      shared_id_account: sharedPersonalInfo?.id_account,
-      shared_id_visualMedia: sharedPost?.id_visualMedia,
-      shared_postContent: sharedPost?.postContent,
-      shared_postFeeling: sharedPost?.postFeeling,
-      shared_postPrivacy: sharedPost?.postPrivacy,
-      shared_createdAt: sharedPost?.createdAt,
-      shared_id_friendTag: sharedPost?.id_friendTag,
-      shared_location: sharedPost?.location,
-    };
-
-    const post = new Post({
-      id_account: decodedToken.id_account,
-      avatar: personalInfo.avatar,
-      fullName: personalInfo.fullName,
-      isShared: true,
-      shareId: req.body.shareId,
-      shareContent,
-      ...req.body,
-    });
-
-    const result = await post.save();
-
-    const notification = await Notification.find({
-      $and: [{ id_post: req.body.shareId }, { notificationType: 'share' }],
-    });
-    if (notification.length >= 1) {
-      const shareAmmount = await notification[0].id_senders.length;
-      let updateNotification = {};
-      if (notification[0].id_senders.includes(decodedToken.id_account)) {
-        const checkOtherShare = await notification[0].id_senders.filter(
-          (account) => account != decodedToken.id_account,
-        );
-        if (checkOtherShare.length == 0) {
-          updateNotification = {
-            notificationTime: new Date(),
-            isViewed: false,
-          };
-        } else {
-          updateNotification = {
-            id_senders: notification[0].id_senders,
-            id_receiver: notification[0].id_receiver,
-            id_post: notification[0].id_post,
-            id_comment: notification[0].id_comment,
-            notificationType: notification[0].notificationType,
-            notificationEnglishContent:
-              shareAmmount == 2
-                ? `${personalInfo.fullName} and ${shareAmmount - 1} other person shared your post.`
-                : `${personalInfo.fullName} and ${shareAmmount - 1} other people shared your post.`,
-            notificationVietnameseContent: `${personalInfo.fullName} và ${
-              shareAmmount - 1
-            } người khác đã chia sẻ một bài viết của bạn.`,
-            isViewed: false,
-            notificationTime: new Date(),
-          };
-        }
-      } else {
-        updateNotification = {
-          id_senders: [...notification[0].id_senders, decodedToken.id_account],
-          id_receiver: notification[0].id_receiver,
-          id_post: notification[0].id_post,
-          id_comment: notification[0].id_comment,
-          notificationType: notification[0].notificationType,
-          notificationEnglishContent:
-            accountCommentAmount == 1
-              ? `${personalInfo.fullName} and ${shareAmmount} other person shared your post.`
-              : `${personalInfo.fullName} and ${shareAmmount} other people shared your post.`,
-          notificationVietnameseContent: `${personalInfo.fullName} và ${shareAmmount} người khác đã chia sẻ một bài viết của bạn.`,
-          isViewed: false,
-          notificationTime: new Date(),
-        };
-      }
-
-      await Notification.findOneAndUpdate(
-        { $and: [{ id_post: req.body.shareId }, { notificationType: 'share' }] },
-        updateNotification,
-      );
     } else {
-      const newNotification = await new Notification({
-        id_senders: [decodedToken.id_account],
-        id_receiver: sharedPost.id_account,
-        id_post: req.body.shareId,
-        id_comment: null,
-        notificationType: 'share',
-        notificationEnglishContent: `${personalInfo.fullName} shared your post.`,
-        notificationVietnameseContent: `${personalInfo.fullName} đã chia sẻ một bài viết của bạn.`,
-        isViewed: false,
-        notificationTime: new Date(),
+      const data = await axios.post(process.env.TOXIC_COMMENT_API, {
+        comments: req.body.postContent || '',
       });
-      await newNotification.save();
-    }
+      const checkToxic = data?.data?.response;
+      if (checkToxic[1] >= 0.5) {
+        const toxicDetection = await new ToxicDetection({
+          content: req.body.postContent,
+          id_account: decodedToken.id_account,
+          type: 'post',
+        });
 
-    res.status(201).json({
-      message: 'shared post created!',
-      id_notification_receivers: [sharedPost.id_account],
-      post: result,
-    });
+        await toxicDetection.save();
+
+        const newWarningAmount = existedAccount?.warningAmount + 1;
+
+        switch (newWarningAmount) {
+          case 3:
+            await Account.findOneAndUpdate(
+              { _id: decodedToken.id_account },
+              { isBlocked: true, warningAmount: newWarningAmount },
+            );
+
+            const block3Notification = await new Notification({
+              id_senders: [process.env.ADMIN_ID],
+              id_receiver: decodedToken.id_account,
+              notificationType: 'block',
+              notificationEnglishContent: `Your account will be blocked due to inappropriate language use. You will not be able to post or comment for the next 3 days.`,
+              notificationVietnameseContent: `Tài khoản của bạn sẽ bị khóa do sử dụng ngôn từ không phù hợp. Bạn sẽ không thể đăng bài hoặc bình luận trong 3 ngày tới.`,
+              notificationTime: new Date(),
+              isViewed: false,
+            });
+            await block3Notification.save();
+
+            const unblock3Date = add(new Date(), { days: 3 });
+            schedule.scheduleJob(unblock3Date, async function () {
+              await Account.findOneAndUpdate({ _id: decodedToken.id_account }, { isBlocked: false });
+              const unblock3Notification = await new Notification({
+                id_senders: [process.env.ADMIN_ID],
+                id_receiver: decodedToken.id_account,
+                notificationType: 'unblock',
+                notificationEnglishContent: `Your account has been unblocked.`,
+                notificationVietnameseContent: `Tài khoản của bạn đã được mở khóa.`,
+                notificationTime: new Date(unblock3Date),
+                isViewed: false,
+              });
+              await unblock3Notification.save();
+            });
+            break;
+          case 5:
+            await Account.findOneAndUpdate(
+              { _id: decodedToken.id_account },
+              { isBlocked: true, warningAmount: newWarningAmount },
+            );
+
+            const block5Notification = await new Notification({
+              id_senders: [process.env.ADMIN_ID],
+              id_receiver: decodedToken.id_account,
+              notificationType: 'block',
+              notificationEnglishContent: `Your account will be blocked due to inappropriate language use. You will not be able to post or comment for the next 7 days.`,
+              notificationVietnameseContent: `Tài khoản của bạn sẽ bị khóa do sử dụng ngôn từ không phù hợp. Bạn sẽ không thể đăng bài hoặc bình luận trong 7 ngày tới.`,
+              notificationTime: new Date(),
+              isViewed: false,
+            });
+            await block5Notification.save();
+
+            const unblock5Date = add(new Date(), { days: 7 });
+            schedule.scheduleJob(unblock5Date, async function () {
+              await Account.findOneAndUpdate({ _id: decodedToken.id_account }, { isBlocked: false });
+              const unblock5Notification = await new Notification({
+                id_senders: [process.env.ADMIN_ID],
+                id_receiver: decodedToken.id_account,
+                notificationType: 'unblock',
+                notificationEnglishContent: `Your account has been unblocked.`,
+                notificationVietnameseContent: `Tài khoản của bạn đã được mở khóa.`,
+                notificationTime: new Date(unblock5Date),
+                isViewed: false,
+              });
+              await unblock5Notification.save();
+            });
+            break;
+          case 7:
+            await Account.findOneAndUpdate(
+              { _id: decodedToken.id_account },
+              { isBlocked: true, warningAmount: newWarningAmount },
+            );
+
+            const block7Notification = await new Notification({
+              id_senders: [process.env.ADMIN_ID],
+              id_receiver: decodedToken.id_account,
+              notificationType: 'block',
+              notificationEnglishContent: `Your account will be blocked due to inappropriate language use. You will not be able to post or comment for the next 30 days.`,
+              notificationVietnameseContent: `Tài khoản của bạn sẽ bị khóa do sử dụng ngôn từ không phù hợp. Bạn sẽ không thể đăng bài hoặc bình luận trong 30 ngày tới.`,
+              notificationTime: new Date(),
+              isViewed: false,
+            });
+            await block7Notification.save();
+
+            const unblock7Date = add(new Date(), { days: 30 });
+            schedule.scheduleJob(unblock7Date, async function () {
+              await Account.findOneAndUpdate({ _id: decodedToken.id_account }, { isBlocked: false });
+              const unblock7Notification = await new Notification({
+                id_senders: [process.env.ADMIN_ID],
+                id_receiver: decodedToken.id_account,
+                notificationType: 'unblock',
+                notificationEnglishContent: `Your account has been unblocked.`,
+                notificationVietnameseContent: `Tài khoản của bạn đã được mở khóa.`,
+                notificationTime: new Date(unblock7Date),
+                isViewed: false,
+              });
+              await unblock7Notification.save();
+            });
+            break;
+          default:
+            await Account.findOneAndUpdate({ _id: decodedToken.id_account }, { warningAmount: newWarningAmount });
+            break;
+        }
+        res.status(400).json({
+          message: 'inappropriate language post',
+        });
+      } else {
+        const personalInfo = await PersonalInfo.findOne({ id_account: decodedToken.id_account });
+
+        const sharedPost = await Post.findOne({ _id: req.body.shareId });
+        if (!sharedPost) {
+          return res.status(404).json({
+            message: 'Shared post not found!',
+          });
+        }
+
+        const sharedPersonalInfo = await PersonalInfo.findOne(
+          { id_account: sharedPost.id_account },
+          { _id: 0, id_account: 1, avatar: 1, fullName: 1 },
+        );
+
+        const shareContent = {
+          shared_id_account: sharedPersonalInfo?.id_account,
+          shared_id_visualMedia: sharedPost?.id_visualMedia,
+          shared_postContent: sharedPost?.postContent,
+          shared_postFeeling: sharedPost?.postFeeling,
+          shared_postPrivacy: sharedPost?.postPrivacy,
+          shared_createdAt: sharedPost?.createdAt,
+          shared_id_friendTag: sharedPost?.id_friendTag,
+          shared_location: sharedPost?.location,
+        };
+
+        const post = new Post({
+          id_account: decodedToken.id_account,
+          avatar: personalInfo.avatar,
+          fullName: personalInfo.fullName,
+          isShared: true,
+          shareId: req.body.shareId,
+          shareContent,
+          ...req.body,
+        });
+
+        const result = await post.save();
+
+        const notification = await Notification.find({
+          $and: [{ id_post: req.body.shareId }, { notificationType: 'share' }],
+        });
+        if (notification.length >= 1) {
+          const shareAmmount = await notification[0].id_senders.length;
+          let updateNotification = {};
+          if (notification[0].id_senders.includes(decodedToken.id_account)) {
+            const checkOtherShare = await notification[0].id_senders.filter(
+              (account) => account != decodedToken.id_account,
+            );
+            if (checkOtherShare.length == 0) {
+              updateNotification = {
+                notificationTime: new Date(),
+                isViewed: false,
+              };
+            } else {
+              updateNotification = {
+                id_senders: notification[0].id_senders,
+                id_receiver: notification[0].id_receiver,
+                id_post: notification[0].id_post,
+                id_comment: notification[0].id_comment,
+                notificationType: notification[0].notificationType,
+                notificationEnglishContent:
+                  shareAmmount == 2
+                    ? `${personalInfo.fullName} and ${shareAmmount - 1} other person shared your post.`
+                    : `${personalInfo.fullName} and ${shareAmmount - 1} other people shared your post.`,
+                notificationVietnameseContent: `${personalInfo.fullName} và ${
+                  shareAmmount - 1
+                } người khác đã chia sẻ một bài viết của bạn.`,
+                isViewed: false,
+                notificationTime: new Date(),
+              };
+            }
+          } else {
+            updateNotification = {
+              id_senders: [...notification[0].id_senders, decodedToken.id_account],
+              id_receiver: notification[0].id_receiver,
+              id_post: notification[0].id_post,
+              id_comment: notification[0].id_comment,
+              notificationType: notification[0].notificationType,
+              notificationEnglishContent:
+                accountCommentAmount == 1
+                  ? `${personalInfo.fullName} and ${shareAmmount} other person shared your post.`
+                  : `${personalInfo.fullName} and ${shareAmmount} other people shared your post.`,
+              notificationVietnameseContent: `${personalInfo.fullName} và ${shareAmmount} người khác đã chia sẻ một bài viết của bạn.`,
+              isViewed: false,
+              notificationTime: new Date(),
+            };
+          }
+
+          await Notification.findOneAndUpdate(
+            { $and: [{ id_post: req.body.shareId }, { notificationType: 'share' }] },
+            updateNotification,
+          );
+        } else {
+          const newNotification = await new Notification({
+            id_senders: [decodedToken.id_account],
+            id_receiver: sharedPost.id_account,
+            id_post: req.body.shareId,
+            id_comment: null,
+            notificationType: 'share',
+            notificationEnglishContent: `${personalInfo.fullName} shared your post.`,
+            notificationVietnameseContent: `${personalInfo.fullName} đã chia sẻ một bài viết của bạn.`,
+            isViewed: false,
+            notificationTime: new Date(),
+          });
+          await newNotification.save();
+        }
+
+        res.status(201).json({
+          message: 'shared post created!',
+          id_notification_receivers: [sharedPost.id_account],
+          post: result,
+        });
+      }
+    }
   } catch (error) {
     res.status(500).json({
       error,
@@ -270,25 +535,156 @@ exports.posts_update_post = async (req, res, next) => {
 
     const decodedToken = jwt_decode(token);
 
-    const account = await Account.findOne({ _id: decodedToken.id_account });
-    const result = await Post.findOneAndUpdate(
-      {
-        id_account: account._id,
-        _id: req.body._id,
-      },
-      req.body,
-    );
+    const existedAccount = await Account.findOne({ _id: decodedToken.id_account });
+    const { isBlocked } = existedAccount;
 
-    if (!result) {
-      return res.status(404).json({
-        message: 'Post not found!',
+    if (isBlocked) {
+      res.status(406).json({
+        message: 'this account is blocked',
       });
-    }
+    } else {
+      const data = await axios.post(process.env.TOXIC_COMMENT_API, {
+        comments: req.body.postContent || '',
+      });
+      const checkToxic = data?.data?.response;
+      if (checkToxic[1] >= 0.5) {
+        const toxicDetection = await new ToxicDetection({
+          content: req.body.postContent,
+          id_account: decodedToken.id_account,
+          id_post: req.body._id,
+          type: 'post',
+        });
 
-    res.status(200).json({
-      message: 'post updated',
-      post: result,
-    });
+        await toxicDetection.save();
+
+        const newWarningAmount = existedAccount?.warningAmount + 1;
+
+        switch (newWarningAmount) {
+          case 3:
+            await Account.findOneAndUpdate(
+              { _id: decodedToken.id_account },
+              { isBlocked: true, warningAmount: newWarningAmount },
+            );
+
+            const block3Notification = await new Notification({
+              id_senders: [process.env.ADMIN_ID],
+              id_receiver: decodedToken.id_account,
+              notificationType: 'block',
+              notificationEnglishContent: `Your account will be blocked due to inappropriate language use. You will not be able to post or comment for the next 3 days.`,
+              notificationVietnameseContent: `Tài khoản của bạn sẽ bị khóa do sử dụng ngôn từ không phù hợp. Bạn sẽ không thể đăng bài hoặc bình luận trong 3 ngày tới.`,
+              notificationTime: new Date(),
+              isViewed: false,
+            });
+            await block3Notification.save();
+
+            const unblock3Date = add(new Date(), { days: 3 });
+            schedule.scheduleJob(unblock3Date, async function () {
+              await Account.findOneAndUpdate({ _id: decodedToken.id_account }, { isBlocked: false });
+              const unblock3Notification = await new Notification({
+                id_senders: [process.env.ADMIN_ID],
+                id_receiver: decodedToken.id_account,
+                notificationType: 'unblock',
+                notificationEnglishContent: `Your account has been unblocked.`,
+                notificationVietnameseContent: `Tài khoản của bạn đã được mở khóa.`,
+                notificationTime: new Date(unblock3Date),
+                isViewed: false,
+              });
+              await unblock3Notification.save();
+            });
+            break;
+          case 5:
+            await Account.findOneAndUpdate(
+              { _id: decodedToken.id_account },
+              { isBlocked: true, warningAmount: newWarningAmount },
+            );
+
+            const block5Notification = await new Notification({
+              id_senders: [process.env.ADMIN_ID],
+              id_receiver: decodedToken.id_account,
+              notificationType: 'block',
+              notificationEnglishContent: `Your account will be blocked due to inappropriate language use. You will not be able to post or comment for the next 7 days.`,
+              notificationVietnameseContent: `Tài khoản của bạn sẽ bị khóa do sử dụng ngôn từ không phù hợp. Bạn sẽ không thể đăng bài hoặc bình luận trong 7 ngày tới.`,
+              notificationTime: new Date(),
+              isViewed: false,
+            });
+            await block5Notification.save();
+
+            const unblock5Date = add(new Date(), { days: 7 });
+            schedule.scheduleJob(unblock5Date, async function () {
+              await Account.findOneAndUpdate({ _id: decodedToken.id_account }, { isBlocked: false });
+              const unblock5Notification = await new Notification({
+                id_senders: [process.env.ADMIN_ID],
+                id_receiver: decodedToken.id_account,
+                notificationType: 'unblock',
+                notificationEnglishContent: `Your account has been unblocked.`,
+                notificationVietnameseContent: `Tài khoản của bạn đã được mở khóa.`,
+                notificationTime: new Date(unblock5Date),
+                isViewed: false,
+              });
+              await unblock5Notification.save();
+            });
+            break;
+          case 7:
+            await Account.findOneAndUpdate(
+              { _id: decodedToken.id_account },
+              { isBlocked: true, warningAmount: newWarningAmount },
+            );
+
+            const block7Notification = await new Notification({
+              id_senders: [process.env.ADMIN_ID],
+              id_receiver: decodedToken.id_account,
+              notificationType: 'block',
+              notificationEnglishContent: `Your account will be blocked due to inappropriate language use. You will not be able to post or comment for the next 30 days.`,
+              notificationVietnameseContent: `Tài khoản của bạn sẽ bị khóa do sử dụng ngôn từ không phù hợp. Bạn sẽ không thể đăng bài hoặc bình luận trong 30 ngày tới.`,
+              notificationTime: new Date(),
+              isViewed: false,
+            });
+            await block7Notification.save();
+
+            const unblock7Date = add(new Date(), { days: 30 });
+            schedule.scheduleJob(unblock7Date, async function () {
+              await Account.findOneAndUpdate({ _id: decodedToken.id_account }, { isBlocked: false });
+              const unblock7Notification = await new Notification({
+                id_senders: [process.env.ADMIN_ID],
+                id_receiver: decodedToken.id_account,
+                notificationType: 'unblock',
+                notificationEnglishContent: `Your account has been unblocked.`,
+                notificationVietnameseContent: `Tài khoản của bạn đã được mở khóa.`,
+                notificationTime: new Date(unblock7Date),
+                isViewed: false,
+              });
+              await unblock7Notification.save();
+            });
+            break;
+          default:
+            await Account.findOneAndUpdate({ _id: decodedToken.id_account }, { warningAmount: newWarningAmount });
+            break;
+        }
+        res.status(400).json({
+          message: 'inappropriate language post',
+        });
+      } else {
+        const account = await Account.findOne({ _id: decodedToken.id_account });
+        const result = await Post.findOneAndUpdate(
+          {
+            id_account: account._id,
+            _id: req.body._id,
+          },
+          req.body,
+        );
+
+        if (!result) {
+          return res.status(404).json({
+            message: 'Post not found!',
+          });
+        }
+
+        res.status(200).json({
+          message: 'post updated',
+          post: result,
+        });
+      }
+    }
   } catch (error) {
     res.status(500).json({
       error,
