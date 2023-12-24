@@ -60,7 +60,7 @@ exports.posts_create_post = async (req, res, next) => {
               id_receiver: decodedToken.id_account,
               notificationType: 'block',
               notificationEnglishContent: `Your account will be blocked due to inappropriate language use. You will not be able to post or comment for the next 3 days.`,
-              notificationVietnameseContent: `Tài khoản của bạn sẽ bị khóa do sử dụng ngôn từ không phù hợp. Bạn sẽ không thể đăng bài hoặc bình luận trong 3 ngày tới.`,
+              notificationVietnameseContent: `Tài khoản của bạn đã bị khóa do sử dụng ngôn từ không phù hợp. Bạn sẽ không thể đăng bài hoặc bình luận trong 3 ngày tới.`,
               notificationTime: new Date(),
               isViewed: false,
             });
@@ -92,7 +92,7 @@ exports.posts_create_post = async (req, res, next) => {
               id_receiver: decodedToken.id_account,
               notificationType: 'block',
               notificationEnglishContent: `Your account will be blocked due to inappropriate language use. You will not be able to post or comment for the next 7 days.`,
-              notificationVietnameseContent: `Tài khoản của bạn sẽ bị khóa do sử dụng ngôn từ không phù hợp. Bạn sẽ không thể đăng bài hoặc bình luận trong 7 ngày tới.`,
+              notificationVietnameseContent: `Tài khoản của bạn đã bị khóa do sử dụng ngôn từ không phù hợp. Bạn sẽ không thể đăng bài hoặc bình luận trong 7 ngày tới.`,
               notificationTime: new Date(),
               isViewed: false,
             });
@@ -124,7 +124,7 @@ exports.posts_create_post = async (req, res, next) => {
               id_receiver: decodedToken.id_account,
               notificationType: 'block',
               notificationEnglishContent: `Your account will be blocked due to inappropriate language use. You will not be able to post or comment for the next 30 days.`,
-              notificationVietnameseContent: `Tài khoản của bạn sẽ bị khóa do sử dụng ngôn từ không phù hợp. Bạn sẽ không thể đăng bài hoặc bình luận trong 30 ngày tới.`,
+              notificationVietnameseContent: `Tài khoản của bạn đã bị khóa do sử dụng ngôn từ không phù hợp. Bạn sẽ không thể đăng bài hoặc bình luận trong 30 ngày tới.`,
               notificationTime: new Date(),
               isViewed: false,
             });
@@ -312,7 +312,7 @@ exports.posts_share_post = async (req, res, next) => {
               id_receiver: decodedToken.id_account,
               notificationType: 'block',
               notificationEnglishContent: `Your account will be blocked due to inappropriate language use. You will not be able to post or comment for the next 3 days.`,
-              notificationVietnameseContent: `Tài khoản của bạn sẽ bị khóa do sử dụng ngôn từ không phù hợp. Bạn sẽ không thể đăng bài hoặc bình luận trong 3 ngày tới.`,
+              notificationVietnameseContent: `Tài khoản của bạn đã bị khóa do sử dụng ngôn từ không phù hợp. Bạn sẽ không thể đăng bài hoặc bình luận trong 3 ngày tới.`,
               notificationTime: new Date(),
               isViewed: false,
             });
@@ -344,7 +344,7 @@ exports.posts_share_post = async (req, res, next) => {
               id_receiver: decodedToken.id_account,
               notificationType: 'block',
               notificationEnglishContent: `Your account will be blocked due to inappropriate language use. You will not be able to post or comment for the next 7 days.`,
-              notificationVietnameseContent: `Tài khoản của bạn sẽ bị khóa do sử dụng ngôn từ không phù hợp. Bạn sẽ không thể đăng bài hoặc bình luận trong 7 ngày tới.`,
+              notificationVietnameseContent: `Tài khoản của bạn đã bị khóa do sử dụng ngôn từ không phù hợp. Bạn sẽ không thể đăng bài hoặc bình luận trong 7 ngày tới.`,
               notificationTime: new Date(),
               isViewed: false,
             });
@@ -376,7 +376,7 @@ exports.posts_share_post = async (req, res, next) => {
               id_receiver: decodedToken.id_account,
               notificationType: 'block',
               notificationEnglishContent: `Your account will be blocked due to inappropriate language use. You will not be able to post or comment for the next 30 days.`,
-              notificationVietnameseContent: `Tài khoản của bạn sẽ bị khóa do sử dụng ngôn từ không phù hợp. Bạn sẽ không thể đăng bài hoặc bình luận trong 30 ngày tới.`,
+              notificationVietnameseContent: `Tài khoản của bạn đã bị khóa do sử dụng ngôn từ không phù hợp. Bạn sẽ không thể đăng bài hoặc bình luận trong 30 ngày tới.`,
               notificationTime: new Date(),
               isViewed: false,
             });
@@ -571,7 +571,7 @@ exports.posts_update_post = async (req, res, next) => {
               id_receiver: decodedToken.id_account,
               notificationType: 'block',
               notificationEnglishContent: `Your account will be blocked due to inappropriate language use. You will not be able to post or comment for the next 3 days.`,
-              notificationVietnameseContent: `Tài khoản của bạn sẽ bị khóa do sử dụng ngôn từ không phù hợp. Bạn sẽ không thể đăng bài hoặc bình luận trong 3 ngày tới.`,
+              notificationVietnameseContent: `Tài khoản của bạn đã bị khóa do sử dụng ngôn từ không phù hợp. Bạn sẽ không thể đăng bài hoặc bình luận trong 3 ngày tới.`,
               notificationTime: new Date(),
               isViewed: false,
             });
@@ -603,7 +603,7 @@ exports.posts_update_post = async (req, res, next) => {
               id_receiver: decodedToken.id_account,
               notificationType: 'block',
               notificationEnglishContent: `Your account will be blocked due to inappropriate language use. You will not be able to post or comment for the next 7 days.`,
-              notificationVietnameseContent: `Tài khoản của bạn sẽ bị khóa do sử dụng ngôn từ không phù hợp. Bạn sẽ không thể đăng bài hoặc bình luận trong 7 ngày tới.`,
+              notificationVietnameseContent: `Tài khoản của bạn đã bị khóa do sử dụng ngôn từ không phù hợp. Bạn sẽ không thể đăng bài hoặc bình luận trong 7 ngày tới.`,
               notificationTime: new Date(),
               isViewed: false,
             });
@@ -635,7 +635,7 @@ exports.posts_update_post = async (req, res, next) => {
               id_receiver: decodedToken.id_account,
               notificationType: 'block',
               notificationEnglishContent: `Your account will be blocked due to inappropriate language use. You will not be able to post or comment for the next 30 days.`,
-              notificationVietnameseContent: `Tài khoản của bạn sẽ bị khóa do sử dụng ngôn từ không phù hợp. Bạn sẽ không thể đăng bài hoặc bình luận trong 30 ngày tới.`,
+              notificationVietnameseContent: `Tài khoản của bạn đã bị khóa do sử dụng ngôn từ không phù hợp. Bạn sẽ không thể đăng bài hoặc bình luận trong 30 ngày tới.`,
               notificationTime: new Date(),
               isViewed: false,
             });
