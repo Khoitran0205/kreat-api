@@ -841,6 +841,18 @@ exports.posts_get_all_post = async (req, res, next) => {
         };
       }
 
+      const id_friendTag = [];
+      if (value?.id_friendTag?.length > 0) {
+        for (let i = 0; i < value?.id_friendTag?.length; i++) {
+          const id = value?.id_friendTag[i];
+          const taggedFriendPersonalInfo = await PersonalInfo.findOne({ id_account: id }, { fullName: 1 });
+          id_friendTag.push({
+            id_account: id,
+            fullName: taggedFriendPersonalInfo?.fullName,
+          });
+        }
+      }
+
       postInfo = {
         _id: value._id,
         id_account: value.id_account,
@@ -850,7 +862,7 @@ exports.posts_get_all_post = async (req, res, next) => {
         postContent: value.postContent,
         postFeeling: value.postFeeling,
         postPrivacy: value.postPrivacy,
-        id_friendTag: value.id_friendTag,
+        id_friendTag: id_friendTag,
         location: value.location,
         isShared: value.isShared,
         shareId: value.shareId,
