@@ -125,6 +125,15 @@ io.on('connection', (socket) => {
     });
   });
 
+  socket.on('denyCall', async ({ id_conversation, id_sender }) => {
+    const otherUserInCall = getOtherInCallUser(id_conversation, id_sender);
+    if (otherUserInCall) {
+      const { socketId } = otherUserInCall;
+      io.to(socketId).emit('callEnded');
+    }
+    removeUsersCalling(id_conversation);
+  });
+
   // when a user logouts
   socket.on('logout', async (id_account) => {
     const logoutUser = getOnlineUser(id_account);
