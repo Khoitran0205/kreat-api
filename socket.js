@@ -125,8 +125,8 @@ io.on('connection', (socket) => {
     });
   });
 
-  socket.on('denyCall', async ({ id_conversation, id_sender }) => {
-    const otherUserInCall = getOtherInCallUser(id_conversation, id_sender);
+  socket.on('denyCall', async ({ id_conversation, id_account }) => {
+    const otherUserInCall = getOtherInCallUser(id_conversation, id_account);
     if (otherUserInCall) {
       const { socketId } = otherUserInCall;
       io.to(socketId).emit('callEnded');
