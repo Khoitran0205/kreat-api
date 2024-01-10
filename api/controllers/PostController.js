@@ -9,6 +9,8 @@ const Notification = require('../models/notification');
 const schedule = require('node-schedule');
 const env = require('dotenv');
 
+const axios = require('axios');
+
 const { cloudinary } = require('../../utils/cloudinary');
 
 const jwt_decode = require('jwt-decode');
